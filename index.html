@@ -1,151 +1,168 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-title-key="meta_title">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tugrion — Games, stories and apps for the whole family</title>
-<meta name="description" content="Tugrion is an independent studio creating colorful mobile games, animated stories and fun apps for the whole family. Home of Hop Bunny.">
-<meta property="og:title" content="Tugrion — Play. Imagine. Explore.">
-<meta property="og:description" content="Colorful mobile games, animated stories and fun apps for the whole family.">
-<meta property="og:image" content="https://tugrion.com/assets/og-image.jpg">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.gstatic.com https://fundingchoicesmessages.google.com https://*.adtrafficquality.google; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://abacus.jasoncameron.dev https://*.google.com https://*.googlesyndication.com https://*.doubleclick.net https://*.adtrafficquality.google https://fundingchoicesmessages.google.com; frame-src https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.adtrafficquality.google https://fundingchoicesmessages.google.com; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Tugrion — Games, apps and stories crafted to spark curiosity</title>
+<meta name="description" content="Tugrion is an independent creative studio making games, apps and stories for people of every age. Home of Hop Bunny.">
+<link rel="canonical" href="https://tugrion.com/">
+<meta property="og:site_name" content="Tugrion">
+<meta property="og:title" content="Tugrion — Games, apps and stories crafted to spark curiosity">
+<meta property="og:description" content="Tugrion is an independent creative studio making games, apps and stories for people of every age. Home of Hop Bunny.">
+<meta property="og:image" content="https://tugrion.com/assets/img/og-image.png">
 <meta property="og:url" content="https://tugrion.com/">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#2A0A57">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
-<link rel="icon" type="image/png" sizes="48x48" href="/assets/favicon-48.png">
+<meta name="twitter:site" content="@tugrionofficial">
+<meta name="theme-color" content="#00224F">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/assets/img/tugrion-mark.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@400;700;800&display=swap">
-<link rel="stylesheet" href="/assets/style.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;700;800&amp;family=Sora:wght@700;800&amp;display=swap">
+<link rel="stylesheet" href="/assets/style.css?v=3">
+<script src="/assets/i18n.js?v=3" defer></script>
+<script src="/assets/site.js?v=3" defer></script>
 </head>
 <body>
-
+<a class="skip" href="#main" data-i18n="skip">Skip to content</a>
 <header class="site-header">
   <div class="wrap">
-    <a class="brand" href="/" aria-label="Tugrion home">
-      <img src="/assets/tugrion-icon-256.webp" alt="" width="40" height="40">
-      <span>TUGRION</span>
-    </a>
+    <a class="brand" href="/" aria-label="Tugrion"><img src="/assets/img/tugrion-logo.svg" alt="Tugrion" width="164" height="55"></a>
     <nav class="nav" aria-label="Main">
-      <a href="#games">Games</a>
-      <a href="#about">About</a>
-      <a href="#follow">Follow</a>
+      <a href="/#games" data-i18n="nav_games">Games</a>
+      <a href="/about.html" data-i18n="nav_about">About</a>
+      <a href="/#follow" data-i18n="nav_contact">Contact</a>
+      <div class="lang"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"></path></svg><label for="lang-select" data-i18n="lang_label">Language</label><select id="lang-select"><option value="en">English</option></select></div>
     </nav>
   </div>
 </header>
-
-<main>
+<main id="main">
   <div class="hero">
     <div class="wrap">
       <div>
-        <h1>Play. Imagine. <em>Explore.</em></h1>
-        <p>Tugrion is an independent studio creating colorful mobile games, animated stories and fun apps for the whole family.</p>
+        <span class="eyebrow" data-i18n="hero_eyebrow">Independent creative studio</span>
+        <h1><span data-i18n="hero_title_a" style="color:inherit">Crafted to spark </span><span data-i18n="hero_title_b">curiosity</span></h1>
+        <p data-i18n="hero_text">Tugrion creates games, apps and stories that people of every age love coming back to — made with care and built to last.</p>
         <div class="btns">
-          <a class="btn btn-gold" href="#games">See our games</a>
-          <a class="btn btn-ghost" href="#follow">Follow us</a>
+          <a class="btn btn-primary" href="#games" data-i18n="btn_games">Explore our games</a>
+          <a class="btn btn-outline" href="/about.html" data-i18n="btn_about">Our story</a>
         </div>
       </div>
-      <img class="hero-art" src="/assets/tugrion-icon-512.png" alt="Tugrion logo: a white letter T crowned with golden calligraphic strokes" width="360" height="360">
+      <div class="hero-art"><img src="/assets/img/tugrion-mark.svg" alt="Tugrion symbol: three flowing strokes forming the letter T" width="340" height="270"></div>
     </div>
   </div>
+
+<div class="ad-slot" data-slot="top" role="complementary" aria-label="Advertisement">
+  <span class="ad-label" data-i18n="ad_label">Advertisement</span>
+  <div class="ad-box"></div>
+</div>
 
   <section id="games">
     <div class="wrap">
-      <div class="eyebrow">Our games</div>
-      <h2 class="section-title">Hop in and play</h2>
-      <p class="lead">Easy to pick up, fun to master. Every Tugrion game is designed to be friendly for kids and enjoyable for grown-ups too.</p>
-
+      <div class="section-head">
+        <span class="eyebrow" data-i18n="games_eyebrow">Our games</span>
+        <h2 class="section-title" data-i18n="games_title">Play something new</h2>
+        <p class="lead" data-i18n="games_text">Easy to start, fun to master.</p>
+      </div>
       <div class="games">
         <article class="game">
-          <div class="game-cover">
-            <img src="/assets/hop-bunny-feature.webp" alt="Hop Bunny: Hopi the bunny jumping through a colorful world" width="1024" height="500" loading="lazy">
-          </div>
+          <div class="game-cover"><img src="/assets/img/hop-bunny-feature.webp" alt="Hop Bunny: Hopi the bunny jumping through a colorful world" width="1024" height="500" loading="lazy"></div>
           <div class="game-body">
             <div class="game-head">
-              <img src="/assets/hop-bunny-icon.webp" alt="" width="64" height="64">
-              <div>
-                <h3>Hop Bunny</h3>
-                <span class="tag">Available on Android</span>
-              </div>
+              <img src="/assets/img/hop-bunny-icon.webp" alt="" width="60" height="60" loading="lazy">
+              <div><h3>Hop Bunny</h3><span class="tag" data-i18n="hb_tag">Available on Android</span></div>
             </div>
-            <p>Run, jump and collect carrots and coins with Hopi the bunny across 5 worlds and 40 levels. Unlock costumes, grab power-ups and test yourself in Endless Run.</p>
-            <div class="btns">
-              <a class="btn btn-purple" href="https://play.google.com/store/apps/details?id=com.hopbunny.game" target="_blank" rel="noopener">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3l14 9-14 9V3z"></path></svg>
-                Get it on Google Play
-              </a>
-            </div>
+            <p data-i18n="hb_text">Run, jump and collect with Hopi the bunny across 5 worlds and 40 levels.</p>
+            <div class="btns"><a class="btn btn-navy" href="https://play.google.com/store/apps/details?id=com.hopbunny.game" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3l14 9-14 9V3z"></path></svg><span data-i18n="hb_btn">Get it on Google Play</span></a></div>
           </div>
         </article>
-
         <article class="game">
-          <div class="game-cover soon-cover">
-            <div>Hop Bunny Slide<small>Coming soon</small></div>
-          </div>
+          <div class="game-cover soon-cover"><img src="/assets/img/tugrion-mark.svg" alt="" width="120" height="96"><strong data-i18n="hbs_soon">Coming soon</strong></div>
           <div class="game-body">
-            <div class="game-head">
-              <div>
-                <h3>Hop Bunny Slide</h3>
-                <span class="tag soon">In testing</span>
-              </div>
-            </div>
-            <p>Hopi is back — this time on a sled! Race down six worlds, upgrade fruit-and-veggie sleds, launch from slingshots and chase your best distance in Endless mode.</p>
-            <div class="btns">
-              <a class="btn btn-purple" href="#follow">Get notified</a>
-            </div>
+            <div class="game-head"><div><h3>Hop Bunny Slide</h3><span class="tag soon" data-i18n="hbs_tag">Coming soon</span></div></div>
+            <p data-i18n="hbs_text">Hopi is back — this time on a sled!</p>
+            <div class="btns"><a class="btn btn-outline" href="#follow" data-i18n="hbs_btn">Follow for launch news</a></div>
           </div>
         </article>
       </div>
     </div>
   </section>
 
-  <section id="about" class="about">
+  <section class="bg-white" aria-label="Tugrion in numbers">
     <div class="wrap">
-      <div>
-        <div class="eyebrow">About Tugrion</div>
-        <h2 class="section-title">A spark of energy with a royal signature</h2>
-        <p class="lead">Our name blends the <strong>tuğra</strong> — the elegant calligraphic signature of the Ottoman sultans — with <strong>ion</strong>, a tiny spark of energy. That is what we want every game and story to be: crafted with care, full of energy and made to last.</p>
+      <div class="stats">
+        <div class="stat accent" id="visit-stat"><b id="visit-count" aria-live="polite">…</b><span data-i18n="stat_visitors">Site visits</span></div>
+        <div class="stat"><b>2</b><span data-i18n="stat_games">Games</span></div>
+        <div class="stat"><b>6</b><span data-i18n="stat_langs">Languages</span></div>
+        <div class="stat"><b>2026</b><span data-i18n="stat_since">Founded</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-sand">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow" data-i18n="make_eyebrow">What we create</span>
+        <h2 class="section-title" data-i18n="make_title">One studio, many stories</h2>
+        <p class="lead" data-i18n="make_text">We started with games.</p>
       </div>
       <div class="pillars">
-        <div class="pillar">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="6"></rect><path d="M7 12h4M9 10v4M15.5 11h.01M17.5 13h.01"></path></svg></div>
-          <div><h3>Games</h3><p>Colorful mobile games that are easy to start and hard to put down.</p></div>
-        </div>
-        <div class="pillar">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-1.5z"></path><path d="M8 7h6M8 11h6"></path></svg></div>
-          <div><h3>Stories</h3><p>Animated stories and short videos that spark curiosity.</p></div>
-        </div>
-        <div class="pillar">
-          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"></rect><path d="M11 18h2"></path></svg></div>
-          <div><h3>Apps</h3><p>Simple, helpful apps built with the same care as our games.</p></div>
-        </div>
+        <div class="pillar" style="background:#fff"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="6"></rect><path d="M7 12h4M9 10v4M15.5 11h.01M17.5 13h.01"></path></svg></div><h3 data-i18n="p1_t">Games</h3><p data-i18n="p1_d">Colorful mobile games for the whole family.</p></div>
+        <div class="pillar" style="background:#fff"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"></rect><path d="M11 18h2"></path></svg></div><h3 data-i18n="p2_t">Apps</h3><p data-i18n="p2_d">Simple, useful apps.</p><span class="pill" data-i18n="roadmap">On our roadmap</span></div>
+        <div class="pillar" style="background:#fff"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-1.5z"></path><path d="M8 7h6M8 11h6"></path></svg></div><h3 data-i18n="p3_t">Stories</h3><p data-i18n="p3_d">Animated stories and videos.</p><span class="pill" data-i18n="roadmap">On our roadmap</span></div>
       </div>
     </div>
   </section>
+
+<div class="ad-slot" data-slot="middle" role="complementary" aria-label="Advertisement">
+  <span class="ad-label" data-i18n="ad_label">Advertisement</span>
+  <div class="ad-box"></div>
+</div>
 
   <section id="follow" class="follow">
     <div class="wrap">
-      <div class="eyebrow">Stay in the loop</div>
-      <h2 class="section-title">Follow Tugrion</h2>
-      <p class="lead">New games, behind-the-scenes clips and sneak peeks — follow us to see what we are building next.</p>
-      <div class="socials">
-        <a class="social" href="https://www.instagram.com/tugrion.official/" target="_blank" rel="noopener">Instagram <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"></path></svg></a>
-        <a class="social" href="https://www.tiktok.com/@tugrion.official" target="_blank" rel="noopener">TikTok <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"></path></svg></a>
-        <a class="social" href="https://x.com/tugrionofficial" target="_blank" rel="noopener">X <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"></path></svg></a>
+      <div class="section-head">
+        <span class="eyebrow" data-i18n="follow_eyebrow">Stay in touch</span>
+        <h2 class="section-title" data-i18n="follow_title">Follow Tugrion</h2>
+        <p class="lead" data-i18n="follow_text">Be the first to see new games.</p>
       </div>
-      <p class="contact">Questions, feedback or business inquiries: <a href="mailto:info@tugrion.com">info@tugrion.com</a></p>
+      <div class="socials">
+        <a class="social" href="https://www.instagram.com/tugrion.official/" target="_blank" rel="noopener noreferrer">Instagram <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"></path></svg></a>
+        <a class="social" href="https://www.tiktok.com/@tugrion.official" target="_blank" rel="noopener noreferrer">TikTok <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"></path></svg></a>
+        <a class="social" href="https://x.com/tugrionofficial" target="_blank" rel="noopener noreferrer">X <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"></path></svg></a>
+      </div>
+      <p class="contact"><span data-i18n="contact_text">Business, feedback or press: </span><a href="mailto:info@tugrion.com">info@tugrion.com</a></p>
     </div>
   </section>
 </main>
-
 <footer class="site-footer">
   <div class="wrap">
-    <div>© 2026 Tugrion. All rights reserved.</div>
-    <div><a href="/privacy/hop-bunny.html">Hop Bunny Privacy Policy</a> · <a href="/privacy/hop-bunny-slide.html">Hop Bunny Slide Privacy Policy</a></div>
+    <div>
+      <img src="/assets/img/tugrion-logo-white.svg" alt="Tugrion" width="150" height="50">
+      <p data-i18n="f_studio">Games, apps and stories crafted to spark curiosity.</p>
+    </div>
+    <div>
+      <h3 data-i18n="f_explore">Explore</h3>
+      <ul>
+        <li><a href="/#games" data-i18n="nav_games">Games</a></li>
+        <li><a href="/about.html" data-i18n="nav_about">About</a></li>
+        <li><a href="mailto:info@tugrion.com">info@tugrion.com</a></li>
+      </ul>
+    </div>
+    <div>
+      <h3 data-i18n="f_legal">Legal</h3>
+      <ul>
+        <li><a href="/privacy/website.html" data-i18n="f_site_privacy">Website Privacy &amp; Cookies</a></li>
+        <li><a href="/privacy/hop-bunny.html" data-i18n="f_hb_privacy">Hop Bunny Privacy</a></li>
+        <li><a href="/privacy/hop-bunny-slide.html" data-i18n="f_hbs_privacy">Hop Bunny Slide Privacy</a></li>
+      </ul>
+    </div>
+    <p class="copy">© <span id="year">2026</span> Tugrion. <span data-i18n="f_rights">All rights reserved.</span></p>
   </div>
 </footer>
-
 </body>
 </html>
