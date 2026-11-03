@@ -6,7 +6,7 @@
   var CONFIG = {
     // Fill these in after Google AdSense approves the site. While empty, no ad code loads and ad slots stay hidden.
     adsenseClient: "ca-pub-4908057275713944",
-    adsenseSlots: { top: "", middle: "" }, // ad unit IDs from AdSense
+    adsenseSlots: { top: "", middle: "", article: "" }, // ad unit IDs from AdSense
     counterUrl: "https://abacus.jasoncameron.dev",
     counterKey: "tugrion.com/visits"
   };
@@ -38,7 +38,8 @@
   }
 
   function applyLang(lang) {
-    document.documentElement.setAttribute("lang", lang);
+    // Articles written in one language keep their own lang attribute; only the site chrome is translated.
+    if (!document.documentElement.hasAttribute("data-content-lang")) document.documentElement.setAttribute("lang", lang);
     var nodes = document.querySelectorAll("[data-i18n]");
     for (var i = 0; i < nodes.length; i++) {
       var v = t(lang, nodes[i].getAttribute("data-i18n"));

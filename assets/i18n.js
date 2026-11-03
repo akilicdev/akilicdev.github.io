@@ -1,6 +1,7 @@
 /* Tugrion — site translations. Plain text only (rendered with textContent). */
 window.TUGRION_I18N = {
 en: {
+  nav_blog: "Blog", read_more: "Read article →", back_blog: "← All articles", more_posts: "More from the blog", blog_meta_title: "Blog — Tugrion", blog_eyebrow: "Blog", blog_title: "News, guides and stories from the studio", blog_lead: "Game guides, behind-the-scenes diaries and practical tips for players and parents.", latest_eyebrow: "From the blog", latest_title: "Latest stories", all_posts: "See all articles",
   hb1_title: "Hop Bunny is free on Google Play", hb1_text: "40 levels, 5 worlds, endless fun. Jump in today!", hb1_btn: "Play free",
   hb2_title: "Hop Bunny Slide is coming soon", hb2_text: "Follow @tugrion.official to see it first.", hb2_btn: "Follow us",
   _name: "English",
@@ -60,6 +61,7 @@ en: {
   cta_btn: "Email us"
 },
 tr: {
+  nav_blog: "Blog", read_more: "Yazıyı oku →", back_blog: "← Tüm yazılar", more_posts: "Blogdan diğer yazılar", blog_meta_title: "Blog — Tugrion", blog_eyebrow: "Blog", blog_title: "Stüdyodan haberler, rehberler ve hikâyeler", blog_lead: "Oyun rehberleri, kamera arkası günlükleri ve oyuncular ile ebeveynler için pratik ipuçları. (Yazılar İngilizcedir.)", latest_eyebrow: "Blogdan", latest_title: "Son yazılar", all_posts: "Tüm yazıları gör",
   hb1_title: "Hop Bunny Google Play'de ücretsiz", hb1_text: "40 bölüm, 5 dünya, bitmeyen eğlence. Hemen oyna!", hb1_btn: "Ücretsiz oyna",
   hb2_title: "Hop Bunny Slide çok yakında", hb2_text: "İlk sen görmek için @tugrion.official hesabını takip et.", hb2_btn: "Takip et",
   _name: "Türkçe",
@@ -119,6 +121,7 @@ tr: {
   cta_btn: "E-posta gönder"
 },
 de: {
+  nav_blog: "Blog", read_more: "Artikel lesen →", back_blog: "← Alle Artikel", more_posts: "Mehr aus dem Blog", blog_meta_title: "Blog — Tugrion", blog_eyebrow: "Blog", blog_title: "News, Guides und Geschichten aus dem Studio", blog_lead: "Spiele-Guides, Entwicklertagebücher und praktische Tipps für Spieler und Eltern. (Artikel auf Englisch.)", latest_eyebrow: "Aus dem Blog", latest_title: "Neueste Beiträge", all_posts: "Alle Artikel ansehen",
   hb1_title: "Hop Bunny ist kostenlos bei Google Play", hb1_text: "40 Level, 5 Welten, endloser Spaß. Spring jetzt rein!", hb1_btn: "Gratis spielen",
   hb2_title: "Hop Bunny Slide kommt bald", hb2_text: "Folge @tugrion.official, um es zuerst zu sehen.", hb2_btn: "Folgen",
   _name: "Deutsch",
@@ -178,6 +181,7 @@ de: {
   cta_btn: "E-Mail schreiben"
 },
 es: {
+  nav_blog: "Blog", read_more: "Leer artículo →", back_blog: "← Todos los artículos", more_posts: "Más del blog", blog_meta_title: "Blog — Tugrion", blog_eyebrow: "Blog", blog_title: "Noticias, guías e historias del estudio", blog_lead: "Guías de juegos, diarios de desarrollo y consejos prácticos para jugadores y padres. (Artículos en inglés.)", latest_eyebrow: "Del blog", latest_title: "Últimas historias", all_posts: "Ver todos los artículos",
   hb1_title: "Hop Bunny es gratis en Google Play", hb1_text: "40 niveles, 5 mundos, diversión sin fin. ¡Juega hoy!", hb1_btn: "Jugar gratis",
   hb2_title: "Hop Bunny Slide llega muy pronto", hb2_text: "Sigue a @tugrion.official para verlo primero.", hb2_btn: "Síguenos",
   _name: "Español",
@@ -237,6 +241,7 @@ es: {
   cta_btn: "Escríbenos"
 },
 fr: {
+  nav_blog: "Blog", read_more: "Lire l'article →", back_blog: "← Tous les articles", more_posts: "Plus d'articles du blog", blog_meta_title: "Blog — Tugrion", blog_eyebrow: "Blog", blog_title: "Actus, guides et histoires du studio", blog_lead: "Guides de jeux, carnets de développement et conseils pratiques pour joueurs et parents. (Articles en anglais.)", latest_eyebrow: "Du blog", latest_title: "Derniers articles", all_posts: "Voir tous les articles",
   hb1_title: "Hop Bunny est gratuit sur Google Play", hb1_text: "40 niveaux, 5 mondes, du plaisir sans fin. Lance-toi !", hb1_btn: "Jouer gratuitement",
   hb2_title: "Hop Bunny Slide arrive bientôt", hb2_text: "Suis @tugrion.official pour le découvrir en premier.", hb2_btn: "Nous suivre",
   _name: "Français",
@@ -296,6 +301,7 @@ fr: {
   cta_btn: "Nous écrire"
 },
 pt: {
+  nav_blog: "Blog", read_more: "Ler artigo →", back_blog: "← Todos os artigos", more_posts: "Mais do blog", blog_meta_title: "Blog — Tugrion", blog_eyebrow: "Blog", blog_title: "Notícias, guias e histórias do estúdio", blog_lead: "Guias de jogos, diários de desenvolvimento e dicas práticas para jogadores e pais. (Artigos em inglês.)", latest_eyebrow: "Do blog", latest_title: "Últimas histórias", all_posts: "Ver todos os artigos",
   hb1_title: "Hop Bunny é grátis no Google Play", hb1_text: "40 fases, 5 mundos, diversão sem fim. Jogue hoje!", hb1_btn: "Jogar grátis",
   hb2_title: "Hop Bunny Slide chega em breve", hb2_text: "Siga @tugrion.official para ver primeiro.", hb2_btn: "Seguir",
   _name: "Português",
