@@ -1,6 +1,8 @@
 /* Tugrion — site translations. Plain text only (rendered with textContent). */
 window.TUGRION_I18N = {
 en: {
+  hb1_title: "Hop Bunny is free on Google Play", hb1_text: "40 levels, 5 worlds, endless fun. Jump in today!", hb1_btn: "Play free",
+  hb2_title: "Hop Bunny Slide is coming soon", hb2_text: "Follow @tugrion.official to see it first.", hb2_btn: "Follow us",
   _name: "English",
   meta_title: "Tugrion — Games, apps and stories crafted to spark curiosity",
   about_meta_title: "About Tugrion — Our story, mission and values",
@@ -58,6 +60,8 @@ en: {
   cta_btn: "Email us"
 },
 tr: {
+  hb1_title: "Hop Bunny Google Play'de ücretsiz", hb1_text: "40 bölüm, 5 dünya, bitmeyen eğlence. Hemen oyna!", hb1_btn: "Ücretsiz oyna",
+  hb2_title: "Hop Bunny Slide çok yakında", hb2_text: "İlk sen görmek için @tugrion.official hesabını takip et.", hb2_btn: "Takip et",
   _name: "Türkçe",
   meta_title: "Tugrion — Merak uyandıran oyunlar, uygulamalar ve hikâyeler",
   about_meta_title: "Tugrion Hakkında — Hikâyemiz, misyonumuz ve değerlerimiz",
@@ -115,6 +119,8 @@ tr: {
   cta_btn: "E-posta gönder"
 },
 de: {
+  hb1_title: "Hop Bunny ist kostenlos bei Google Play", hb1_text: "40 Level, 5 Welten, endloser Spaß. Spring jetzt rein!", hb1_btn: "Gratis spielen",
+  hb2_title: "Hop Bunny Slide kommt bald", hb2_text: "Folge @tugrion.official, um es zuerst zu sehen.", hb2_btn: "Folgen",
   _name: "Deutsch",
   meta_title: "Tugrion — Spiele, Apps und Geschichten, die Neugier wecken",
   about_meta_title: "Über Tugrion — Unsere Geschichte, Mission und Werte",
@@ -172,6 +178,8 @@ de: {
   cta_btn: "E-Mail schreiben"
 },
 es: {
+  hb1_title: "Hop Bunny es gratis en Google Play", hb1_text: "40 niveles, 5 mundos, diversión sin fin. ¡Juega hoy!", hb1_btn: "Jugar gratis",
+  hb2_title: "Hop Bunny Slide llega muy pronto", hb2_text: "Sigue a @tugrion.official para verlo primero.", hb2_btn: "Síguenos",
   _name: "Español",
   meta_title: "Tugrion — Juegos, apps e historias creados para despertar la curiosidad",
   about_meta_title: "Sobre Tugrion — Nuestra historia, misión y valores",
@@ -229,6 +237,8 @@ es: {
   cta_btn: "Escríbenos"
 },
 fr: {
+  hb1_title: "Hop Bunny est gratuit sur Google Play", hb1_text: "40 niveaux, 5 mondes, du plaisir sans fin. Lance-toi !", hb1_btn: "Jouer gratuitement",
+  hb2_title: "Hop Bunny Slide arrive bientôt", hb2_text: "Suis @tugrion.official pour le découvrir en premier.", hb2_btn: "Nous suivre",
   _name: "Français",
   meta_title: "Tugrion — Jeux, applis et histoires conçus pour éveiller la curiosité",
   about_meta_title: "À propos de Tugrion — Notre histoire, notre mission et nos valeurs",
@@ -286,6 +296,8 @@ fr: {
   cta_btn: "Nous écrire"
 },
 pt: {
+  hb1_title: "Hop Bunny é grátis no Google Play", hb1_text: "40 fases, 5 mundos, diversão sem fim. Jogue hoje!", hb1_btn: "Jogar grátis",
+  hb2_title: "Hop Bunny Slide chega em breve", hb2_text: "Siga @tugrion.official para ver primeiro.", hb2_btn: "Seguir",
   _name: "Português",
   meta_title: "Tugrion — Jogos, apps e histórias feitos para despertar a curiosidade",
   about_meta_title: "Sobre a Tugrion — Nossa história, missão e valores",
