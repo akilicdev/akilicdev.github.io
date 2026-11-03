@@ -5,7 +5,7 @@
   /* ---------- Settings ---------- */
   var CONFIG = {
     // Fill these in after Google AdSense approves the site. While empty, no ad code loads and ad slots stay hidden.
-    adsenseClient: "",              // e.g. "ca-pub-1234567890123456"
+    adsenseClient: "ca-pub-4908057275713944",
     adsenseSlots: { top: "", middle: "" }, // ad unit IDs from AdSense
     counterUrl: "https://abacus.jasoncameron.dev",
     counterKey: "tugrion.com/visits"
