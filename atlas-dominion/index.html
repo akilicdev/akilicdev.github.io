@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="theme-color" content="#14100b"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Atlas Dominion — İl Haritası</title>
 <style>
 html,body{margin:0;height:100%;background:#0b1a2b;overflow:hidden;font-family:system-ui,Segoe UI,Arial,sans-serif;color:#eef}
@@ -192,12 +192,21 @@ button:hover{background:#372f25;border-color:var(--gold)}button:disabled{opacity
  .ldc b{font-size:14px}.lde{width:34px;height:34px;font-size:12px}
 }
 input[type=range]{touch-action:none}.bigR{height:30px;cursor:pointer}.bigR::-webkit-slider-thumb{width:26px;height:26px}.bigR::-moz-range-thumb{width:24px;height:24px}
+
+.volc{display:flex;align-items:center;gap:10px}.volc button{width:38px;height:34px;font-size:20px!important;padding:0!important;line-height:1}.volc b{min-width:22px;text-align:center;font-size:16px}
+#rotate{display:none;position:fixed;inset:0;z-index:99;background:#14100b;color:#e3c98e;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif;text-align:center;gap:14px}
+#rotate .ri{font-size:64px;animation:rot 2s ease-in-out infinite}#rotate b{font-size:22px;font-weight:400;letter-spacing:1px}#rotate small{opacity:.7;font-size:14px}
+@keyframes rot{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+@media (orientation:portrait) and (max-width:600px) and (pointer:coarse){#rotate{display:flex}}
+@media (max-height:500px) and (min-width:600px){#hud{flex-wrap:wrap!important;height:auto!important;padding:2px 6px!important;row-gap:1px;overflow:visible!important}#hud .sp{order:1;flex:0 0 100%;height:0}#hud button{order:2;flex:1 1 auto;font-size:11px!important;padding:4px 3px!important}#turn{font-size:11px;margin-left:auto}#pinfo{font-size:11.5px}
+ .sidep{max-height:calc(100vh - var(--hudh,60px) - 10px)!important}#mp{max-height:92vh;overflow:auto}}
+#rotate .ri{font-size:80px}#rotate b{font-size:26px}#rotate small{font-size:16px}
 </style></head><body>
 <canvas id="cv"></canvas><canvas id="fx"></canvas>
 <div id="menu"><div class="panel" id="mp"></div></div>
 <div id="pick">🌍 Oynamak istediğin ülkeye haritada dokun</div>
 <div id="setup"><div class="panel" id="sp"></div></div>
-<div id="toast"></div><div id="quote" onclick="quoteNext()"></div><div id="tip"></div><div id="mapsP" class="dropP"></div><div id="warsP" class="sidep"></div><div id="histP" class="sidep"></div><div id="tourCap"></div><div id="intro"><canvas id="introBg"></canvas><div class="iv"></div><svg class="emb" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52"/><circle cx="60" cy="60" r="40"/><path d="M60 6 L66 54 L114 60 L66 66 L60 114 L54 66 L6 60 L54 54 Z"/><path d="M60 30 L63 57 L90 60 L63 63 L60 90 L57 63 L30 60 L57 57 Z" class="e2"/></svg><div class="i1">TUGRION</div><div class="i2">ATLAS DOMINION</div><div class="rule"></div><div class="i3">İmparatorluklar yükselir, sınırlar değişir.</div><div class="i4">devam etmek için dokun</div></div><div id="techP" class="sidep wide"></div><div id="selBar"></div><div id="negP" class="sidep"></div><div id="custP" class="sidep"></div><div id="rep"><div class="np-h"><b>⚔ Savaş Raporu</b><button class="x2" onclick="closeReplay()">✕</button></div><div id="repL"></div></div><div id="modeRank"></div><div id="rankP" class="sidep"></div><div id="cityP" class="sidep"></div>
+<div id="rotate"><div class="ri">📱</div><b>Telefonu yan çevir</b><small>Oyun yatay ekranda oynanır</small></div><div id="toast"></div><div id="quote" onclick="quoteNext()"></div><div id="tip"></div><div id="mapsP" class="dropP"></div><div id="warsP" class="sidep"></div><div id="histP" class="sidep"></div><div id="tourCap"></div><div id="intro"><canvas id="introBg"></canvas><div class="iv"></div><svg class="emb" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52"/><circle cx="60" cy="60" r="40"/><path d="M60 6 L66 54 L114 60 L66 66 L60 114 L54 66 L6 60 L54 54 Z"/><path d="M60 30 L63 57 L90 60 L63 63 L60 90 L57 63 L30 60 L57 57 Z" class="e2"/></svg><div class="i1">TUGRION</div><div class="i2">ATLAS DOMINION</div><div class="rule"></div><div class="i3">İmparatorluklar yükselir, sınırlar değişir.</div><div class="i4">devam etmek için dokun</div></div><div id="techP" class="sidep wide"></div><div id="selBar"></div><div id="negP" class="sidep"></div><div id="custP" class="sidep"></div><div id="rep"><div class="np-h"><b>⚔ Savaş Raporu</b><button class="x2" onclick="closeReplay()">✕</button></div><div id="repL"></div></div><div id="modeRank"></div><div id="rankP" class="sidep"></div><div id="cityP" class="sidep"></div>
 <div id="ecoP" class="sidep"><div class="np-h"><b>⚖ Yatırım</b><button class="x2" onclick="closeEco()">✕</button></div><div id="ecoB" style="padding:6px 14px 12px"></div></div><div id="newsP"><div class="np-h"><b>📰 Haberler</b><button class="x2" onclick="closeNews()">✕</button></div><div class="tabs"><button id="tY" onclick="openNews('yerel')">🏙 Yerel</button><button id="tU" onclick="openNews('ulusal')">🏛 Ulusal</button></div><div id="nl"></div></div><div id="log"></div>
 <div id="hud"><span id="flagBox" onclick="custUI()"><img id="myFlag"><b id="myRank"></b></span> <span id="pinfo"></span><span class="sp"></span><span id="turn">Tur 1 · Ocak 2027</span><button id="endTurn">Turu Bitir ▶</button><button id="warsBtn" class="sec2" onclick="warsUI()">⚔ Savaşlar</button><button class="sec2" onclick="techUI()">🔬 Teknoloji</button><button id="mapsBtn" class="sec2" onclick="openMaps()">🗺 Haritalar</button><button class="sec2" onclick="openRank()">🏆 Sıralama</button><button id="ecoBtn" class="sec2" onclick="openEco()">⚖ Yatırım</button><button id="newsBtn" class="sec2" onclick="openNews()">📰 Haberler <span id="newsBadge" class="badge"></span></button><button id="menuBtn" class="sec" style="background:#3a342a">☰</button></div>
 
@@ -251,19 +260,27 @@ cl.forEach((q,i)=>{q.x/=q.n;q.y/=q.n;const v=grid[(q.y|0)*W+(q.x|0)];if(v===OCEA
 const base=document.createElement('canvas');base.width=W;base.height=H;const bx=base.getContext('2d');
 let sel=-1,selC=-1;
 function sepia(d,o){const r=d[o],g=d[o+1],b=d[o+2],L=.3*r+.59*g+.11*b;d[o]=Math.min(255,(r*.55+(L*1.12+20)*.45)*.95);d[o+1]=Math.min(255,(g*.55+(L*.95+9)*.45)*.95);d[o+2]=Math.min(255,(b*.55+L*.62*.45)*.95)}
-function paint(){const im=bx.createImageData(W,H),d=im.data;let G_=null;try{G_=game}catch(e){}const PJS=G_&&G_.proj&&G_.proj.length?projSet(MAPMODE):null;if(G_&&MAPMODE==='army')armyMapCalc();
- for(let i=0;i<W*H;i++){const v=grid[i],o=i*4;
-  if(v===OCEAN){d[o]=24;d[o+1]=21;d[o+2]=15;d[o+3]=255;continue}
-  const ow=(VOWN||owner)[v],q=pv[v];let mc=MAPMODE!=='pol'?modeColor(v):null;if(mc&&SEL.size&&SEL.has(v))mc=mc.map(x=>x*0.55+235*0.45|0);else if(mc&&PJS&&PJS.has(v)&&((i%W+((i/W)|0))%4<2))mc=[mc[0]*0.5+226*0.5|0,mc[1]*0.5+180*0.5|0,mc[2]*0.5+70*0.5|0];const b=mc||CC[ow];if(v===sel){d[o]=214;d[o+1]=184;d[o+2]=112}else if(ow===selC){d[o]=Math.min(255,b[0]*.55+230*.45+q);d[o+1]=Math.min(255,b[1]*.55+205*.45+q);d[o+2]=Math.min(255,b[2]*.55+150*.45+q)}else{d[o]=b[0]+q;d[o+1]=b[1]+q;d[o+2]=b[2]+q}if(v!==sel)sepia(d,o);d[o+3]=255}
+function paint(){const im=bx.createImageData(W,H),d32=new Uint32Array(im.data.buffer);let G_=null;try{G_=game}catch(e){}const PJS=G_&&G_.proj&&G_.proj.length?projSet(MAPMODE):null;if(G_&&MAPMODE==='army')armyMapCalc();
+ const O=VOWN||owner,cols=new Uint32Array(N),cols2=new Uint32Array(N),st=new Uint8Array(N),tmp=new Uint8ClampedArray(4);
+ const pack=(r,g,b,sp)=>{tmp[0]=r;tmp[1]=g;tmp[2]=b;if(sp)sepia(tmp,0);return (255<<24|tmp[2]<<16|tmp[1]<<8|tmp[0])>>>0};
+ for(let v=0;v<N;v++){const ow=O[v],q=pv[v];let mc=MAPMODE!=='pol'?modeColor(v):null;if(mc&&SEL.size&&SEL.has(v))mc=mc.map(x=>x*0.55+235*0.45|0);
+  const col=b=>v===sel?pack(214,184,112,false):ow===selC?pack(Math.min(255,b[0]*.55+230*.45+q),Math.min(255,b[1]*.55+205*.45+q),Math.min(255,b[2]*.55+150*.45+q),true):pack(b[0]+q,b[1]+q,b[2]+q,true);
+  const b=mc||CC[ow]||[120,120,120];cols[v]=col(b);if(mc&&PJS&&PJS.has(v)){st[v]=1;cols2[v]=col([mc[0]*0.5+226*0.5|0,mc[1]*0.5+180*0.5|0,mc[2]*0.5+70*0.5|0])}}
+ const OC=(255<<24|15<<16|21<<8|24)>>>0;
+ for(let i=0,y=0;y<H;y++)for(let x=0;x<W;x++,i++){const v=grid[i];if(v===OCEAN){d32[i]=OC;continue}d32[i]=st[v]&&((x+y)%4<2)?cols2[v]:cols[v]}
  bx.putImageData(im,0,0);LAYER=null}
 paint();
 // vector borders from grid edges
 let pathC,pathP;
-function buildBorders(){LAYER=null;if(typeof calcLabels==='function')calcLabels();pathC=new Path2D();pathP=new Path2D();const kind=(a,b)=>{if(a===b)return 0;if(a===OCEAN||b===OCEAN)return 1;const O=VOWN||owner;return O[a]!==O[b]?1:2};
- for(let y=0;y<H;y++){let run=0,rs=0;for(let x=0;x<=W;x++){const k=y<H-1&&x<W?kind(grid[y*W+x],grid[(y+1)*W+x]):0;
-  if(k!==run){if(run){const p=run===1?pathC:pathP;p.moveTo(rs,y+1);p.lineTo(x,y+1)}run=k;rs=x}}}
- for(let x=0;x<W;x++){let run=0,rs=0;for(let y=0;y<=H;y++){const k=y<H?kind(grid[y*W+x],grid[y*W+(x+1)%W]):0;
-  if(k!==run){if(run){const p=run===1?pathC:pathP;p.moveTo(x+1,rs);p.lineTo(x+1,y)}run=k;rs=y}}}}
+let SEGS=null,PATHP0=null;
+function buildSegs(){const S=[];const add=(x0,y0,x1,y1,a,b)=>S.push(x0,y0,x1,y1,a,b);
+ for(let y=0;y<H-1;y++){let ra=-1,rb=-1,rs=0;for(let x=0;x<=W;x++){let a=-1,b=-1;if(x<W){a=grid[y*W+x];b=grid[(y+1)*W+x];if(a===b){a=-1;b=-1}}
+  if(a!==ra||b!==rb){if(ra>=0)add(rs,y+1,x,y+1,ra,rb);ra=a;rb=b;rs=x}}}
+ for(let x=0;x<W;x++){let ra=-1,rb=-1,rs=0;for(let y=0;y<=H;y++){let a=-1,b=-1;if(y<H){a=grid[y*W+x];b=grid[y*W+(x+1)%W];if(a===b){a=-1;b=-1}}
+  if(a!==ra||b!==rb){if(ra>=0)add(x+1,rs,x+1,y,ra,rb);ra=a;rb=b;rs=y}}}
+ SEGS=Int32Array.from(S);PATHP0=new Path2D();for(let k=0;k<SEGS.length;k+=6){const a=SEGS[k+4],b=SEGS[k+5];if(a===OCEAN||b===OCEAN)continue;PATHP0.moveTo(SEGS[k],SEGS[k+1]);PATHP0.lineTo(SEGS[k+2],SEGS[k+3])}}
+function buildBorders(){LAYER=null;if(typeof calcLabels==='function')calcLabels();if(!SEGS)buildSegs();const O=VOWN||owner;pathC=new Path2D();pathP=PATHP0;
+ for(let k=0;k<SEGS.length;k+=6){const a=SEGS[k+4],b=SEGS[k+5];if(a===OCEAN||b===OCEAN||O[a]!==O[b]){pathC.moveTo(SEGS[k],SEGS[k+1]);pathC.lineTo(SEGS[k+2],SEGS[k+3])}}}
 buildBorders();
 var LBL;function calcLabels(){LBL=[];const seen=new Uint8Array(N);const best={};
  const O=VOWN||owner;for(let i=0;i<N;i++){if(seen[i])continue;const o=O[i];const comp=[i];seen[i]=1;for(let h=0;h<comp.length;h++){for(const j of P[comp[h]].nb)if(!seen[j]&&O[j]===o){seen[j]=1;comp.push(j)}}
@@ -1474,6 +1491,11 @@ function cnameL(i){const c=C[i];if(!c)return '?';if(c.hist){return c.hist[LANG]|
  if(c.L)return c.L[li()]||c.n;return DISPLAY[c.n]||c.n}
 // UI dictionary: [tr, en, ar, zh, it, es, de, fr, ru]
 const DICT=[
+['🔉 Efekt sesi','🔉 Effects volume','🔉 مستوى المؤثرات','🔉 音效音量','🔉 Volume effetti','🔉 Volumen de efectos','🔉 Effektlautstärke','🔉 Volume des effets','🔉 Громкость эффектов'],
+['🎶 Müzik sesi','🎶 Music volume','🎶 مستوى الموسيقى','🎶 音乐音量','🎶 Volume musica','🎶 Volumen de música','🎶 Musiklautstärke','🎶 Volume de la musique','🎶 Громкость музыки'],
+['📱 Telefonda tam ekran','📱 Fullscreen on phone','📱 ملء الشاشة على الهاتف','📱 手机全屏','📱 Schermo intero sul telefono','📱 Pantalla completa en el móvil','📱 Vollbild am Handy','📱 Plein écran sur téléphone','📱 Полный экран на телефоне'],
+['Telefonu yan çevir','Turn your phone sideways','أدر هاتفك أفقياً','请横置手机','Gira il telefono in orizzontale','Gira el móvil en horizontal','Drehe dein Handy quer','Tourne ton téléphone à l\'horizontale','Поверните телефон горизонтально'],
+['Oyun yatay ekranda oynanır','The game is played in landscape','تُلعب اللعبة في الوضع الأفقي','游戏需横屏进行','Il gioco si gioca in orizzontale','El juego se juega en horizontal','Das Spiel wird im Querformat gespielt','Le jeu se joue en mode paysage','Игра идёт в горизонтальном режиме'],
 ['Dünya gergin: ABD ve İsrail, İran ve Filistin ile savaşta. Rusya ile Ukrayna arasındaki savaş sürüyor.','The world is tense: the USA and Israel are at war with Iran and Palestine. The war between Russia and Ukraine continues.','العالم متوتر: الولايات المتحدة وإسرائيل في حرب مع إيران وفلسطين. وتستمر الحرب بين روسيا وأوكرانيا.','世界局势紧张：美国和以色列与伊朗及巴勒斯坦交战，俄罗斯与乌克兰的战争仍在继续。','Il mondo è teso: USA e Israele sono in guerra con Iran e Palestina. Continua la guerra tra Russia e Ucraina.','El mundo está tenso: EE. UU. e Israel están en guerra con Irán y Palestina. Continúa la guerra entre Rusia y Ucrania.','Die Welt ist angespannt: USA und Israel im Krieg mit Iran und Palästina. Der Krieg zwischen Russland und der Ukraine dauert an.','Le monde est tendu : les États-Unis et Israël sont en guerre contre l\'Iran et la Palestine. La guerre entre la Russie et l\'Ukraine continue.','Мир напряжён: США и Израиль воюют с Ираном и Палестиной. Война между Россией и Украиной продолжается.'],
 ['Gerçek ülkeler, ordular, ekonomi, teknoloji ve uzay. ABD–İsrail ile İran–Filistin, Rusya ile Ukrayna savaşta','Real countries, armies, economy, technology and space. USA–Israel vs Iran–Palestine and Russia vs Ukraine at war','دول وجيوش واقتصاد وتقنية وفضاء حقيقية. الولايات المتحدة وإسرائيل ضد إيران وفلسطين، وروسيا ضد أوكرانيا في حرب','真实的国家、军队、经济、科技与太空。美以对伊朗与巴勒斯坦、俄罗斯对乌克兰处于战争中','Paesi, eserciti, economia, tecnologia e spazio reali. USA–Israele contro Iran–Palestina e Russia contro Ucraina in guerra','Países, ejércitos, economía, tecnología y espacio reales. EE. UU.–Israel contra Irán–Palestina y Rusia contra Ucrania en guerra','Echte Länder, Armeen, Wirtschaft, Technik und Raumfahrt. USA–Israel gegen Iran–Palästina und Russland gegen Ukraine im Krieg','Pays, armées, économie, technologie et espace réels. États-Unis–Israël contre Iran–Palestine et Russie contre Ukraine en guerre','Реальные страны, армии, экономика, технологии и космос. США–Израиль против Ирана–Палестины и Россия против Украины воюют'],
 ['Çağlar ve Sancaklar','Ages & Banners','العصور والرايات','时代与旗帜','Ere e Stendardi','Eras y Estandartes','Zeitalter & Banner','Âges et Bannières','Эпохи и знамёна'],
@@ -2709,8 +2731,9 @@ function leaderView(k){const L=LDR[k],en=LANG!=='tr';showMenu(`<h2><span class="
  <button class="mb sec" onclick="leadersMenu()">← Liderler</button>`)}
 
 // ===== SOUND (synthesized, quiet) =====
-let AC=null,MG=null,MUS=null;
-function audio(){if(AC)return AC;try{AC=new (window.AudioContext||window.webkitAudioContext)();MG=AC.createGain();MG.gain.value=0.18;MG.connect(AC.destination)}catch(e){AC=null}return AC}
+let AC=null,MG=null,MUS=null,MUG=null;
+function applyVol(){if(!AC)return;const sv=(SET.svol??6)/10,mv=(SET.mvol??7)/10;MG.gain.value=0.45*sv*sv;MUG.gain.value=1.6*mv*mv}
+function audio(){if(AC)return AC;try{AC=new (window.AudioContext||window.webkitAudioContext)();MG=AC.createGain();MG.connect(AC.destination);MUG=AC.createGain();MUG.connect(AC.destination);applyVol()}catch(e){AC=null}return AC}
 function tone(f,d,type,vol,slide){const a=audio();if(!a)return;const o=a.createOscillator(),g=a.createGain(),t=a.currentTime;o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+d);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol||0.3,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(g);g.connect(MG);o.start(t);o.stop(t+d+0.02)}
 function noise(d,vol,fc,q,delay,sweep){const a=audio();if(!a)return;const len=Math.ceil(a.sampleRate*d),buf=a.createBuffer(1,len,a.sampleRate),ch=buf.getChannelData(0);for(let i=0;i<len;i++)ch[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
  const s=a.createBufferSource();s.buffer=buf;const f=a.createBiquadFilter();f.type='lowpass';const t=a.currentTime+(delay||0);f.frequency.setValueAtTime(fc||800,t);if(sweep)f.frequency.exponentialRampToValueAtTime(sweep,t+d);f.Q.value=q||0.7;const g=a.createGain();g.gain.value=vol||0.5;s.connect(f);f.connect(g);g.connect(MG);s.start(t)}
@@ -2749,7 +2772,7 @@ function musicSched(){if(!MUSI||!AC)return;const med=typeof ERA!=='undefined'&&E
   if(sec===1||sec===3){const mel=MMEL[(sec===3?4:0)+ch];for(const [st,n,l] of mel)if(st===s)mVoice(med?'square':'sawtooth',mf(n),t,MSTEP*l*0.95,med?0.04:0.055,med?2200:1500,true)}
   if(sec===2){const mel=MMEL[ch];for(const [st,n,l] of mel)if(st===s)mVoice('triangle',mf(n-12),t,MSTEP*l*0.95,0.06,1200,true)}
   MUSI.next+=MSTEP;MUSI.step++}}
-function musicStart(){if(MUSI||!AC||AC.state!=='running')return;MUSI={next:AC.currentTime+0.15,step:0,g:AC.createGain()};MUSI.g.gain.value=0.0001;MUSI.g.gain.exponentialRampToValueAtTime(0.6,AC.currentTime+2);MUSI.g.connect(MG);MUSI.iv=setInterval(musicSched,90)}
+function musicStart(){if(MUSI||!AC||AC.state!=='running')return;MUSI={next:AC.currentTime+0.15,step:0,g:AC.createGain()};MUSI.g.gain.value=0.0001;MUSI.g.gain.exponentialRampToValueAtTime(1,AC.currentTime+2);MUSI.g.connect(MUG);MUSI.iv=setInterval(musicSched,90)}
 function musicStop(){if(!MUSI)return;clearInterval(MUSI.iv);const g=MUSI.g;try{g.gain.setTargetAtTime(0.0001,AC.currentTime,0.3)}catch(e){}setTimeout(()=>{try{g.disconnect()}catch(e){}},1600);MUSI=null}
 setInterval(()=>{const on=SET.music&&AC&&!document.hidden;if(on&&!MUSI)musicStart();else if(!on&&MUSI)musicStop()},700);
 // ===== ANIMATED MAIN MENU (cached world map, slow tour through countries) =====
@@ -2766,7 +2789,7 @@ function buildMenuCache(){if(MCV)return;const O=P.map(p=>p.c);const tmp=document
 let MLBL=[];
 function startTour(){if(TOUR)return;buildMenuCache();const big=C.map((c,i)=>i).filter(i=>i<C0&&C[i].pop>8e6).sort(()=>Math.random()-0.5);let k=0;const st={x:cam.x,y:cam.y};
  TOUR={from:{...st},to:null,t0:0,big,k,raf:0};nextStop();const loop=now=>{if(!TOUR)return;if(mode!=='menu'){stopTour();return}const T=TOUR;let s=Math.min(1,(now-T.t0)/5200);s=s*s*(3-2*s);
-  let dx=T.to.x-T.from.x;if(dx>W/2)dx-=W;if(dx<-W/2)dx+=W;const x=((T.from.x+dx*s)%W+W)%W,y=T.from.y+(T.to.y-T.from.y)*s;drawMenuAt(x,y);if(now-T.t0>6500)nextStop();T.raf=requestAnimationFrame(loop)};TOUR.raf=requestAnimationFrame(loop)}
+  let dx=T.to.x-T.from.x;if(dx>W/2)dx-=W;if(dx<-W/2)dx+=W;const x=((T.from.x+dx*s)%W+W)%W,y=T.from.y+(T.to.y-T.from.y)*s;if(now-(T.lf||0)>=33){T.lf=now;drawMenuAt(x,y)}if(now-T.t0>6500)nextStop();T.raf=requestAnimationFrame(loop)};TOUR.raf=requestAnimationFrame(loop)}
 function nextStop(){const T=TOUR;const c=T.big[T.k++%T.big.length];const q=MLBL.find(l=>l.c===c)||{x:P[CAP0[c]].x,y:P[CAP0[c]].y};T.from=T.to?{...T.to}:{x:cam.x,y:cam.y};T.to={x:q.x,y:q.y};T.t0=performance.now();
  const cap=$('tourCap');if(cap){cap.innerHTML=`<img src="${FLAGS[C[c].n]||flagOf(c)}"><div><b>${cnameL(c)}</b><span>${P[CAP0[c]].n} · ${kfmt(C[c].pop)} nüfus</span></div>`;cap.classList.remove('show');void cap.offsetWidth;cap.classList.add('show')}}
 function drawMenuAt(x,y){if(!MCV)buildMenuCache();cx.setTransform(dpr,0,0,dpr,0,0);cx.fillStyle='#1e2a2e';cx.fillRect(0,0,VW,VH);const sx=x*MZ-VW*(VW>900?0.66:0.72),sy=Math.max(0,Math.min(H*MZ-VH,y*MZ-VH/2));
@@ -2776,8 +2799,14 @@ function stopTour(){if(TOUR){cancelAnimationFrame(TOUR.raf);TOUR=null}const cap=
 function playIntro(done){const el=$('intro');el.style.display='flex';let fin=false;
  try{buildMenuCache();const bg=$('introBg');const w=innerWidth,h=innerHeight;bg.width=w;bg.height=h;const g=bg.getContext('2d');const s=Math.max(w/(W*MZ),h/(H*MZ))*2.4;const cxw=P[C[C.findIndex(c=>c.n==='Turkey')].cap].x*MZ,cyw=P[C[C.findIndex(c=>c.n==='Turkey')].cap].y*MZ;
   g.drawImage(MCV,cxw-w/2/s,cyw-h/2/s,w/s,h/s,0,0,w,h)}catch(e){}
- const end=()=>{if(fin)return;fin=true;el.classList.add('out');setTimeout(()=>{el.style.display='none';done()},800)};
- el.onclick=end;requestAnimationFrame(()=>el.classList.add('go'));setTimeout(()=>el.classList.add('s1'),300);setTimeout(()=>el.classList.add('s2'),1500);setTimeout(()=>el.classList.add('s3'),2900);setTimeout(end,6800)}
+ const end=()=>{if(fin)return;fin=true;el.classList.add('out');setTimeout(()=>{el.style.display='none';done()},350)};
+ el.onclick=end;requestAnimationFrame(()=>el.classList.add('go'));setTimeout(()=>el.classList.add('s1'),150);setTimeout(()=>el.classList.add('s2'),700);setTimeout(()=>el.classList.add('s3'),1300);setTimeout(end,2800)}
+
+// ===== phones: fullscreen + landscape =====
+const isPhone=()=>matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<600;
+function goFull(){if(SET.fs===false||!isPhone())return;const d=document,el=d.documentElement;if(d.fullscreenElement||d.webkitFullscreenElement)return;
+ const rq=el.requestFullscreen||el.webkitRequestFullscreen;if(!rq)return;try{const p=rq.call(el,{navigationUI:'hide'});const lock=()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})}catch(e){}};if(p&&p.then)p.then(lock).catch(()=>{});else lock()}catch(e){}}
+document.addEventListener('pointerup',goFull,{capture:true});
 
 const AY=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 
@@ -2785,7 +2814,7 @@ const AY=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos',
 // ===== MENU / SAVE SYSTEM =====
 const LS={get:(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}};
 const SKEY='atlasAoH.saves.v1',LKEY='atlasAoH.last',SETKEY='atlasAoH.settings';
-let SET=Object.assign({sound:true,music:true,provNames:true,borders:true,lang:'en'},LS.get(SETKEY,{}));
+let SET=Object.assign({sound:true,music:true,svol:6,mvol:7,fs:true,provNames:true,borders:true,lang:'en'},LS.get(SETKEY,{}));
 let mode='menu',game=null,pend=null;
 const $=id=>document.getElementById(id);
 function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',1800)}
@@ -2804,10 +2833,12 @@ function gameMenu(){const last=LS.get(LKEY,null),ok=last&&saves().some(s=>s.id==
  <button class="mb sec" onclick="continueGame()" ${ok?'':'disabled'}>⏯ Oyuna Devam Et</button>
  <button class="mb sec" onclick="mainMenu()">← Geri</button>`)}
 function settingsMenu(){const sw=(k,t)=>`<div class="opt"><span>${t}</span><div class="sw ${SET[k]?'on':''}" onclick="SET.${k}=!SET.${k};LS.set(SETKEY,SET);this.classList.toggle('on');LAYER=null;req()"></div></div>`;
- showMenu(`<h2>Ayarlar</h2>${sw('sound','🔊 Ses efektleri')}${sw('music','🎵 Müzik')}${sw('provNames','🏷 İl isimleri')}
+ const vr=(k,t)=>`<div class="opt"><span>${t}</span><span class="volc"><button class="sec2" onclick="setVol('${k}',-1)">−</button><b id="v_${k}">${SET[k]??5}</b><button class="sec2" onclick="setVol('${k}',1)">+</button></span></div>`;
+ showMenu(`<h2>Ayarlar</h2>${sw('sound','🔊 Ses efektleri')}${vr('svol','🔉 Efekt sesi')}${sw('music','🎵 Müzik')}${vr('mvol','🎶 Müzik sesi')}${sw('fs','📱 Telefonda tam ekran')}${sw('provNames','🏷 İl isimleri')}
  <div class="opt"><span>🌐 Dil</span><select onchange="setLang(this.value);settingsMenu()">${LANGS.map(l=>`<option value="${l}" ${l===LANG?'selected':''}>${LNAME[l]}</option>`).join('')}</select></div>
  <div class="opt"><span>🗑 Tüm kayıtları sil</span><button class="red" style="background:#6e2e24" onclick="if(confirmDel(this)){LS.set(SKEY,[]);localStorage.removeItem(LKEY);toast('Kayıtlar silindi')}">Sil</button></div>
  <button class="mb sec" onclick="game?pauseMenu():mainMenu()" style="margin-top:14px">← Geri</button>`)}
+function setVol(k,d){SET[k]=Math.max(0,Math.min(10,(SET[k]??5)+d));LS.set(SETKEY,SET);const e=$('v_'+k);if(e)e.textContent=SET[k];if(typeof audio==='function')audio();applyVol();if(k==='svol')sfx('click')}
 function confirmDel(b){if(b.dataset.c){return true}b.dataset.c=1;b.textContent='Emin misin?';return false}
 function aboutMenu(){showMenu(`<h2>Hakkında</h2><div class="sub" style="opacity:.85">Atlas Dominion — Tugrion<br>Gerçek dünya il haritası üzerinde tur tabanlı strateji.<br><br>Sürüm 1.0<br>Bayraklar: flag-icons (MIT)<br>Veriler: Dünya Bankası (nüfus 2025, GSYH son yıl), IISS (aktif asker)</div><button class="mb sec" onclick="mainMenu()">← Geri</button>`)}
 function scenMenu(){const card=(y,t,d)=>`<button class="scn" onclick="newGame('${y}')"><b>${y}</b><span>${t}</span><small>${d}</small></button>`;showMenu(`<h2>Başlangıç yılı</h2><div class="sub">Hangi yıldan başlamak istersin?</div><div class="scnL">${card('2027','Modern dünya','Gerçek ülkeler, ordular, ekonomi, teknoloji ve uzay. ABD–İsrail ile İran–Filistin, Rusya ile Ukrayna savaşta')}${card('1939','İkinci Dünya Savaşı','Almanya Polonya\'ya saldırdı. Mihver ve Müttefikler; uçaklar, tanklar, roketler')}${card('1919','Kurtuluş Savaşı','Mustafa Kemal Samsun\'a çıktı. Ankara Hükümeti işgale karşı: Yunan, Fransız ve İtalyan kuvvetleri, doğuda Ermenistan')}${card('1914','Birinci Dünya Savaşı','Temmuz Krizi: İttifak ve İtilaf Devletleri. Siperler, ilk tanklar ve çift kanatlı uçaklar')}${card('1200','Selçuklu dönemi','Anadolu Selçuklu Sultanlığı ve Bizans. Haçlılar, Eyyubiler, Harezmşahlar; doğuda Moğollar yükseliyor')}${card('1300','Beylikler dönemi','Osmanlı Beyliği kuruluyor. Süvari, okçu, mancınık; Anadolu beyliklere bölünmüş')}</div><button class="mb sec" onclick="gameMenu()">← Geri</button>`)}
