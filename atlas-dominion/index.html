@@ -223,6 +223,23 @@ input[type=range]{touch-action:none}.bigR{height:30px;cursor:pointer}.bigR::-web
 #hud.hw{flex-wrap:wrap!important;height:auto!important;padding:3px 6px!important;row-gap:2px;overflow:visible!important}#hud.hw .sp{order:1;flex:0 0 100%;height:0}#hud.hw button{order:2;flex:1 1 auto;padding:5px 4px!important}#hud.hw #turn{margin-left:auto}
 html[data-dev=phone] button,html[data-dev=tablet] button{min-height:34px}
 html[data-dev=phone] .sw,html[data-dev=tablet] .sw{transform:scale(1.1)}
+
+/* ===== roomier screen; compact phone HUD ===== */
+#hud .wn{color:#ffb3a0;margin-left:2px}#hud.hico .bl{display:none}#hud.hico #endTurn .bl{display:inline}#hud.hico button{padding:6px 9px!important}
+html[data-dev=phone] #hud{flex-wrap:nowrap!important;height:34px!important;padding:0 6px!important;gap:2px!important;overflow:hidden!important;background:linear-gradient(rgba(33,27,20,.92),rgba(23,19,15,.86))!important}
+html[data-dev=phone] #hud .sp{flex:1 1 auto!important;order:0!important;height:auto!important}
+html[data-dev=phone] #hud .bl{display:none}
+html[data-dev=phone] #hud button{order:0!important;flex:0 0 auto!important;min-height:0!important;padding:5px 7px!important;font-size:13px!important}
+html[data-dev=phone] #endTurn{order:0!important;flex:0 0 auto!important;padding:5px 10px!important;font-size:12px!important;background:linear-gradient(#7a5a2a,#5a4220)!important;border:1px solid #c9a45c!important}
+html[data-dev=phone] #endTurn .bl{display:inline}
+html[data-dev=phone] #pinfo{font-size:11px!important;flex:0 1 auto!important}html[data-dev=phone] #pinfo b.pn{display:none}
+html[data-dev=phone] #turn{font-size:10.5px!important;opacity:.85;margin:0 4px!important}
+html[data-dev=phone] #flagBox img{height:18px}
+html[data-dev=phone] button{min-height:0}
+html[data-dev=phone] #mp{width:min(360px,70vw)}html[data-dev=phone] #mp h1{font-size:24px}html[data-dev=phone] #mp .mb{padding:7px 10px!important;margin:4px 0!important;font-size:13px!important}
+html[data-dev=phone] #setup{width:min(400px,56vw)!important}html[data-dev=phone] #pick{padding:4px;font-size:13px}
+html[data-dev=phone] #log{display:none!important}
+#toast{font-size:13px}html[data-dev=phone] #toast{font-size:12px;padding:6px 10px}
 </style></head><body>
 <canvas id="cv"></canvas><canvas id="fx"></canvas>
 <div id="menu"><div class="panel" id="mp"></div></div>
@@ -230,7 +247,7 @@ html[data-dev=phone] .sw,html[data-dev=tablet] .sw{transform:scale(1.1)}
 <div id="setup"><div class="panel" id="sp"></div></div>
 <div id="rotate"><div class="ri">📱</div><b>Telefonu yan çevir</b><small>Oyun yatay ekranda oynanır</small></div><div id="toast"></div><div id="quote" onclick="quoteNext()"></div><div id="tip"></div><div id="mapsP" class="dropP"></div><div id="warsP" class="sidep"></div><div id="histP" class="sidep"></div><div id="tourCap"></div><div id="intro"><canvas id="introBg"></canvas><div class="iv"></div><svg class="emb" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52"/><circle cx="60" cy="60" r="40"/><path d="M60 6 L66 54 L114 60 L66 66 L60 114 L54 66 L6 60 L54 54 Z"/><path d="M60 30 L63 57 L90 60 L63 63 L60 90 L57 63 L30 60 L57 57 Z" class="e2"/></svg><div class="i1">TUGRION</div><div class="i2">ATLAS DOMINION</div><div class="rule"></div><div class="i3">İmparatorluklar yükselir, sınırlar değişir.</div><div class="i4">devam etmek için dokun</div></div><div id="techP" class="sidep wide"></div><div id="selBar"></div><div id="negP" class="sidep"></div><div id="custP" class="sidep"></div><div id="rep"><div class="np-h"><b>⚔ Savaş Raporu</b><button class="x2" onclick="closeReplay()">✕</button></div><div id="repL"></div></div><div id="modeRank"></div><div id="rankP" class="sidep"></div><div id="cityP" class="sidep"></div>
 <div id="ecoP" class="sidep"><div class="np-h"><b>⚖ Yatırım</b><button class="x2" onclick="closeEco()">✕</button></div><div id="ecoB" style="padding:6px 14px 12px"></div></div><div id="newsP"><div class="np-h"><b>📰 Haberler</b><button class="x2" onclick="closeNews()">✕</button></div><div class="tabs"><button id="tY" onclick="openNews('yerel')">🏙 Yerel</button><button id="tU" onclick="openNews('ulusal')">🏛 Ulusal</button></div><div id="nl"></div></div><div id="log"></div>
-<div id="hud"><span id="flagBox" onclick="custUI()"><img id="myFlag"><b id="myRank"></b></span> <span id="pinfo"></span><span class="sp"></span><span id="turn">Tur 1 · Ocak 2027</span><button id="endTurn">Turu Bitir ▶</button><button id="warsBtn" class="sec2" onclick="warsUI()">⚔ Savaşlar</button><button class="sec2" onclick="techUI()">🔬 Teknoloji</button><button id="mapsBtn" class="sec2" onclick="openMaps()">🗺 Haritalar</button><button class="sec2" onclick="openRank()">🏆 Sıralama</button><button id="ecoBtn" class="sec2" onclick="openEco()">⚖ Yatırım</button><button id="newsBtn" class="sec2" onclick="openNews()">📰 Haberler <span id="newsBadge" class="badge"></span></button><button id="menuBtn" class="sec" style="background:#3a342a">☰</button></div>
+<div id="hud"><span id="flagBox" onclick="custUI()"><img id="myFlag"><b id="myRank"></b></span> <span id="pinfo"></span><span class="sp"></span><span id="turn">Tur 1 · Ocak 2027</span><button id="endTurn"><span class="bl">Turu Bitir </span>▶</button><button id="warsBtn" class="sec2" onclick="warsUI()">⚔ <span class="bl">Savaşlar</span></button><button class="sec2" onclick="techUI()">🔬 <span class="bl">Teknoloji</span></button><button id="mapsBtn" class="sec2" onclick="openMaps()">🗺 <span class="bl">Haritalar</span></button><button class="sec2" onclick="openRank()">🏆 <span class="bl">Sıralama</span></button><button id="ecoBtn" class="sec2" onclick="openEco()">⚖ <span class="bl">Yatırım</span></button><button id="newsBtn" class="sec2" onclick="openNews()">📰 <span class="bl">Haberler</span> <span id="newsBadge" class="badge"></span></button><button id="menuBtn" class="sec" style="background:#3a342a">☰</button></div>
 
 <div id="card"><button class="x" id="cx">✕</button><div id="cb"></div></div>
 <div id="help" style="display:none">Sürükle: kaydır · Tekerlek/İki parmak: yakınlaş · Dokun: il bilgisi</div>
@@ -431,7 +448,7 @@ function battle(a,en,nx){const sup=(game.supp&&(game.supp[nx]||0)>game.turn)?0.8
  if(game.scn==='1919')tkBattle(a.o,en.o,nx,false);if(mine)bev(nx,`${cname(a.o)} → ${P[nx].n}: saldırı püskürtüldü · saldıran kaybı ${kfmt(lA)} · savunan kaybı ${kfmt(lD)}`,a.o!==game.me,a.o);return false}
 const hostile=(o,ow)=>atWar(o,ow)||(C[ow]&&C[ow].tribal&&!C[o].tribal);
 const militia=i=>pop[i]*0.006*(i===C[owner[i]].cap?1.8:1)*Q[owner[i]]*1.25*(owner[i]===game.me?(game&&(isMed(game.scn)||game.scn==='1919')?1.6:1):MULT[game.diff])*(game&&game.shock&&(game.shock[i]||0)>game.turn?0.5:1)*(C[owner[i]].tribal?0.5:1);
-function stepArmy(a){const nx=a.path[0];if(!canEnter(a.o,nx)){a.path=[];return false}
+function stepArmy(a){const nx=a.path[0];if(!canEnter(a.o,nx)){a.path=[];return false}if(a.o===game.me&&atWar(game.me,owner[nx]))markHot(owner[nx],nx,a.p);
  if(has(nx,B.FORT)&&hostile(a.o,owner[nx])){const fl=(0.1+0.1*lv(nx,B.FORT))*(a.tank?0.5:1);a.n=Math.max(1,Math.round(a.n*(1-fl)));}
  for(const en of armies.filter(b=>b.p===nx&&b.o!==a.o&&atWar(a.o,b.o))){if(!battle(a,en,nx))return false}
  if(hostile(a.o,owner[nx])){const ml=militia(nx)*(a.o!==game.me&&owner[nx]!==game.me?1.6:1),pa=pow(a);
@@ -458,29 +475,34 @@ function aiRecruit(c,budget){if(budget<=0)return;let men=Math.floor(budget*PER_G
  let spots=provsOf(c).filter(i=>P[i].nb.some(j=>en.includes(owner[j])));if(!spots.length)spots=provsOf(c).sort((a,b)=>pop[b]-pop[a]).slice(0,4);
  for(const i of spots){if(men<=0)break;const got=recruit(i,Math.min(men,Math.ceil(men/spots.length)+1),c);men-=got}}
 function aiTurn(c){const en=enemiesOf(c);if(!en.length)return;
- let ep=0;for(const e of en)ep=Math.max(ep,armyPower(e));const vsMe=c!==game.me&&en.includes(game.me);const emg=c===game.me?1:vsMe?(ep>armyPower(c)?1.6:1.3):ep>armyPower(c)*1.2?1.7:1;let hit=false;
+ let ep=0;for(const e of en)ep=Math.max(ep,armyPower(e));const vsMe=c!==game.me&&en.includes(game.me);const emg=c===game.me?1:vsMe?(ep>armyPower(c)?1.4:1.15):ep>armyPower(c)*1.2?1.7:1;let hit=false;
  aiRecruit(c,incomeOf(c)*emg*(c===game.me?1:MULT[game.diff]));
  const fr=provsOf(c).filter(i=>P[i].nb.some(j=>en.includes(owner[j])));
- const dep=aiDepth(c);const depthOf=j=>{let m=99;for(const k of P[j].nb)if(owner[k]===c&&dep[k]<m)m=dep[k];return m+1};
+ const dep=aiDepth(c);const HZ=c!==game.me&&en.includes(game.me)?hotZone(c):null;const depthOf=j=>{let m=99;for(const k of P[j].nb)if(owner[k]===c&&dep[k]<m)m=dep[k];return m+1};
  for(const a of armies.filter(a=>a.o===c)){if(a.path.length||!armies.includes(a)||a.g)continue;
   const tg=P[a.p].nb.filter(j=>en.includes(owner[j]));
   if(tg.length){let threat=0;for(const d of armies)if(d.o!==c&&atWar(c,d.o)&&P[a.p].nb.includes(d.p))threat=Math.max(threat,pow(d));
    const key=CORE[a.p]===c||a.p===C[c].cap;if(key&&threat>pow(a)*0.6)continue;
-   const opts=[];for(const j of tg){const dj=depthOf(j);if(dj>3)continue;let dp=0;for(const d of armies)if(d.p===j&&atWar(c,d.o))dp+=pow(d)*1.25;const def=dp+militia(j);const sup=P[j].nb.filter(k=>owner[k]===c).length;opts.push({j,def,sc:def*(1+0.35*dj)/(1+0.15*sup)})}
+   const opts=[];for(const j of tg){const dj=depthOf(j);if(dj>3)continue;let dp=0;for(const d of armies)if(d.p===j&&atWar(c,d.o))dp+=pow(d)*1.25;const def=dp+militia(j);const sup=P[j].nb.filter(k=>owner[k]===c).length;const hz=HZ&&owner[j]===game.me?(HZ.has(j)?0.3:1.8):1;opts.push({j,def,sc:def*(1+0.35*dj)/(1+0.15*sup)*hz})}
    if(!opts.length)continue;opts.sort((x,y)=>x.sc-y.sc);const b0=opts[0];
    const garrison=(CORE[a.p]!==c||threat>0)?Math.max(300,Math.round(a.n*0.2)):0;const strike=a.n-garrison;if(strike<=0)continue;
    const tk=tl(c,'tank')>=1;if(tk)a.tank=1;const pu=pow(a)/a.n;if(strike*pu<=b0.def*1.3+3){delete a.tank;continue}
    if(garrison>0&&!armies.some(b=>b!==a&&b.o===c&&b.p===a.p&&!b.path.length)){a.n=strike;armies.push({id:aid++,o:c,p:a.p,n:garrison,path:[],g:1})}
    const b1=opts[1];if(b1&&strike*pu/2>Math.max(b0.def,b1.def)*1.4){const half=Math.floor(a.n/2);a.n-=half;armies.push({id:aid++,o:c,p:a.p,n:half,path:[b1.j],tank:tk?1:undefined})}
    a.path=[b0.j];hit=true;continue}
-  if(fr.length&&!fr.includes(a.p)&&a.n>50){let t=fr[0],bd=1e9;for(const f of fr){let dx=Math.abs(P[f].x-P[a.p].x);dx=Math.min(dx,W-dx);const d=dx+Math.abs(P[f].y-P[a.p].y);if(d<bd){bd=d;t=f}}const pth=findPath(c,a.p,t);if(pth)a.path=pth}}
- if(!hit&&c!==game.me&&fr.length&&Math.random()<(vsMe?0.75:0.4))aiCounter(c,en);
+  if(fr.length&&!fr.includes(a.p)&&a.n>50){let t=fr[0],bd=1e9;const fz=HZ?fr.filter(f=>HZ.has(f)||P[f].nb.some(j=>HZ.has(j))):[];for(const f of (fz.length?fz:fr)){let dx=Math.abs(P[f].x-P[a.p].x);dx=Math.min(dx,W-dx);const d=dx+Math.abs(P[f].y-P[a.p].y);if(d<bd){bd=d;t=f}}const pth=findPath(c,a.p,t);if(pth)a.path=pth}}
+ if(!hit&&c!==game.me&&fr.length&&Math.random()<(vsMe?0.6:0.4))aiCounter(c,en);
  if(!fr.length&&(game.turn+c)%8===0)aiNaval(c,en);
  moveAll(c)}
+// remember where the player attacked each AI: the attacked city and the city the attack came from
+function markHot(c,tgt,src){if(c===game.me||!C[c])return;const X=game.ext||(game.ext={});const H=X.hot||(X.hot={});const L=(H[c]||[]).filter(h=>game.turn-h.t<6&&h.p!==tgt);L.push({p:tgt,s:src,t:game.turn});H[c]=L.slice(-6)}
+function hotOf(c){const H=game.ext&&game.ext.hot&&game.ext.hot[c];if(!H)return null;const L=H.filter(h=>game.turn-h.t<6);return L.length?L:null}
+function hotZone(c){const L=hotOf(c);if(!L)return null;const z=new Set();for(const h of L){z.add(h.p);if(h.s>=0)z.add(h.s);for(const j of P[h.p].nb)z.add(j)}return z}
 // even a weaker AI hits back: raid the weakest enemy border city
-function aiCounter(c,en){let best=null,bs=0;for(const a of armies){if(a.o!==c||a.path.length||a.n<800||a.p<0)continue;if(!P[a.p].nb.some(j=>en.includes(owner[j])))continue;if(a.n>bs){bs=a.n;best=a}}if(!best)return;
- let tg=-1,td=1e18;for(const j of P[best.p].nb){if(!en.includes(owner[j]))continue;let dp=militia(j);for(const d of armies)if(d.p===j&&atWar(c,d.o))dp+=pow(d)*1.25;if(dp<td){td=dp;tg=j}}if(tg<0)return;
- const send=Math.floor(best.n*(0.55+Math.random()*0.3));if(send<500)return;best.n-=send;armies.push({id:aid++,o:c,p:best.p,n:send,path:[tg],tank:tl(c,'tank')>=1?1:undefined})}
+function aiCounter(c,en){const HZ=en.includes(game.me)?hotZone(c):null;const okT=j=>en.includes(owner[j])&&(!HZ||owner[j]!==game.me||HZ.has(j));
+ let best=null,bs=0;for(const a of armies){if(a.o!==c||a.path.length||a.n<800||a.p<0)continue;if(!P[a.p].nb.some(okT))continue;const near=HZ&&(HZ.has(a.p)||P[a.p].nb.some(j=>HZ.has(j)))?2:1;if(a.n*near>bs){bs=a.n*near;best=a}}if(!best)return;
+ let tg=-1,td=1e18;for(const j of P[best.p].nb){if(!okT(j))continue;let dp=militia(j);for(const d of armies)if(d.p===j&&atWar(c,d.o))dp+=pow(d)*1.25;if(dp<td){td=dp;tg=j}}if(tg<0)return;
+ const send=Math.floor(best.n*(0.45+Math.random()*0.25));if(send<500)return;best.n-=send;armies.push({id:aid++,o:c,p:best.p,n:send,path:[tg],tank:tl(c,'tank')>=1?1:undefined})}
 function aiColonize(){if(game.scn!=='1300')return;for(let t=0;t<8;t++){const c=C0+((Math.random()*(C.length-C0))|0);if(!C[c]||C[c].tribal||c===game.me||!owner.includes(c))continue;const opts=[];for(let i=0;i<N;i++)if(owner[i]===c)for(const j of P[i].nb)if(C[owner[j]]&&C[owner[j]].tribal)opts.push(j);if(!opts.length||Math.random()>0.35)continue;const j=opts[(Math.random()*opts.length)|0];const old=owner[j];owner[j]=c;CORE[j]=c;dirty=true;if(!owner.includes(old))refreshNb(c)}}
 function aiDepth(c){const d=new Int16Array(N).fill(99),q=[];for(let i=0;i<N;i++)if(owner[i]===c&&CORE[i]===c){d[i]=0;q.push(i)}for(let h=0;h<q.length;h++){const u=q[h];for(const v of P[u].nb)if(owner[v]===c&&d[v]>d[u]+1){d[v]=d[u]+1;q.push(v)}}return d}
 function aiNaval(c,en){const X=game.ext||(game.ext={});const nav=X.nav||(X.nav={});if((nav[c]||0)>game.turn)return;const ports=provsOf(c).filter(i=>has(i,B.PORT));if(!ports.length)return;let best=null;
@@ -874,7 +896,7 @@ var MAPMODE='pol';
 const MODES={pol:'  Siyasi',army:'  Ordu',hap:'  Mutluluk',stab:'  Eyalet istikrarı',eco:'  Ekonomi',pop:'  Nüfus',tech:'  Teknoloji',dis:'  Hastalık'};
 let AMAP=null;function armyMapCalc(){AMAP=new Float64Array(N);if(!game)return;for(const a of armies)if(a.p>=0&&armyVisible(a))AMAP[a.p]+=a.n}
 function openMaps(){const p=$('mapsP');if(p.style.display==='block'){p.style.display='none';return}closeSide();p.style.display='block';p.innerHTML=Object.entries(MODES).map(([k,v])=>`<button class="${k===MAPMODE?'on':''}" onclick="setMode('${k}')">${v}</button>`).join('')}
-function setMode(m){MAPMODE=m;SEL.clear();SELON=false;selUI();$('mapsP').style.display='none';$('mapsBtn').textContent='🗺 '+(m==='pol'?'Haritalar':MODES[m].slice(2));paint();req();showModeRank()}
+function setMode(m){MAPMODE=m;SEL.clear();SELON=false;selUI();$('mapsP').style.display='none';$('mapsBtn').innerHTML=ico('map')+' <span class="bl">'+(m==='pol'?'Haritalar':MODES[m].slice(2))+'</span>';paint();req();showModeRank()}
 function metric(kind){calcEco();const v=C.map(()=>0);if(kind==='army'){for(let c=0;c<C.length;c++)v[c]=owner.includes(c)?armyTotal(c):0;return v}if(kind==='hap'){const s=stabilityAll();return s.map((x,c)=>owner.includes(c)?x:0)}if(kind==='eco')for(let c=0;c<C.length;c++)v[c]=ECO[c];
  else if(kind==='tech')for(let c=0;c<C.length;c++)v[c]=owner.includes(c)?TECH[c]:0;
  else if(kind==='stab'){const n=C.map(()=>0);for(let i=0;i<N;i++){v[owner[i]]+=stabOf(i);n[owner[i]]++}for(let c=0;c<C.length;c++)v[c]=n[c]?v[c]/n[c]:0}
@@ -2917,13 +2939,13 @@ function startGame(){const scn=pend.scn||'2027',def=SCNDEF[scn];if(isModern(scn)
  if(def)wwStart();if(scn==='1919'&&game.skeys&&game.me===game.skeys.tbm)setTimeout(()=>showQuote('Ya istiklâl, ya ölüm!','Mustafa Kemal Paşa'),900);
  showLog();selC=-1;sel=-1;selP=-1;card.style.display='none';buildBorders();paint();enterPlay();const cp=P[C[game.me].cap];cam={x:cp.x,y:cp.y,z:8};req();toast('Oyun başladı: '+cname(game.me));setTimeout(autoSave,500);if(!LS.get('ad_help',0)){LS.set('ad_help',1);setTimeout(()=>helpMenu(true),600)}}
 function uiAuto(){const w=innerWidth,h=innerHeight,s=Math.min(w,h),md=SET.ui||'auto';let z=1;
- if(md==='auto'){if(w>=2400&&h>=1300)z=1.45;else if(w>=1800&&h>=1000)z=1.2;else if(matchMedia('(pointer:coarse)').matches&&s>=700)z=1.1}else z={s:0.9,m:1,l:1.15,xl:1.3}[md]||1;
+ const coarse=matchMedia('(pointer:coarse)').matches;if(md==='auto'){if(w>=2400&&h>=1300)z=1.45;else if(w>=1800&&h>=1000)z=1.2;else if(coarse&&s<600)z=s<380?0.78:0.85;else if(coarse&&s>=700)z=1.05}else z={s:0.85,m:1,l:1.15,xl:1.3}[md]||1;
  if(z>1)z=Math.min(z,Math.max(1,h/700));document.documentElement.style.setProperty('--uiz',z.toFixed(3));
  const d=matchMedia('(pointer:coarse)').matches?(s<600?'phone':'tablet'):'desktop';document.documentElement.dataset.dev=d}
-function hudH(){const h=$('hud');if(h){h.classList.remove('hw');if(h.scrollWidth>h.clientWidth+2)h.classList.add('hw');const r=h.getBoundingClientRect();document.documentElement.style.setProperty('--hudh',Math.round(r.height||46)+'px')}}
+function hudH(){const h=$('hud');if(h){h.classList.remove('hw','hico');if(h.scrollWidth>h.clientWidth+1)h.classList.add('hico');if(h.scrollWidth>h.clientWidth+1)h.classList.add('hw');const r=h.getBoundingClientRect();document.documentElement.style.setProperty('--hudh',Math.round(r.height||46)+'px')}}
 addEventListener('resize',()=>{uiAuto();setTimeout(hudH,50)});addEventListener('orientationchange',()=>setTimeout(()=>{uiAuto();hudH()},300));uiAuto();
 function enterPlay(){mode='play';selUI();showModeRank();$('log').style.display=events.length?'block':'none';hideMenu();$('pick').style.display='none';$('setup').style.display='none';hud.style.display='flex';updHud()}
-function updHud(){setTimeout(hudH,0);$('turn').textContent=`Tur ${game.turn} · ${dateStr(game.turn)}`;const inc=income();$('pinfo').innerHTML=`<b class="pn">${cname(game.me)}</b> · 💰 <b>${kfmt(game.gold)}</b> <span style="color:${inc<0?'#e0604a':'#9fc48a'}">(${inc<0?'':'+'}${fmt(inc)})</span> · 📜 <b>${game.dp.toFixed(1)}</b> · 🏃 <b>${game.mp}</b> · 🔬 <b>${game.tp.toFixed(0)}</b>`;updNewsBtn();$('myFlag').src=flagOf(game.me);const tot=hudRank();$('myRank').textContent='#'+tot;const nw=enemiesOf(game.me).length;$('warsBtn').textContent='⚔ Savaşlar'+(nw?' ('+nw+')':'')}
+function updHud(){setTimeout(hudH,0);$('turn').textContent=`Tur ${game.turn} · ${dateStr(game.turn)}`;const inc=income();$('pinfo').innerHTML=`<b class="pn">${cname(game.me)}</b> · 💰 <b>${kfmt(game.gold)}</b> <span style="color:${inc<0?'#e0604a':'#9fc48a'}">(${inc<0?'':'+'}${fmt(inc)})</span> · 📜 <b>${game.dp.toFixed(1)}</b> · 🏃 <b>${game.mp}</b> · 🔬 <b>${game.tp.toFixed(0)}</b>`;updNewsBtn();$('myFlag').src=flagOf(game.me);const tot=hudRank();$('myRank').textContent='#'+tot;const nw=enemiesOf(game.me).length;$('warsBtn').innerHTML=ico('war')+' <span class="bl">Savaşlar</span>'+(nw?' <b class="wn">'+nw+'</b>':'')}
 const C0=C.length,CAP0=C.map(c=>c.cap),CC0=CC.map(x=>x.slice());
 function resetCountries(){for(let i=0;i<N;i++)CORE[i]=P[i].c;C.forEach(c=>{if(!c.scn){delete c.hist}});if(C.length>C0){C.length=C0;CC.length=C0;Q.length=C0;TECH.length=C0;MIL.length=C0;GDPPC.length=C0;CNB.length=C0;CNEAR.length=C0;COAST.length=C0;INITCNT.length=C0;for(const s of CNEAR)for(const x of [...s])if(x>=C0)s.delete(x);for(const s of CNB)for(const x of [...s])if(x>=C0)s.delete(x)}
  C.forEach((c,i)=>c.cap=CAP0[i]);for(let i=0;i<C0;i++)CC[i]=CC0[i].slice();STARCUT=null}
