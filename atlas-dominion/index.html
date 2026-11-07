@@ -2867,7 +2867,7 @@ function buildMenuCache(){if(MCV)return;const O=P.map(p=>p.c);const tmp=document
  g.setTransform(MZ,0,0,MZ,0,0);g.strokeStyle='rgba(28,20,12,.85)';g.lineWidth=1.1/MZ;g.stroke(pc);g.setTransform(1,0,0,1,0,0);
  g.textAlign='center';g.textBaseline='middle';for(const q of L0){const sz=MZ*Math.sqrt(q.n);if(sz<40)continue;const fs=Math.round(Math.max(10,Math.min(26,sz/8)));g.font=`600 ${fs}px Georgia,serif`;g.letterSpacing=Math.round(fs*0.18)+'px';g.lineWidth=3;g.strokeStyle='rgba(20,14,8,.55)';const nm=cnameL(q.c);const tx=nm.toLocaleUpperCase(LANG==='tr'?'tr':LANG==='ru'?'ru':'en');g.strokeText(tx,q.x*MZ,q.y*MZ);g.fillStyle='rgba(236,224,196,.85)';g.fillText(tx,q.x*MZ,q.y*MZ)}g.letterSpacing='0px'}
 let MLBL=[];
-function startTour(){if(TOUR)return;buildMenuCache();const big=C.map((c,i)=>i).filter(i=>i<C0&&C[i].pop>8e6).sort(()=>Math.random()-0.5);let k=0;const st={x:cam.x,y:cam.y};
+function startTour(){if(TOUR)return;buildMenuCache();const big=C.map((c,i)=>i).filter(i=>i<C0&&C[i].pop>8e6).sort(()=>Math.random()-0.5);try{const hc=devCountry();big.splice(big.indexOf(hc)>=0?big.indexOf(hc):0,big.indexOf(hc)>=0?1:0);big.unshift(hc)}catch(e){}let k=0;const st={x:cam.x,y:cam.y};
  TOUR={from:{...st},to:null,t0:0,big,k,raf:0};nextStop();const loop=now=>{if(!TOUR)return;if(mode!=='menu'){stopTour();return}const T=TOUR;let s=Math.min(1,(now-T.t0)/5200);s=s*s*(3-2*s);
   let dx=T.to.x-T.from.x;if(dx>W/2)dx-=W;if(dx<-W/2)dx+=W;const x=((T.from.x+dx*s)%W+W)%W,y=T.from.y+(T.to.y-T.from.y)*s;if(now-(T.lf||0)>=33){T.lf=now;drawMenuAt(x,y)}if(now-T.t0>6500)nextStop();T.raf=requestAnimationFrame(loop)};TOUR.raf=requestAnimationFrame(loop)}
 function nextStop(){const T=TOUR;const c=T.big[T.k++%T.big.length];const q=MLBL.find(l=>l.c===c)||{x:P[CAP0[c]].x,y:P[CAP0[c]].y};T.from=T.to?{...T.to}:{x:cam.x,y:cam.y};T.to={x:q.x,y:q.y};T.t0=performance.now();
@@ -2877,14 +2877,14 @@ function drawMenuAt(x,y){if(!MCV)buildMenuCache();cx.setTransform(dpr,0,0,dpr,0,
 function stopTour(){if(TOUR){cancelAnimationFrame(TOUR.raf);TOUR=null}const cap=$('tourCap');if(cap)cap.classList.remove('show')}
 // ===== INTRO =====
 function playIntro(done){const el=$('intro');el.style.display='flex';let fin=false;
- try{buildMenuCache();const bg=$('introBg');const w=innerWidth,h=innerHeight;bg.width=w;bg.height=h;const g=bg.getContext('2d');const s=Math.max(w/(W*MZ),h/(H*MZ))*2.4;const cxw=P[C[C.findIndex(c=>c.n==='Turkey')].cap].x*MZ,cyw=P[C[C.findIndex(c=>c.n==='Turkey')].cap].y*MZ;
+ try{buildMenuCache();const bg=$('introBg');const w=innerWidth,h=innerHeight;bg.width=w;bg.height=h;const g=bg.getContext('2d');const s=Math.max(w/(W*MZ),h/(H*MZ))*2.4;const hc=typeof devCountry==='function'?devCountry():C.findIndex(c=>c.n==='Turkey');const cxw=P[C[hc].cap].x*MZ,cyw=P[C[hc].cap].y*MZ;
   g.drawImage(MCV,cxw-w/2/s,cyw-h/2/s,w/s,h/s,0,0,w,h)}catch(e){}
  const end=()=>{if(fin)return;fin=true;el.classList.add('out');setTimeout(()=>{el.style.display='none';done()},350)};
  el.onclick=end;requestAnimationFrame(()=>el.classList.add('go'));setTimeout(()=>el.classList.add('s1'),150);setTimeout(()=>el.classList.add('s2'),700);setTimeout(()=>el.classList.add('s3'),1300);setTimeout(end,2800)}
 
 // ===== phones: fullscreen + landscape =====
 const isPhone=()=>matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<600;
-function goFull(){if(SET.fs===false||!isPhone())return;const d=document,el=d.documentElement;if(d.fullscreenElement||d.webkitFullscreenElement)return;
+function goFull(){if(SET.fs===false||!isPhone()||window.Capacitor)return;const d=document,el=d.documentElement;if(d.fullscreenElement||d.webkitFullscreenElement)return;
  const rq=el.requestFullscreen||el.webkitRequestFullscreen;if(!rq)return;try{const p=rq.call(el,{navigationUI:'hide'});const lock=()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})}catch(e){}};if(p&&p.then)p.then(lock).catch(()=>{});else lock()}catch(e){}}
 document.addEventListener('pointerup',goFull,{capture:true});
 
@@ -2920,6 +2920,10 @@ function settingsMenu(){const sw=(k,t)=>`<div class="opt"><span>${t}</span><div 
  <button class="mb sec" onclick="game?pauseMenu():mainMenu()" style="margin-top:14px">← Geri</button>`)}
 function setVol(k,d){SET[k]=Math.max(0,Math.min(10,(SET[k]??5)+d));LS.set(SETKEY,SET);const e=$('v_'+k);if(e)e.textContent=SET[k];if(typeof audio==='function')audio();applyVol();if(k==='svol')sfx('click')}
 function setUI(v){SET.ui=v;LS.set(SETKEY,SET);uiAuto();setTimeout(hudH,50);LAYER=null;req()}
+function devLang(){const ls=navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en'];for(const l of ls){const b=String(l).toLowerCase().split('-')[0];if(LANGS.includes(b))return b}return 'en'}
+function devCountry(){const ls=navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en'];
+ for(const l of ls){const r=(String(l).split(/[-_]/)[1]||'').toUpperCase();if(r.length===2){const i=C.findIndex((c,k)=>k<C0&&c.iso&&c.iso.toUpperCase()===r);if(i>=0)return i}}
+ const by={tr:'Turkey',de:'Germany',fr:'France',it:'Italy',es:'Spain',ru:'Russia',ar:'Egypt',zh:'China',en:'United Kingdom'};const n=by[devLang()];const i=C.findIndex(c=>c.n===n);return i>=0?i:C.findIndex(c=>c.n==='Turkey')}
 function confirmDel(b){if(b.dataset.c){return true}b.dataset.c=1;b.textContent='Emin misin?';return false}
 function aboutMenu(){showMenu(`<h2>Hakkında</h2><div class="sub" style="opacity:.85">Atlas Dominion — Tugrion<br>Gerçek dünya il haritası üzerinde tur tabanlı strateji.<br><br>Sürüm 1.0<br>Bayraklar: flag-icons (MIT)<br>Nehir ve göl verisi: © OpenStreetMap katkıcıları (ODbL), geo-maps<br>Veriler: Dünya Bankası (nüfus 2025, GSYH son yıl), IISS (aktif asker)</div><button class="mb sec" onclick="mainMenu()">← Geri</button>`)}
 function scenMenu(){const card=(y,t,d)=>`<button class="scn" onclick="newGame('${y}')"><b>${y}</b><span>${t}</span><small>${d}</small></button>`;showMenu(`<h2>Başlangıç yılı</h2><div class="sub">Hangi yıldan başlamak istersin?</div><div class="scnL">${card('2027','Modern dünya','Gerçek ülkeler, ordular, ekonomi, teknoloji ve uzay. ABD–İsrail ile İran–Filistin, Rusya ile Ukrayna savaşta')}${card('1939','İkinci Dünya Savaşı','Almanya Polonya\'ya saldırdı. Mihver ve Müttefikler; uçaklar, tanklar, roketler')}${card('1919','Kurtuluş Savaşı','Mustafa Kemal Samsun\'a çıktı. Ankara Hükümeti işgale karşı: Yunan, Fransız ve İtalyan kuvvetleri, doğuda Ermenistan')}${card('1914','Birinci Dünya Savaşı','Temmuz Krizi: İttifak ve İtilaf Devletleri. Siperler, ilk tanklar ve çift kanatlı uçaklar')}${card('1200','Selçuklu dönemi','Anadolu Selçuklu Sultanlığı ve Bizans. Haçlılar, Eyyubiler, Harezmşahlar; doğuda Moğollar yükseliyor')}${card('1300','Beylikler dönemi','Osmanlı Beyliği kuruluyor. Süvari, okçu, mancınık; Anadolu beyliklere bölünmüş')}</div><button class="mb sec" onclick="gameMenu()">← Geri</button>`)}
@@ -3007,5 +3011,5 @@ menuBtn.onclick=()=>{if(game){if(mode==='move')mode='play';pauseMenu()}};
 addEventListener('keydown',e=>{if(e.key==='Escape'){if(mode==='move'||mode==='mmove')cancelMove();else if(mode==='play')pauseMenu()}});
 addEventListener('beforeunload',()=>{if(game&&game.saveId)saveGame(true)});
 document.getElementById('cx').onclick=closeBar;
-addEventListener('resize',resize);resize();cam={x:W*0.55,y:H*0.32,z:Math.max(VH/H,2.2)};if(SET.musicV3===undefined){SET.music=true;SET.musicV2=1;SET.musicV3=1;LS.set(SETKEY,SET)}setLang(SET.uiLang||'tr');playIntro(mainMenu);
+addEventListener('resize',resize);resize();cam={x:W*0.55,y:H*0.32,z:Math.max(VH/H,2.2)};if(SET.musicV3===undefined){SET.music=true;SET.musicV2=1;SET.musicV3=1;LS.set(SETKEY,SET)}setLang(SET.uiLang||devLang());playIntro(mainMenu);
 </script></body></html>
