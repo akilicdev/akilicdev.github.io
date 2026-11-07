@@ -360,11 +360,14 @@ let rq=0;function req(){if(!rq)rq=requestAnimationFrame(()=>{rq=0;draw()})}
 // ===== GAME LOGIC =====
 const isMed=s=>s==='1300'||s==='1200';const isModern=s=>s==='2027'||s==='2026';const MEDPOP={'1300':0.06,'1200':0.05};
 function QO(k,q,by){if(!game)return;if(!game.ext)game.ext={};const o=game.ext.qo||(game.ext.qo={});if(o[k])return;o[k]=1;by=by||'Mustafa Kemal Atatürk';setTimeout(()=>showQuote(q,by),400);news('ulusal',`💬 “${q}” — ${by}`)}
+const stabOf=i=>{const s=game&&game.ext&&game.ext.stab;return s&&s[i]!==undefined?s[i]:100};
+function setStab(i,v){if(!game)return;const X=game.ext||(game.ext={});const s=X.stab||(X.stab={});if(v>=100)delete s[i];else s[i]=Math.max(0,v)}
+function stabTick(){const s=game.ext&&game.ext.stab;if(!s)return;for(const k in s){const i=+k;const up=(CORE[i]===owner[i]?2:0.6)+(hap[i]>60?0.3:0)-(atWar(owner[i],CORE[i])?0.4:0);setStab(i,s[k]+Math.max(0.1,up))}}
 const fmt=n=>Math.round(n).toLocaleString('tr-TR');
 const kfmt=n=>n>=1e6?(n/1e6).toFixed(n>=1e7?0:1).replace('.',',')+'M':n>=1e4?Math.round(n/1e3)+'K':fmt(n);
 const BASEPOP=P.map(p=>p.pop);let pop=BASEPOP.slice();let armies=[],aid=1;
 const RATE=0.02,PER_GOLD=250/180;
-const recruitable=i=>Math.max(0,Math.floor(pop[i]*(game&&owner[i]===game.me&&game.mob?game.mob/100:RATE)*(game&&game.scn==='1919'&&owner[i]===game.me?5:1)));
+const recruitable=i=>Math.max(0,Math.floor(Math.max(0.1,stabOf(i)/100)*pop[i]*(game&&owner[i]===game.me&&game.mob?game.mob/100:RATE)*(game&&game.scn==='1919'&&owner[i]===game.me?5:1)));
 const CORE=P.map(p=>p.c);const INITCNT=C.map(()=>0);P.forEach(p=>INITCNT[p.c]++);
 // quality from GDP per capita
 const Q=C.map(c=>{const pc=c.pop>0?c.gdp*1e9/c.pop:1000;return 0.45+0.55*Math.min(1,Math.sqrt(pc/45000))});
@@ -394,7 +397,7 @@ function news(cat,t,bad){game.news.unshift({cat,t,bad,turn:game.turn,read:false}
 function updNewsBtn(){const n=game?game.news.filter(x=>!x.read).length:0;const b=$('newsBadge');if(b){b.textContent=n;b.style.display=n?'inline-block':'none'}}
 let hap=P.map(()=>70);
 function showLog(){$('log').style.display='none'}
-function conquer(prov,o){const old=owner[prov];if(old===o)return;owner[prov]=o;dirty=true;const me=game.me;hap[prov]=25;
+function conquer(prov,o){const old=owner[prov];if(old===o)return;owner[prov]=o;dirty=true;const me=game.me;hap[prov]=25;setStab(prov,CORE[prov]===o?60:20);
  if(prov===C[old].cap){if(old===me)news('ulusal',`🏛 Başkentimiz ${P[prov].n} düştü! ${cname(o)} orduları şehre girdi.`,true);
   else if(o===me)news('ulusal',`🏛 ${cname(old)} başkenti ${P[prov].n} düştü! Ordularımız şehre girdi.`);
   else if(CNB[me].has(old)||CNB[me].has(o))news('ulusal',`🌍 ${cname(old)} başkenti ${P[prov].n}, ${cname(o)} tarafından ele geçirildi.`)}
@@ -427,7 +430,7 @@ function stepArmy(a){const nx=a.path[0];if(!canEnter(a.o,nx)){a.path=[];return f
 function moveAll(o){for(const a of armies.filter(a=>a.o===o&&a.path.length)){for(let s=0;s<2&&a.path.length;s++){if(s&&o!==game.me&&owner[a.path[0]]!==game.me&&hostile(o,owner[a.path[0]]))break;if(!armies.includes(a)||!stepArmy(a))break}if(o!==game.me)delete a.tank}}
 function recruit(prov,n,o,free){if(CORE[prov]!==o&&atWar(o,CORE[prov]))return 0;const mx=recruitable(prov);n=Math.min(Math.floor(n),mx);if(n<=0)return 0;hap[prov]=Math.max(0,hap[prov]-12*n/Math.max(1,mx));pop[prov]-=n;const a=homeArmy(prov,o);if(a&&!a.path.length)a.n+=n;else armies.push({id:aid++,o,p:prov,n,path:[]});return n}
 function provsOf(c){const r=[];for(let i=0;i<N;i++)if(owner[i]===c)r.push(i);return r}
-let ECO=[];function calcEco(){ECO=C.map(()=>0);for(let i=0;i<N;i++)ECO[owner[i]]+=ecoP[i]*(0.5+hap[i]/140)*(game&&game.dmg&&(game.dmg[i]||0)>game.turn?0.8:1)}
+let ECO=[];function calcEco(){ECO=C.map(()=>0);for(let i=0;i<N;i++)ECO[owner[i]]+=ecoP[i]*(0.5+hap[i]/140)*(0.4+0.6*stabOf(i)/100)*(game&&game.dmg&&(game.dmg[i]||0)>game.turn?0.8:1)}
 const incomeOf=c=>ECO[c]*0.05*GS*(game&&isMed(game.scn)?1.25:game&&SCNDEF[game.scn]?1.4:1);
 function income(){return Math.round(netIncome())}
 // starting armies: real active personnel, split between capital and border provinces
@@ -528,7 +531,7 @@ function endTurnNow(){if(!game||busy)return;busy=true;sfx('turn');dirty=false;ca
  if(fighters.size&&enemiesOf(game.me).length){const first=order.find(c=>c===game.me||atWar(c,game.me));game.firstMove=first}
  for(const c of order){if(c===game.me)moveAll(c);else{aiTurn(c);aiAir(c)}}seaQueue();moveFleets();navalBattles();aiWars();aiDiplomacy();aiPeace();aiPeaceRecruit();
  for(let i=0;i<N;i++){const cap=BASEPOP[i]*1.05;if(pop[i]<cap)pop[i]=Math.min(cap,pop[i]*1.001+1);const o=owner[i];const tgt=(CORE[i]===o?72:48)-Math.min(15,enemiesOf(o).length*6*(gov(o)==='dem'?1.5:1))-(unemp[i]-7)*0.8+govF(o,'hap')+(tl(o,'med')>=3?2:0)+(tl(o,'med')>=6?3:0)-((game.dmg[i]||0)>game.turn?6:0)+(o===game.me?(0.2-game.tax)*60-Math.max(0,(game.mob||2)-2)*4:0);hap[i]+=(tgt-hap[i])*0.03}
- game.dp=Math.min(50,game.dp+0.5+govF(game.me,'dp'));processEnvoys();unrestNews();buildTick();debtTick();coupTick();straitTick();projTick();spaceTick();aiColonize();vassalTick();missileTick();aiBuild();aiCyber();game.tp+=tpGain();if(game.turn%10===0)aiTreeTick();game.mp=Math.min(30,game.mp+Math.min(12,5+Math.floor(provsOf(game.me).length/40)));const anyDis=diseaseTick();investTick();
+ game.dp=Math.min(50,game.dp+0.5+govF(game.me,'dp'));processEnvoys();unrestNews();buildTick();debtTick();coupTick();straitTick();projTick();spaceTick();stabTick();aiColonize();vassalTick();missileTick();aiBuild();aiCyber();game.tp+=tpGain();if(game.turn%10===0)aiTreeTick();game.mp=Math.min(30,game.mp+Math.min(12,5+Math.floor(provsOf(game.me).length/40)));const anyDis=diseaseTick();investTick();
  consolidate();calcEco();game.gold+=income();game.turn++;if(!isModern(game.scn)&&typeof scenTick==='function')scenTick();if(!owner.includes(game.me)){busy=false;gameOver();return}
  const cq=BLOG.filter(e=>e.now!==undefined);if(cq.length){VOWN=owner.slice();for(let k=cq.length-1;k>=0;k--)VOWN[cq[k].p]=cq[k].prev}
  if(dirty){buildBorders();paint()}else if(MAPMODE!=='pol')paint();refreshBar();updHud();req();autoSave();busy=false;refreshPanels();if(game.offer)showOffer();if(BLOG.length)playReplay()}
@@ -590,13 +593,13 @@ function selectFleet(id){selF=id;selP=-1;if(sel>=0){sel=-1;paint()}const f=fleet
  cb.innerHTML=`<h3>🚢 Filo</h3><div class="ab">${cname(f.o)} · 🪖 ${fmt(f.n)}${f.route.length?' · yolda':' · denizde bekliyor'}</div><div class="acts"><button onclick="mode='move';toast('🎯 Denizde bir noktaya veya kıyı şehrine dokun')">➜ Hareket · 2🏃</button></div><div id="sub"></div>`;card.style.display='block';req()}
 function selectProv(v){selF=0;selP=v;sel=v;paint();req();refreshBar()}
 function closeBar(){card.style.display='none';selP=-1;selF=0;if(sel>=0){sel=-1;paint();req()}}
-function cancelMove(){MSEL.clear();MSELF.clear();mode='play';toast('Hareket iptal');if(selF)selectFleet(selF);else refreshBar()}
+function cancelMove(){MMP=-1;MSEL.clear();MSELF.clear();mode='play';toast('Hareket iptal');if(selF)selectFleet(selF);else refreshBar()}
 function countryBox(o){return `<div class="row"><span>👥 Nüfus</span><b>${fmt(C[o].pop)}</b></div><div class="row"><span>💰 GSYH</span><b>${fmt(C[o].gdp)} milyar $</b></div>
  <div class="row"><span>🪖 Toplam ordu</span><b>${fmt(armyTotal(o))}</b></div><div class="row"><span>🔬 Teknoloji</span><b>${TECH[o].toFixed(2)}</b></div><div class="row"><span>⭐ Ordu kalitesi</span><b>%${Math.round(Q[o]*100)}</b></div>`}
 function refreshBar(){if(selF&&game){selectFleet(selF);return}if(selP<0||!game){card.style.display='none';return}const v=selP,o=owner[v],me=game.me;
  const flag=`<span class="flag" style="background:rgb(${CC[o]})"></span>`;
  if(o===me){const here=armies.filter(a=>a.p===v&&a.o===me),tot=here.reduce((s,a)=>s+a.n,0),home=homeArmy(v,me);const cmd=tot&&game.scn==='1919'&&game.skeys&&me===game.skeys.tbm?tkCommander(v):null;
-  cb.innerHTML=`<h3>${P[v].n}</h3><div class="ab">${flag}${cname(o)}${tot?` · 🪖 ${fmt(tot)}`:''}</div>
+  cb.innerHTML=`<h3>${P[v].n}</h3><div class="ab">${flag}${cname(o)}${tot?` · 🪖 ${fmt(tot)}`:''}${stabOf(v)<100?` · 🏛 İstikrar <b style="color:${stabOf(v)<40?'#e0806a':stabOf(v)<70?'#d9b86a':'#9fc48a'}">%${Math.round(stabOf(v))}</b>`:''}</div>
   <div class="acts g2"><button onclick="recruitUI()">⚔ Yetiştir</button><button onclick="startMove()" ${home?'':'disabled'}>➜ Hareket</button><button onclick="buildUI()">🏗 İnşa</button><button onclick="statsUI()">📊 İstatistik</button>${home&&tl(me,'tank')>=1?`<button class="b-red" style="grid-column:span 2" onclick="tankUI()">Tank saldırısı${(game.tankCd[v]||0)>game.turn?' ('+(game.tankCd[v]-game.turn)+' tur)':''}</button>`:''}${cmd?`<div class="cmdl" style="grid-column:span 2">🎖 <b>${cmd.n}</b>${cmd.r?' · '+cmd.r:''}</div>`:''}<button class="b-blue" style="grid-column:span 2" onclick="interiorUI()">🏛 İçişleri</button>${strOf(v)?`<button class="b-blue" style="grid-column:span 2" onclick="straitUI()">⚓ ${STR[strOf(v)].n}${game.strait&&game.strait[strOf(v)]&&enemiesOf(me).length?' (kapalı)':''}</button>`:''}${has(v,B.SILO)?`<button class="b-red" style="grid-column:span 2" onclick="missileUI()">🚀 Füze (${game.missiles})</button>`:''}${has(v,B.AIR)?`<button class="b-red" style="grid-column:span 2" onclick="airUI()">✈ Hava saldırısı${(game.airCd[v]||0)>game.turn?' ('+((game.airCd[v])-game.turn)+' tur)':''}</button>`:''}</div><div id="sub"></div>`}
  else{const r=game.rel[o]|0,w=atWar(me,o),al=game.allies.includes(o),tr=truce(me,o);
   cb.innerHTML=`<h3>${fimg(o,18)} ${cname(o)}</h3><div class="ab">${game.vas[o]===me?'👑 Vasal · ':''}${P[v].n} · İlişki: <b style="color:${r<=-10?'#d9826e':r>=30?'#9fc48a':'#d9b86a'}">${r}</b>${w?' · <b style="color:#d9654f">SAVAŞTA</b>':''}${al?' · <b style="color:#9fc48a">MÜTTEFİK</b>':''}${tr&&!w?' · 🕊 Ateşkes':''}${game.access[o]?' · 🛂':''}</div>
@@ -620,17 +623,19 @@ function startMove(){const a=homeArmy(selP,game.me);if(!a)return;mode='move';con
  ${armies.some(x=>x.p===selP&&x.o===game.me&&x.path.length)?`<button class="sec2" style="width:100%" onclick="stopArmy()">Yoldakileri durdur</button>`:''}</div>`}
 function mvSet(v){const m=$('mS');if(!m)return;v=Math.max(1,Math.min(+m.max,v|0));m.value=v;$('mN').value=v;$('mL').textContent=fmt(v)}
 let MSEL=new Set(),MSELF=new Set();
-function mmStart(){MSEL=new Set();MSELF=new Set();if(selF)MSELF.add(selF);if(selP>=0&&homeArmy(selP,game.me))MSEL.add(selP);mode='mmove';mmUI();req()}
+function mmStart(){MMP=-1;MSEL=new Set();MSELF=new Set();if(selF)MSELF.add(selF);if(selP>=0&&homeArmy(selP,game.me))MSEL.add(selP);mode='mmove';mmUI();req()}
 function mmIdle(){const r=[];for(const a of armies)if(a.o===game.me&&!a.path.length&&a.p>=0)r.push(a);return r}
 function mmUI(){const L=mmIdle().filter(a=>MSEL.has(a.p));const FL=fleets.filter(f=>MSELF.has(f.id));const men=L.reduce((s,a)=>s+a.n,0)+FL.reduce((s,f)=>s+f.n,0);const cost=Math.max(1,Math.ceil((MSEL.size+MSELF.size)/2));
- $('sub').innerHTML=`<div class="box mvbox"><div class="mvh">👥 Toplu hareket</div><div class="mvi">Ordulu şehirlerine dokunarak seç veya çıkar. Ordusu olmayan bir şehre dokununca seçili ordular oraya yürür.</div>
+ $('sub').innerHTML=`<div class="box mvbox"><div class="mvh">👥 Toplu hareket</div><div class="mvi">Ordulu şehirlerine dokunarak seç veya çıkar. Sonra hedefe dokun: düşman şehri, boş şehir veya kendi şehrin.</div>${MMP>=0?`<div class="box" style="margin:6px 0;border-color:#c9a45c"><div>📍 <b>${P[MMP].n}</b> (kendi şehrin)</div><div class="mvq" style="margin-top:6px"><button onclick="MSEL.add(${MMP});MMP=-1;mmUI();req()">➕ Seçime ekle</button><button class="b-red" onclick="mmGo(${MMP})">➜ Buraya gönder</button></div></div>`:''}
  <div class="row"><span>Seçili</span><b>${MSEL.size} ordu${MSELF.size?' + '+MSELF.size+' filo':''} · ${fmt(men)} asker · ${cost} 🏃</b></div>
  <div class="mvq"><button class="sec2" onclick="for(const a of mmIdle())MSEL.add(a.p);for(const f of fleets)if(f.o===game.me)MSELF.add(f.id);mmUI();req()">Tüm ordularım</button><button class="sec2" onclick="for(const a of mmIdle())if(P[a.p].nb.some(j=>owner[j]!==game.me))MSEL.add(a.p);mmUI();req()">Sınırdakiler</button></div>
  <div class="mvq"><button class="sec2" onclick="MSEL.clear();MSELF.clear();mmUI();req()">Temizle</button><button class="sec2" onclick="cancelMove()">İptal</button></div></div>`}
 function mmPick(v,w){const f0=w?fleetAt(w.x,w.y):null;if(f0){MSELF.has(f0.id)?MSELF.delete(f0.id):MSELF.add(f0.id);mmUI();req();return}
  if(v===OCEAN){toast('Bir şehir veya filo seç');return}
- if(owner[v]===game.me&&homeArmy(v,game.me)){MSEL.has(v)?MSEL.delete(v):MSEL.add(v);mmUI();req();return}
- if(!MSEL.size&&!MSELF.size){toast('Önce ordularını seç');return}const cost=Math.max(1,Math.ceil((MSEL.size+MSELF.size)/2));if(game.mp<cost){toast('🏃 Yetersiz hareket puanı');return}let ok=0,men=0,fail=0;
+ if(owner[v]===game.me&&homeArmy(v,game.me)){if(MSEL.has(v)||(!MSEL.size&&!MSELF.size)){MSEL.has(v)?MSEL.delete(v):MSEL.add(v);MMP=-1;mmUI();req();return}MMP=v;mmUI();req();return}
+ mmGo(v)}
+let MMP=-1;
+function mmGo(v){MMP=-1;if(!MSEL.size&&!MSELF.size){toast('Önce ordularını seç');return}const cost=Math.max(1,Math.ceil((MSEL.size+MSELF.size)/2));if(game.mp<cost){toast('🏃 Yetersiz hareket puanı');return}let ok=0,men=0,fail=0;
  for(const p of [...MSEL]){const a=homeArmy(p,game.me);if(!a||a.path.length)continue;const pth=findPath(game.me,p,v);if(!pth){fail++;continue}a.path=pth;ok++;men+=a.n}
  for(const id of [...MSELF]){const f=fleets.find(x=>x.id===id);if(!f)continue;if(!PCELL[v].length||!canEnter(game.me,v)||!orderFleet(f,{prov:v})){fail++;continue}ok++;men+=f.n}MSELF.clear();
  if(!ok){toast('⛔ Seçili ordular ve filolar için oraya yol yok');return}game.mp-=cost;mode='play';MSEL.clear();updHud();if(typeof tkOrder==='function')tkOrder(v);toast(`➜ ${ok} ordu (${kfmt(men)} asker) ${P[v].n} hedefine yola çıktı${fail?` · ${fail} ordu yol bulamadı`:''}`);selectProv(v);req()}
@@ -848,12 +853,13 @@ function closeEco(){$('ecoP').style.display='none'}
 function closeSide(){for(const id of ['ecoP','newsP','rankP','mapsP','cityP','warsP','negP','custP','techP'])$(id)&&($(id).style.display='none')}
 // ---- map modes + rankings ----
 var MAPMODE='pol';
-const MODES={pol:'  Siyasi',army:'  Ordu',hap:'  Mutluluk',eco:'  Ekonomi',pop:'  Nüfus',tech:'  Teknoloji',dis:'  Hastalık'};
+const MODES={pol:'  Siyasi',army:'  Ordu',hap:'  Mutluluk',stab:'  Eyalet istikrarı',eco:'  Ekonomi',pop:'  Nüfus',tech:'  Teknoloji',dis:'  Hastalık'};
 let AMAP=null;function armyMapCalc(){AMAP=new Float64Array(N);if(!game)return;for(const a of armies)if(a.p>=0&&armyVisible(a))AMAP[a.p]+=a.n}
 function openMaps(){const p=$('mapsP');if(p.style.display==='block'){p.style.display='none';return}closeSide();p.style.display='block';p.innerHTML=Object.entries(MODES).map(([k,v])=>`<button class="${k===MAPMODE?'on':''}" onclick="setMode('${k}')">${v}</button>`).join('')}
 function setMode(m){MAPMODE=m;SEL.clear();SELON=false;selUI();$('mapsP').style.display='none';$('mapsBtn').textContent='🗺 '+(m==='pol'?'Haritalar':MODES[m].slice(2));paint();req();showModeRank()}
 function metric(kind){calcEco();const v=C.map(()=>0);if(kind==='army'){for(let c=0;c<C.length;c++)v[c]=owner.includes(c)?armyTotal(c):0;return v}if(kind==='hap'){const s=stabilityAll();return s.map((x,c)=>owner.includes(c)?x:0)}if(kind==='eco')for(let c=0;c<C.length;c++)v[c]=ECO[c];
  else if(kind==='tech')for(let c=0;c<C.length;c++)v[c]=owner.includes(c)?TECH[c]:0;
+ else if(kind==='stab'){const n=C.map(()=>0);for(let i=0;i<N;i++){v[owner[i]]+=stabOf(i);n[owner[i]]++}for(let c=0;c<C.length;c++)v[c]=n[c]?v[c]/n[c]:0}
  else if(kind==='pop')for(let i=0;i<N;i++)v[owner[i]]+=pop[i];
  else if(kind==='dis')for(let i=0;i<N;i++)v[owner[i]]+=deaths[i];
  else if(kind==='land')for(let i=0;i<N;i++)v[owner[i]]+=P[i].px;
@@ -862,7 +868,7 @@ function prestige(){const land=metric('land'),pw=C.map((c,i)=>armyPower(i)),v=C.
 function rankList(v,fmtv,n){const ids=C.map((c,i)=>i).filter(i=>owner.includes(i)&&v[i]>0).sort((a,b)=>v[b]-v[a]);const me=game?game.me:-1;const myR=ids.indexOf(me);
  let h=ids.slice(0,n).map((c,r)=>`<div class="rk ${c===me?'me':''}"><span>${r+1}.</span>${fimg(c,12)}<b>${cname(c)}</b><em>${fmtv(v[c])}</em></div>`).join('');
  if(myR>=n)h+=`<div class="rk me"><span>${myR+1}.</span>${fimg(me,12)}<b>${cname(me)}</b><em>${fmtv(v[me])}</em></div>`;return h}
-const MFMT={army:x=>kfmt(x)+' asker',hap:x=>'%'+Math.round(x),eco:x=>fmt(x)+' mlr $',tech:x=>x.toFixed(2),pop:x=>kfmt(x),dis:x=>kfmt(x)+' ölü'};
+const MFMT={stab:x=>'%'+Math.round(x),army:x=>kfmt(x)+' asker',hap:x=>'%'+Math.round(x),eco:x=>fmt(x)+' mlr $',tech:x=>x.toFixed(2),pop:x=>kfmt(x),dis:x=>kfmt(x)+' ölü'};
 function showModeRank(){const p=$('modeRank');if(MAPMODE==='pol'||!game){p.style.display='none';return}p.style.display='block';const nm=MODES[MAPMODE].trim();
  let body;if(rankView==='mine'){const [f,fm]=CITYM[MAPMODE];const L=provsOf(game.me).sort((a,b)=>f(b)-f(a));body=L.slice(0,60).map((i,r)=>`<div class="rk" onclick="cam={x:P[${i}].x,y:P[${i}].y,z:Math.max(cam.z,6)};req()"><span>${r+1}.</span><b>${P[i].n}</b><em>${fm(f(i))}</em></div>`).join('')}
  else body=rankList(metric(MAPMODE),MFMT[MAPMODE],15);
@@ -878,6 +884,7 @@ function modeColor(v){const m=MAPMODE;
  if(m==='army'){const o=owner[v],me=game?game.me:-1,n=AMAP?AMAP[v]:0,x=n>0?Math.min(1,(Math.log10(n)-2.5)/3.5):0;if(o===me)return n>0?[60+40*x|0,110+110*x|0,70+20*x|0]:[64,82,64];if(game&&atWar(me,o))return n>0?[130+110*x|0,60-20*x|0,50]:[96,66,58];if(game&&friendly(me,o))return n>0?[70,100+60*x|0,140+90*x|0]:[64,72,86];return n>0?[110+90*x|0,104+80*x|0,86+40*x|0]:[72,70,64]}
  if(m==='form')return histColor(v);
  if(m==='hap'){const x=Math.max(0,Math.min(1,hap[v]/90));return[200-130*x|0,70+110*x|0,60]}
+ if(m==='stab'){const s=stabOf(v);if(game&&owner[v]!==game.me&&s>=100)return[74,70,62];const x=s/100;return[210-150*x|0,60+120*x|0,50+30*x|0]}
  if(m==='dis'){const x=Math.min(1,inf[v]*1.6);return x>0.01?[90+150*x|0,70-40*x|0,55-30*x|0]:[78,74,66]}
  if(m==='eco'){const x=Math.pow(Math.max(0,Math.min(1,(Math.log10(ecoP[v]+0.01)+1)/4)),1.6);return[92-55*x|0,84+105*x|0,62+5*x|0]}
  if(m==='pop'){const x=Math.pow(Math.max(0,Math.min(1,(Math.log10(pop[v]+1)-4.7)/2.8)),1.5);return[90+150*x|0,78+60*x|0,60-35*x|0]}
@@ -1258,7 +1265,8 @@ function doTank(t){const v=selP;mode='play';const a=homeArmy(v,game.me);if(!a){r
  if(owner[t]!==prevO){VOWN=owner.slice();VOWN[t]=prevO}FXT={a:v,b:t,t0:performance.now()};ANIM.push({k:'tank',a:v,b:t,t0:performance.now(),d:2600,o:game.me});fxLoop();dirty=false;buildBorders();updHud();refreshBar();playReplay()}
 // ---- map selection actions ----
 const pc=(x,ref,amt,ex)=>Math.max(300,Math.round(amt*Math.pow(Math.max(0,x)/ref,ex)));
-const SELMODES={hap:{n:'Festival',d:'Mutluluk +15 · 3 turda uygulanır',cost:i=>pc(pop[i],5e6,15000,1.25),act:(i,f)=>{hap[i]=Math.min(100,hap[i]+15*f)}},
+const SELMODES={stab:{n:'İstikrar yatırımı',d:'Eyalet istikrarı +30 · 3 turda uygulanır',cost:i=>pc(pop[i],5e6,14000,1.25),act:(i,f)=>{setStab(i,stabOf(i)+30*f);hap[i]=Math.min(100,hap[i]+2*f)}},
+ hap:{n:'Festival',d:'Mutluluk +15 · 3 turda uygulanır',cost:i=>pc(pop[i],5e6,15000,1.25),act:(i,f)=>{hap[i]=Math.min(100,hap[i]+15*f)}},
  eco:{n:'Ekonomi teşviki',d:'Ekonomi +%10, işsizlik -2 · 3 turda uygulanır',cost:i=>pc(ecoP[i],200,20000,1.5),act:(i,f)=>{ecoP[i]*=Math.pow(1.10,f);unemp[i]=Math.max(2,unemp[i]-2*f)}},
  pop:{n:'Nüfus teşviki',d:'Nüfus +%4, mutluluk +3 · 3 turda uygulanır',cost:i=>pc(pop[i],5e6,20000,1.35),act:(i,f)=>{pop[i]*=Math.pow(1.04,f);hap[i]=Math.min(100,hap[i]+3*f)}},
  tech:{n:'Eğitim yatırımı',d:'Cehalet -5, +0,3 teknoloji puanı · 3 turda uygulanır',cost:i=>pc(pop[i],5e6,15000,1.25),act:(i,f)=>{ign[i]=Math.max(0.5,ign[i]-5*f);game.tp+=0.3*f}},
@@ -1273,7 +1281,7 @@ function projTick(){if(!game.proj||!game.proj.length)return;const done=[];
 let SEL=new Set(),SELON=false,RECT=null;
 function selUI(){const m=MAPMODE,b=$('selBar');if(!game||!SELMODES[m]){b.style.display='none';SEL.clear();return}const S=SELMODES[m];let cost=0;for(const i of SEL)cost+=S.cost(i);const PJ=(game.proj||[]).filter(p=>p.m===m);let men=0;if(m==='army')for(const i of SEL)men+=armyRecN(i);
  b.style.display='flex';b.innerHTML=`<button class="${SELON?'on':''}" onclick="SELON=!SELON;selUI()">${SELON?'Seçim: açık':'Seçim: kapalı'}</button><span>${SEL.size} şehir seçili</span>
- <button class="sec2" onclick="const ps=projSet(MAPMODE);for(let i=0;i<N;i++)if(owner[i]===game.me&&!ps.has(i))SEL.add(i);paint();req();selUI()">Tümü</button><button class="sec2" onclick="SEL.clear();paint();req();selUI()">Temizle</button>
+ <button class="sec2" onclick="const ps=projSet(MAPMODE);for(let i=0;i<N;i++)if(owner[i]===game.me&&!ps.has(i)&&(MAPMODE!=='stab'||stabOf(i)<100))SEL.add(i);paint();req();selUI()">Tümü</button><button class="sec2" onclick="SEL.clear();paint();req();selUI()">Temizle</button>
  ${m==='army'?`<span>Oran</span><select onchange="ARMYPCT=+this.value;selUI()">${[25,50,75,100].map(x=>`<option value="${x}" ${x===ARMYPCT?'selected':''}>%${x}</option>`).join('')}</select>`:''}
  <button class="gold" onclick="doSel()" ${!SEL.size||cost>game.gold||(m==='army'&&!men)?'disabled':''}>${S.n}${m==='army'?' · '+kfmt(men)+' asker':''} · ${kfmt(cost)} altın</button><small>${S.d}</small>${PJ.length?`<small class="pj">⏳ <span>Devam eden</span>: ${PJ.map(p=>`${p.ids.length} şehir ${3-p.left}/3`).join(' · ')}</small>`:''}`}
 function doSel(){const S=SELMODES[MAPMODE];let cost=0;for(const i of SEL)cost+=S.cost(i);if(cost>game.gold){toast('Yetersiz altın');return}
@@ -1283,7 +1291,7 @@ function selCostOf(i){return kfmt(SELMODES[MAPMODE].cost(i))}
 function selToggle(v){if(owner[v]!==game.me)return;if(projSet(MAPMODE).has(v)){toast('⏳ Bu şehirde aynı yatırım zaten sürüyor');return}SEL.has(v)?SEL.delete(v):SEL.add(v);paint();req();selUI()}
 function selRect(x0,y0,x1,y1){const a=s2w(Math.min(x0,x1),Math.min(y0,y1)),b=s2w(Math.max(x0,x1),Math.max(y0,y1));for(let i=0;i<N;i++){if(owner[i]!==game.me)continue;for(let k=-1;k<=1;k++){const x=P[i].x+k*W;if(x>=a.x&&x<=b.x&&P[i].y>=a.y&&P[i].y<=b.y){SEL.add(i);break}}}const ps=projSet(MAPMODE);for(const i of ps)SEL.delete(i);paint();req();selUI()}
 let rankView='world';
-const CITYM={army:[i=>{let s=0;for(const a of armies)if(a.p===i&&a.o===game.me)s+=a.n;return s},x=>kfmt(x)+' asker'],hap:[i=>hap[i],x=>'%'+Math.round(x)],eco:[i=>ecoP[i],x=>x.toFixed(1)+' mlr $'],pop:[i=>pop[i],x=>kfmt(x)],tech:[i=>100-ign[i],x=>'%'+x.toFixed(0)+' eğitim'],dis:[i=>deaths[i],x=>kfmt(x)+' ölü']};
+const CITYM={stab:[i=>stabOf(i),x=>'%'+Math.round(x)],army:[i=>{let s=0;for(const a of armies)if(a.p===i&&a.o===game.me)s+=a.n;return s},x=>kfmt(x)+' asker'],hap:[i=>hap[i],x=>'%'+Math.round(x)],eco:[i=>ecoP[i],x=>x.toFixed(1)+' mlr $'],pop:[i=>pop[i],x=>kfmt(x)],tech:[i=>100-ign[i],x=>'%'+x.toFixed(0)+' eğitim'],dis:[i=>deaths[i],x=>kfmt(x)+' ölü']};
 // ---- icons (replace emoji in the interface with clean line icons) ----
 const IC={coin:'<circle cx="12" cy="12" r="8"/><path d="M12 7v10M9.5 9.5h4a1.8 1.8 0 010 3.5h-3a1.8 1.8 0 000 3.5h4"/>',dp:'<path d="M6 4h10l2 3v13H6z"/><path d="M9 9h6M9 13h6M9 17h4"/>',mp:'<path d="M13 4l-2 6h5l-6 10 2-7H7z"/>',
  war:'<path d="M5 19L19 5M15 5h4v4M19 19L5 5M5 9V5h4"/>',map:'<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>',trophy:'<path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 6H5a3 3 0 003 4M16 6h3a3 3 0 01-3 4M12 13v4M9 20h6"/>',
@@ -1501,6 +1509,14 @@ function cnameL(i){const c=C[i];if(!c)return '?';if(c.hist){return c.hist[LANG]|
  if(c.L)return c.L[li()]||c.n;return DISPLAY[c.n]||c.n}
 // UI dictionary: [tr, en, ar, zh, it, es, de, fr, ru]
 const DICT=[
+['Eyalet istikrarı','Province stability','استقرار الولاية','省份稳定度','Stabilità provinciale','Estabilidad provincial','Provinzstabilität','Stabilité provinciale','Стабильность провинции'],
+['İstikrar yatırımı','Stability investment','استثمار الاستقرار','稳定投资','Investimento in stabilità','Inversión en estabilidad','Stabilitätsinvestition','Investissement de stabilité','Инвестиции в стабильность'],
+['Eyalet istikrarı +30 · 3 turda uygulanır','Province stability +30 · applied over 3 turns','استقرار الولاية +30 · يُطبق خلال 3 أدوار','省份稳定度+30 · 3回合内生效','Stabilità +30 · applicata in 3 turni','Estabilidad +30 · se aplica en 3 turnos','Stabilität +30 · über 3 Runden','Stabilité +30 · appliquée sur 3 tours','Стабильность +30 · за 3 хода'],
+['İstikrar','Stability','الاستقرار','稳定度','Stabilità','Estabilidad','Stabilität','Stabilité','Стабильность'],
+['Ordulu şehirlerine dokunarak seç veya çıkar. Sonra hedefe dokun: düşman şehri, boş şehir veya kendi şehrin.','Tap your cities with armies to select or deselect them. Then tap the target: an enemy city, an empty city or one of your own.','انقر على مدنك التي فيها جيوش لتحديدها أو إلغائها، ثم انقر على الهدف: مدينة عدو أو مدينة فارغة أو إحدى مدنك.','点击有军队的城市进行选择或取消，然后点击目标：敌方城市、空城或你自己的城市。','Tocca le tue città con eserciti per selezionarle o deselezionarle. Poi tocca il bersaglio: città nemica, vuota o tua.','Toca tus ciudades con ejércitos para seleccionarlas o quitarlas. Luego toca el objetivo: ciudad enemiga, vacía o propia.','Tippe auf deine Städte mit Armeen zum Auswählen oder Abwählen. Dann tippe aufs Ziel: feindliche, leere oder eigene Stadt.','Touche tes villes avec armées pour les sélectionner ou non. Puis touche la cible : ville ennemie, vide ou à toi.','Нажимайте на свои города с армиями, чтобы выбрать или снять выбор. Затем нажмите цель: вражеский, пустой или свой город.'],
+['(kendi şehrin)','(your city)','(مدينتك)','（你的城市）','(tua città)','(tu ciudad)','(deine Stadt)','(ta ville)','(ваш город)'],
+['➕ Seçime ekle','➕ Add to selection','➕ أضف إلى التحديد','➕加入选择','➕ Aggiungi alla selezione','➕ Añadir a la selección','➕ Zur Auswahl hinzufügen','➕ Ajouter à la sélection','➕ Добавить в выбор'],
+['➜ Buraya gönder','➜ Send here','➜ أرسل إلى هنا','➜ 派往这里','➜ Invia qui','➜ Enviar aquí','➜ Hierher schicken','➜ Envoyer ici','➜ Отправить сюда'],
 ['🚀 Uzay araştırmaları','🚀 Space research','🚀 أبحاث الفضاء','🚀 太空研究','🚀 Ricerca spaziale','🚀 Investigación espacial','🚀 Raumfahrtforschung','🚀 Recherche spatiale','🚀 Космические исследования'],
 ['Uzay programı sadece','The space programme is available only in','برنامج الفضاء متاح فقط في','太空计划仅在','Il programma spaziale è disponibile solo in','El programa espacial solo está disponible en','Das Raumfahrtprogramm gibt es nur im','Le programme spatial n\'est disponible que dans','Космическая программа доступна только в'],
 ['2027 Modern dünya','2027 Modern world','عالم 2027 الحديث','2027 现代世界','Mondo moderno 2027','Mundo moderno 2027','Szenario 2027 Moderne Welt','le monde moderne 2027','сценарии «Современный мир 2027»'],
