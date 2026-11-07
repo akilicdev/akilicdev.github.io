@@ -210,6 +210,19 @@ input[type=range]{touch-action:none}.bigR{height:30px;cursor:pointer}.bigR::-web
 #card{max-height:calc(100dvh - var(--hudh,46px) - 24px)}
 @media (max-height:500px){#pick{padding:5px;font-size:14px}#setup{top:44px;width:min(440px,58vw);max-height:calc(100dvh - 52px)}#setup h2{font-size:18px}#setup .opt{padding:4px 0}#setup .mb{padding:9px!important;margin-top:6px!important}
  #mp h1{font-size:26px;margin:2px 0}#mp h2{font-size:20px;margin:2px 0}#mp .mb{padding:8px!important;margin:4px 0!important}#mp .sub{margin-bottom:4px}#card{bottom:6px}#rep{max-height:40vh}}
+
+/* automatic UI scale per device */
+#hud,.sidep,#card,#mp,#setup,#pick,#selBar,#rep,.dropP,#modeRank,#toast,#log{zoom:var(--uiz,1)}
+.sidep{top:calc((var(--hudh,46px) + 8px) / var(--uiz,1))!important;max-height:calc((100dvh - var(--hudh,46px) - 20px) / var(--uiz,1))!important}
+#card{max-height:calc((100dvh - var(--hudh,46px) - 24px) / var(--uiz,1))!important}
+#setup{top:calc(58px / var(--uiz,1));max-height:calc((100dvh - 70px) / var(--uiz,1))!important}
+#mp{max-height:calc((100dvh - 16px) / var(--uiz,1))!important}
+.sidep{width:calc(min(380px,92vw) / var(--uiz,1))}.sidep.wide{width:calc(min(860px,96vw) / var(--uiz,1))}#setup{width:calc(min(330px,92vw) / var(--uiz,1))}#card{max-width:calc(94vw / var(--uiz,1))}#newsP{overflow-y:auto!important}
+.dropP{top:calc((var(--hudh,46px) + 6px) / var(--uiz,1));max-height:calc((100dvh - var(--hudh,46px) - 16px) / var(--uiz,1))!important}
+@media (max-height:500px){#setup{top:44px!important;max-height:calc(100dvh - 52px)!important;width:min(440px,58vw)!important}}
+#hud.hw{flex-wrap:wrap!important;height:auto!important;padding:3px 6px!important;row-gap:2px;overflow:visible!important}#hud.hw .sp{order:1;flex:0 0 100%;height:0}#hud.hw button{order:2;flex:1 1 auto;padding:5px 4px!important}#hud.hw #turn{margin-left:auto}
+html[data-dev=phone] button,html[data-dev=tablet] button{min-height:34px}
+html[data-dev=phone] .sw,html[data-dev=tablet] .sw{transform:scale(1.1)}
 </style></head><body>
 <canvas id="cv"></canvas><canvas id="fx"></canvas>
 <div id="menu"><div class="panel" id="mp"></div></div>
@@ -445,7 +458,7 @@ function aiRecruit(c,budget){if(budget<=0)return;let men=Math.floor(budget*PER_G
  let spots=provsOf(c).filter(i=>P[i].nb.some(j=>en.includes(owner[j])));if(!spots.length)spots=provsOf(c).sort((a,b)=>pop[b]-pop[a]).slice(0,4);
  for(const i of spots){if(men<=0)break;const got=recruit(i,Math.min(men,Math.ceil(men/spots.length)+1),c);men-=got}}
 function aiTurn(c){const en=enemiesOf(c);if(!en.length)return;
- let ep=0;for(const e of en)ep=Math.max(ep,armyPower(e));const emg=c!==game.me&&!en.includes(game.me)&&ep>armyPower(c)*1.2?1.7:1;
+ let ep=0;for(const e of en)ep=Math.max(ep,armyPower(e));const vsMe=c!==game.me&&en.includes(game.me);const emg=c===game.me?1:vsMe?(ep>armyPower(c)?1.6:1.3):ep>armyPower(c)*1.2?1.7:1;let hit=false;
  aiRecruit(c,incomeOf(c)*emg*(c===game.me?1:MULT[game.diff]));
  const fr=provsOf(c).filter(i=>P[i].nb.some(j=>en.includes(owner[j])));
  const dep=aiDepth(c);const depthOf=j=>{let m=99;for(const k of P[j].nb)if(owner[k]===c&&dep[k]<m)m=dep[k];return m+1};
@@ -459,10 +472,15 @@ function aiTurn(c){const en=enemiesOf(c);if(!en.length)return;
    const tk=tl(c,'tank')>=1;if(tk)a.tank=1;const pu=pow(a)/a.n;if(strike*pu<=b0.def*1.3+3){delete a.tank;continue}
    if(garrison>0&&!armies.some(b=>b!==a&&b.o===c&&b.p===a.p&&!b.path.length)){a.n=strike;armies.push({id:aid++,o:c,p:a.p,n:garrison,path:[],g:1})}
    const b1=opts[1];if(b1&&strike*pu/2>Math.max(b0.def,b1.def)*1.4){const half=Math.floor(a.n/2);a.n-=half;armies.push({id:aid++,o:c,p:a.p,n:half,path:[b1.j],tank:tk?1:undefined})}
-   a.path=[b0.j];continue}
+   a.path=[b0.j];hit=true;continue}
   if(fr.length&&!fr.includes(a.p)&&a.n>50){let t=fr[0],bd=1e9;for(const f of fr){let dx=Math.abs(P[f].x-P[a.p].x);dx=Math.min(dx,W-dx);const d=dx+Math.abs(P[f].y-P[a.p].y);if(d<bd){bd=d;t=f}}const pth=findPath(c,a.p,t);if(pth)a.path=pth}}
+ if(!hit&&c!==game.me&&fr.length&&Math.random()<(vsMe?0.75:0.4))aiCounter(c,en);
  if(!fr.length&&(game.turn+c)%8===0)aiNaval(c,en);
  moveAll(c)}
+// even a weaker AI hits back: raid the weakest enemy border city
+function aiCounter(c,en){let best=null,bs=0;for(const a of armies){if(a.o!==c||a.path.length||a.n<800||a.p<0)continue;if(!P[a.p].nb.some(j=>en.includes(owner[j])))continue;if(a.n>bs){bs=a.n;best=a}}if(!best)return;
+ let tg=-1,td=1e18;for(const j of P[best.p].nb){if(!en.includes(owner[j]))continue;let dp=militia(j);for(const d of armies)if(d.p===j&&atWar(c,d.o))dp+=pow(d)*1.25;if(dp<td){td=dp;tg=j}}if(tg<0)return;
+ const send=Math.floor(best.n*(0.55+Math.random()*0.3));if(send<500)return;best.n-=send;armies.push({id:aid++,o:c,p:best.p,n:send,path:[tg],tank:tl(c,'tank')>=1?1:undefined})}
 function aiColonize(){if(game.scn!=='1300')return;for(let t=0;t<8;t++){const c=C0+((Math.random()*(C.length-C0))|0);if(!C[c]||C[c].tribal||c===game.me||!owner.includes(c))continue;const opts=[];for(let i=0;i<N;i++)if(owner[i]===c)for(const j of P[i].nb)if(C[owner[j]]&&C[owner[j]].tribal)opts.push(j);if(!opts.length||Math.random()>0.35)continue;const j=opts[(Math.random()*opts.length)|0];const old=owner[j];owner[j]=c;CORE[j]=c;dirty=true;if(!owner.includes(old))refreshNb(c)}}
 function aiDepth(c){const d=new Int16Array(N).fill(99),q=[];for(let i=0;i<N;i++)if(owner[i]===c&&CORE[i]===c){d[i]=0;q.push(i)}for(let h=0;h<q.length;h++){const u=q[h];for(const v of P[u].nb)if(owner[v]===c&&d[v]>d[u]+1){d[v]=d[u]+1;q.push(v)}}return d}
 function aiNaval(c,en){const X=game.ext||(game.ext={});const nav=X.nav||(X.nav={});if((nav[c]||0)>game.turn)return;const ports=provsOf(c).filter(i=>has(i,B.PORT));if(!ports.length)return;let best=null;
@@ -1509,6 +1527,12 @@ function cnameL(i){const c=C[i];if(!c)return '?';if(c.hist){return c.hist[LANG]|
  if(c.L)return c.L[li()]||c.n;return DISPLAY[c.n]||c.n}
 // UI dictionary: [tr, en, ar, zh, it, es, de, fr, ru]
 const DICT=[
+['⏯ Kaldığın yerden devam et','⏯ Continue where you left off','⏯ تابع من حيث توقفت','⏯ 从上次中断处继续','⏯ Riprendi da dove eri','⏯ Continuar donde lo dejaste','⏯ Dort weitermachen, wo du warst','⏯ Reprendre où tu t\'étais arrêté','⏯ Продолжить с того места'],
+['🖥 Arayüz boyutu','🖥 Interface size','🖥 حجم الواجهة','🖥 界面大小','🖥 Dimensione interfaccia','🖥 Tamaño de la interfaz','🖥 Oberflächengröße','🖥 Taille de l\'interface','🖥 Размер интерфейса'],
+['Otomatik','Automatic','تلقائي','自动','Automatica','Automático','Automatisch','Automatique','Авто'],
+['Küçük','Small','صغير','小','Piccola','Pequeño','Klein','Petite','Маленький'],
+['Büyük','Large','كبير','大','Grande','Grande','Groß','Grande','Большой'],
+['Çok büyük','Very large','كبير جداً','特大','Molto grande','Muy grande','Sehr groß','Très grande','Очень большой'],
 ['Eyalet istikrarı','Province stability','استقرار الولاية','省份稳定度','Stabilità provinciale','Estabilidad provincial','Provinzstabilität','Stabilité provinciale','Стабильность провинции'],
 ['İstikrar yatırımı','Stability investment','استثمار الاستقرار','稳定投资','Investimento in stabilità','Inversión en estabilidad','Stabilitätsinvestition','Investissement de stabilité','Инвестиции в стабильность'],
 ['Eyalet istikrarı +30 · 3 turda uygulanır','Province stability +30 · applied over 3 turns','استقرار الولاية +30 · يُطبق خلال 3 أدوار','省份稳定度+30 · 3回合内生效','Stabilità +30 · applicata in 3 turni','Estabilidad +30 · se aplica en 3 turnos','Stabilität +30 · über 3 Runden','Stabilité +30 · appliquée sur 3 tours','Стабильность +30 · за 3 хода'],
@@ -2854,7 +2878,7 @@ const DIFF=['Kolay','Normal','Zor','Çok Zor'];
 function showMenu(html){mode='menu';if(!game)setTimeout(startTour,30);else stopTour();if($('selBar'))$('selBar').style.display='none';closeNews();closeEco();$('modeRank').style.display='none';$('log').style.display='none';$('menu').style.display='flex';$('mp').innerHTML=html;hud.style.display='none';$('pick').style.display='none';$('setup').style.display='none';card.style.display='none';0}
 function hideMenu(){$('menu').style.display='none';0}
 function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub">Strateji · Tur Tabanlı · 1300 – 2027</div>
- <button class="mb" onclick="gameMenu()">▶ Oyun</button><button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button>
+ ${!game&&LS.get(LKEY,null)&&saves().some(s=>s.id===LS.get(LKEY,null))?'<button class="mb" onclick="continueGame()">⏯ Kaldığın yerden devam et</button>':''}<button class="mb ${!game&&LS.get(LKEY,null)?'sec':''}" onclick="gameMenu()">▶ Oyun</button><button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button>
  <button class="mb sec" onclick="leadersMenu()">👑 Liderler</button><button class="mb sec" onclick="helpMenu()">📖 Nasıl Oynanır</button><button class="mb sec" onclick="aboutMenu()">ℹ Hakkında</button>${game?'<button class="mb sec" onclick="resume()">↩ Oyuna Dön</button>':''}`)}
 const cleanName=s=>String(s||'').replace(/[<>&"'`\\]/g,'').trim().slice(0,28);
 function saves(){return LS.get(SKEY,[])}
@@ -2865,11 +2889,12 @@ function gameMenu(){const last=LS.get(LKEY,null),ok=last&&saves().some(s=>s.id==
  <button class="mb sec" onclick="mainMenu()">← Geri</button>`)}
 function settingsMenu(){const sw=(k,t)=>`<div class="opt"><span>${t}</span><div class="sw ${SET[k]?'on':''}" onclick="SET.${k}=!SET.${k};LS.set(SETKEY,SET);this.classList.toggle('on');LAYER=null;req()"></div></div>`;
  const vr=(k,t)=>`<div class="opt"><span>${t}</span><span class="volc"><button class="sec2" onclick="setVol('${k}',-1)">−</button><b id="v_${k}">${SET[k]??5}</b><button class="sec2" onclick="setVol('${k}',1)">+</button></span></div>`;
- showMenu(`<h2>Ayarlar</h2>${sw('sound','🔊 Ses efektleri')}${vr('svol','🔉 Efekt sesi')}${sw('music','🎵 Müzik')}${vr('mvol','🎶 Müzik sesi')}${sw('fs','📱 Telefonda tam ekran')}${sw('provNames','🏷 İl isimleri')}
+ showMenu(`<h2>Ayarlar</h2>${sw('sound','🔊 Ses efektleri')}${vr('svol','🔉 Efekt sesi')}${sw('music','🎵 Müzik')}${vr('mvol','🎶 Müzik sesi')}${sw('fs','📱 Telefonda tam ekran')}<div class="opt"><span>🖥 Arayüz boyutu</span><select onchange="setUI(this.value)">${[['auto','Otomatik'],['s','Küçük'],['m','Normal'],['l','Büyük'],['xl','Çok büyük']].map(([k,t])=>`<option value="${k}" ${(SET.ui||'auto')===k?'selected':''}>${t}</option>`).join('')}</select></div>${sw('provNames','🏷 İl isimleri')}
  <div class="opt"><span>🌐 Dil</span><select onchange="setLang(this.value);settingsMenu()">${LANGS.map(l=>`<option value="${l}" ${l===LANG?'selected':''}>${LNAME[l]}</option>`).join('')}</select></div>
  <div class="opt"><span>🗑 Tüm kayıtları sil</span><button class="red" style="background:#6e2e24" onclick="if(confirmDel(this)){LS.set(SKEY,[]);localStorage.removeItem(LKEY);toast('Kayıtlar silindi')}">Sil</button></div>
  <button class="mb sec" onclick="game?pauseMenu():mainMenu()" style="margin-top:14px">← Geri</button>`)}
 function setVol(k,d){SET[k]=Math.max(0,Math.min(10,(SET[k]??5)+d));LS.set(SETKEY,SET);const e=$('v_'+k);if(e)e.textContent=SET[k];if(typeof audio==='function')audio();applyVol();if(k==='svol')sfx('click')}
+function setUI(v){SET.ui=v;LS.set(SETKEY,SET);uiAuto();setTimeout(hudH,50);LAYER=null;req()}
 function confirmDel(b){if(b.dataset.c){return true}b.dataset.c=1;b.textContent='Emin misin?';return false}
 function aboutMenu(){showMenu(`<h2>Hakkında</h2><div class="sub" style="opacity:.85">Atlas Dominion — Tugrion<br>Gerçek dünya il haritası üzerinde tur tabanlı strateji.<br><br>Sürüm 1.0<br>Bayraklar: flag-icons (MIT)<br>Veriler: Dünya Bankası (nüfus 2025, GSYH son yıl), IISS (aktif asker)</div><button class="mb sec" onclick="mainMenu()">← Geri</button>`)}
 function scenMenu(){const card=(y,t,d)=>`<button class="scn" onclick="newGame('${y}')"><b>${y}</b><span>${t}</span><small>${d}</small></button>`;showMenu(`<h2>Başlangıç yılı</h2><div class="sub">Hangi yıldan başlamak istersin?</div><div class="scnL">${card('2027','Modern dünya','Gerçek ülkeler, ordular, ekonomi, teknoloji ve uzay. ABD–İsrail ile İran–Filistin, Rusya ile Ukrayna savaşta')}${card('1939','İkinci Dünya Savaşı','Almanya Polonya\'ya saldırdı. Mihver ve Müttefikler; uçaklar, tanklar, roketler')}${card('1919','Kurtuluş Savaşı','Mustafa Kemal Samsun\'a çıktı. Ankara Hükümeti işgale karşı: Yunan, Fransız ve İtalyan kuvvetleri, doğuda Ermenistan')}${card('1914','Birinci Dünya Savaşı','Temmuz Krizi: İttifak ve İtilaf Devletleri. Siperler, ilk tanklar ve çift kanatlı uçaklar')}${card('1200','Selçuklu dönemi','Anadolu Selçuklu Sultanlığı ve Bizans. Haçlılar, Eyyubiler, Harezmşahlar; doğuda Moğollar yükseliyor')}${card('1300','Beylikler dönemi','Osmanlı Beyliği kuruluyor. Süvari, okçu, mancınık; Anadolu beyliklere bölünmüş')}</div><button class="mb sec" onclick="gameMenu()">← Geri</button>`)}
@@ -2890,8 +2915,13 @@ function startGame(){const scn=pend.scn||'2027',def=SCNDEF[scn];if(isModern(scn)
  if(isModern(scn)){owner=P.map(p=>p.c);pop=BASEPOP.slice();apply2026()}armies=[];events=[];newGameState(game.me);if(!isModern(scn))game.newC=SCN_NEWC.slice();if(scn==='2026')start2026();else if(scn==='2027')start2027();
  if(isMed(scn)){for(const a of armies)if(a.o===game.me)a.n=Math.round(a.n*2.5);game.gold=Math.round(game.gold*3);MIL[game.me]=Math.round(MIL[game.me]*2.5)}
  if(def)wwStart();if(scn==='1919'&&game.skeys&&game.me===game.skeys.tbm)setTimeout(()=>showQuote('Ya istiklâl, ya ölüm!','Mustafa Kemal Paşa'),900);
- showLog();selC=-1;sel=-1;selP=-1;card.style.display='none';buildBorders();paint();enterPlay();const cp=P[C[game.me].cap];cam={x:cp.x,y:cp.y,z:8};req();toast('Oyun başladı: '+cname(game.me));if(!LS.get('ad_help',0)){LS.set('ad_help',1);setTimeout(()=>helpMenu(true),600)}}
-function hudH(){const h=$('hud');if(h)document.documentElement.style.setProperty('--hudh',(h.offsetHeight||46)+'px')}addEventListener('resize',()=>setTimeout(hudH,50));
+ showLog();selC=-1;sel=-1;selP=-1;card.style.display='none';buildBorders();paint();enterPlay();const cp=P[C[game.me].cap];cam={x:cp.x,y:cp.y,z:8};req();toast('Oyun başladı: '+cname(game.me));setTimeout(autoSave,500);if(!LS.get('ad_help',0)){LS.set('ad_help',1);setTimeout(()=>helpMenu(true),600)}}
+function uiAuto(){const w=innerWidth,h=innerHeight,s=Math.min(w,h),md=SET.ui||'auto';let z=1;
+ if(md==='auto'){if(w>=2400&&h>=1300)z=1.45;else if(w>=1800&&h>=1000)z=1.2;else if(matchMedia('(pointer:coarse)').matches&&s>=700)z=1.1}else z={s:0.9,m:1,l:1.15,xl:1.3}[md]||1;
+ if(z>1)z=Math.min(z,Math.max(1,h/700));document.documentElement.style.setProperty('--uiz',z.toFixed(3));
+ const d=matchMedia('(pointer:coarse)').matches?(s<600?'phone':'tablet'):'desktop';document.documentElement.dataset.dev=d}
+function hudH(){const h=$('hud');if(h){h.classList.remove('hw');if(h.scrollWidth>h.clientWidth+2)h.classList.add('hw');const r=h.getBoundingClientRect();document.documentElement.style.setProperty('--hudh',Math.round(r.height||46)+'px')}}
+addEventListener('resize',()=>{uiAuto();setTimeout(hudH,50)});addEventListener('orientationchange',()=>setTimeout(()=>{uiAuto();hudH()},300));uiAuto();
 function enterPlay(){mode='play';selUI();showModeRank();$('log').style.display=events.length?'block':'none';hideMenu();$('pick').style.display='none';$('setup').style.display='none';hud.style.display='flex';updHud()}
 function updHud(){setTimeout(hudH,0);$('turn').textContent=`Tur ${game.turn} · ${dateStr(game.turn)}`;const inc=income();$('pinfo').innerHTML=`<b class="pn">${cname(game.me)}</b> · 💰 <b>${kfmt(game.gold)}</b> <span style="color:${inc<0?'#e0604a':'#9fc48a'}">(${inc<0?'':'+'}${fmt(inc)})</span> · 📜 <b>${game.dp.toFixed(1)}</b> · 🏃 <b>${game.mp}</b> · 🔬 <b>${game.tp.toFixed(0)}</b>`;updNewsBtn();$('myFlag').src=flagOf(game.me);const tot=hudRank();$('myRank').textContent='#'+tot;const nw=enemiesOf(game.me).length;$('warsBtn').textContent='⚔ Savaşlar'+(nw?' ('+nw+')':'')}
 const C0=C.length,CAP0=C.map(c=>c.cap),CC0=CC.map(x=>x.slice());
@@ -2908,7 +2938,9 @@ function closeNews(){$('newsP').style.display='none'}
 function snapshot(){return{id:game.saveId||('s'+Date.now()),me:game.me,diff:game.diff,aggr:game.aggr,fog:game.fog,turn:game.turn,owner:owner.slice(),pop:pop.map(x=>Math.round(x)),armies,aid,wars:game.wars,allies:game.allies,gold:game.gold,rel:game.rel,imp:game.imp,arel:game.arel,truce:game.truce,dp:game.dp,news:game.news.slice(0,40),envoys:game.envoys,cool:game.cool,aicool:game.aicool,unrest:game.unrest,hap:hap.map(x=>Math.round(x)),bld:[...bld],ecoP:ecoP.map(x=>+x.toFixed(3)),unemp:[...unemp].map(x=>+x.toFixed(2)),ign:[...ign].map(x=>+x.toFixed(2)),inf:[...inf].map(x=>+x.toFixed(3)),dis:[...dis],deaths:[...deaths].map(Math.round),tech:TECH.map(x=>+x.toFixed(3)),fleets,tax:game.tax,inv:game.inv,build:game.build,outb:game.outb,dseq:game.dseq,pact:game.pact,access:game.access,gave:game.gave,mp:game.mp,airCd:game.airCd,gov:game.gov,vas:game.vas,newC:game.newC,flag:game.flag,names:game.names,color:game.color,mprod:game.mprod,aimis:game.aimis,mob:game.mob,missiles:game.missiles,propUntil:game.propUntil,govCd:game.govCd,festCd:game.festCd,caps:C.map(c=>c.cap),tree:game.tree,tp:game.tp,cyberVis:game.cyberVis,cybCd:game.cybCd,tankCd:game.tankCd,dmg:game.dmg,core:[...CORE],formed:game.formed,scn:game.scn,y0:game.y0,m0:game.m0,d0:game.d0,nofog:game.nofog,strait:game.strait,fee:game.fee,proj:game.proj,repub:game.repub,ext:game.ext,mil:MIL.slice(),skeys:game.skeys,bloc:game.bloc,evd:game.evd,v:11,cam:{...cam},time:Date.now()}}
 function saveGame(silent){const sv=snapshot();game.saveId=sv.id;let all=saves().filter(s=>s.id!==sv.id);all.unshift(sv);all=all.slice(0,20);let drop=0;
  while(!LS.set(SKEY,all)){if(all.length<=1){toast('⚠ Kaydedilemedi');return false}all.pop();drop++}if(drop)toast('⚠ Kayıt alanı doldu: en eski '+drop+' kayıt silindi');LS.set(LKEY,sv.id);if(!silent)toast('💾 Oyun kaydedildi');return true}
-function autoSave(){if(game)saveGame(true)}
+function autoSave(){if(game&&!busy)saveGame(true)}
+setInterval(()=>{if(game&&!busy)autoSave()},30000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)autoSave()});addEventListener('pagehide',autoSave);addEventListener('beforeunload',autoSave);
 function loadSave(id){const sv=saves().find(s=>s.id===id);if(!sv)return;game={id:sv.id,saveId:sv.id,me:sv.me,diff:sv.diff,aggr:sv.aggr,fog:sv.fog,turn:sv.turn,wars:sv.wars||[],allies:sv.allies||[],gold:sv.gold||0,rel:sv.rel||{},imp:sv.imp||{},arel:sv.arel||{},truce:sv.truce||{},offer:null,dp:sv.dp??10,news:sv.news||[],envoys:sv.envoys||[],cool:sv.cool||{},aicool:sv.aicool||{},unrest:sv.unrest||{}};hap=sv.hap?sv.hap.slice():P.map(()=>70);game.tax=sv.tax??0.2;game.pact=sv.pact||{};game.access=sv.access||{};game.gave=sv.gave||{};game.mp=sv.mp??10;game.airCd=sv.airCd||{};game.gov=sv.gov||{};game.vas=sv.vas||{};game.newC=[];game.flag=sv.flag||{};game.names={};for(const k in (sv.names||{}))game.names[k]=cleanName(sv.names[k]);game.mprod=sv.mprod||[];game.aimis=sv.aimis||{};game.mob=sv.mob||2;game.tree=sv.tree;game.tp=sv.tp||0;game.cyberVis=sv.cyberVis||{};game.cybCd=sv.cybCd||{};game.tankCd=sv.tankCd||{};game.dmg=sv.dmg||{};game.supp={};game.shock={};game.formed=sv.formed;game.scn=sv.scn||'2027';game.y0=sv.y0||2027;game.m0=sv.m0||0;game.d0=sv.d0||1;game.nofog=!!sv.nofog;game.strait=sv.strait||{};game.fee=sv.fee??1;game.proj=sv.proj||[];game.repub=sv.repub;game.ext=sv.ext||{qo:{},nav:{},sp:{r:0,q:[],n:0,ok:0},prest:0};provNames(game.scn);game.skeys=sv.skeys;game.bloc=sv.bloc||{};game.evd=sv.evd||0;if(sv.skeys)SCN_KEY=sv.skeys;setEra(eraOf(game.scn));if(sv.core)for(let i=0;i<N;i++)CORE[i]=sv.core[i];game.missiles=sv.missiles||0;game.propUntil=sv.propUntil;game.govCd=sv.govCd;game.festCd=sv.festCd;
  resetCountries();for(const d of (sv.newC||[])){addCountryRaw(d);game.newC.push(d)}if(sv.caps)sv.caps.forEach((x,i)=>{if(C[i])C[i].cap=x});if(sv.color){game.color=sv.color;CC[game.me]=sv.color}game.inv=sv.inv||{e:0.1,p:0.1,t:0.1};game.build=sv.build||[];game.outb=sv.outb||{};game.dseq=sv.dseq||0;
  owner=sv.owner.slice();pop=sv.pop?sv.pop.slice():BASEPOP.slice();armies=(sv.armies||[]).map(a=>({...a,path:a.path||[]}));aid=sv.aid||1;events=sv.events||[];
