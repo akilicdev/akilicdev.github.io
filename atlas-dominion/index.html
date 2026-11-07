@@ -1201,6 +1201,7 @@ const TREE_WW2=eraTree({inf:['Yarı otomatik tüfek','Hafif makineli tüfek','Ta
  cyb:['Telsiz istihbaratı','Şifre kırma','Radar ağı','Karşı istihbarat','Propaganda','Elektronik harp']},
  {inf:'Piyade',tank:'Tanklar',air:'Hava Kuvvetleri',mis:'Roketler',med:'Sağlık',cyb:'İstihbarat'});
 TREE_MOD.spc={n:'🚀 Uzay',nodes:[['Uzay Ajansı','Roket Kalkış Merkezi inşa edilebilir (başkentte veya en değerli şehirde).'],['Roket Motorları','Roket üretimi açılır. Roketler pahalıdır ve zor üretilir.'],['Yörünge Bilimi','Fırlatma başarı şansı +%20.'],['Ay Programı','Roketler Ay\'a iner: prestij etkisi iki katı.']]};
+for(const T of [TREE_MED,TREE_WW1,TREE_WW2])T.spc=TREE_MOD.spc;
 var TREE=TREE_MOD,ERA='mod';
 const TCOST=[15,30,55,90,140,210];
 function nodeName(c,n){return n}
@@ -1213,13 +1214,13 @@ const cybAtk=c=>30+TECH[c]*6+(tl(c,'cyb')>=2?20:0)+(tl(c,'cyb')>=4?30:0)+(tl(c,'
 const cybDef=c=>30+TECH[c]*6+(tl(c,'cyb')>=1?20:0)+(tl(c,'cyb')>=3?30:0)+(tl(c,'cyb')>=5?30:0);
 function tpGain(){const me=game.me;let libs=0;for(let i=0;i<N;i++)if(owner[i]===me)libs+=lv(i,B.LIB);return Math.round((grossOf(me)*game.inv.t/900+libs*0.2+(isModern(game.scn)?0.3:0.6))*10)/10}
 let treeTab='inf';
-function techUI(t){if(!game)return;if(t)treeTab=t;if(treeTab==='spc'&&game.scn!=='2027')treeTab=Object.keys(TREE)[0];closeSide();const p=$('techP');p.style.display='block';const me=game.me,cur=tl(me,treeTab),T=TREE[treeTab];
+function techUI(t){if(!game)return;if(t)treeTab=t;const noSpc=treeTab==='spc'&&game.scn!=='2027';closeSide();const p=$('techP');p.style.display='block';const me=game.me,cur=tl(me,treeTab),T=TREE[treeTab];
  p.innerHTML=`<div class="np-h"><b>Teknoloji</b><span class="tp">${ico('tech')} ${game.tp.toFixed(1)} puan <small>(+${tpGain()}/tur)</small></span><button class="x2" onclick="closeSide()">✕</button></div>
- <div class="tabs">${Object.entries(TREE).filter(([k])=>k!=='spc'||game.scn==='2027').map(([k,v])=>`<button class="${k===treeTab?'on':''}" onclick="techUI('${k}')">${v.n}</button>`).join('')}</div>
- <div class="tree">${T.nodes.map((n,i)=>{const st=i<cur?'done':i===cur?'next':'lock';const cost=tcost(treeTab,i);
+ <div class="tabs">${Object.entries(TREE).map(([k,v])=>`<button class="${k===treeTab?'on':''}" onclick="techUI('${k}')">${v.n}</button>`).join('')}</div>
+ ${noSpc?`<div class="box" style="margin:14px"><b>🚀 Uzay araştırmaları</b><div class="hint" style="margin-top:6px">Uzay programı sadece <b>2027 Modern dünya</b> senaryosunda açılır. Orada Uzay Ajansı, Roket Motorları, Yörünge Bilimi ve Ay Programı araştırılır; başkentte Roket Kalkış Merkezi kurulup roket fırlatılır.</div></div>`:''}<div class="tree" style="${noSpc?'display:none':''}">${T.nodes.map((n,i)=>{const st=i<cur?'done':i===cur?'next':'lock';const cost=tcost(treeTab,i);
   return `${i?`<div class="tline ${i<=cur?'on':''}"></div>`:''}<div class="tnode ${st}"><div class="tl">Seviye ${i+1}</div><b>${nodeName(me,n[0])}</b><span>${n[1]}</span>${st==='done'?'<em>Açıldı</em>':st==='next'?`<button onclick="unlock('${treeTab}')" ${game.tp<cost?'disabled':''}>Aç · ${cost} puan</button>`:`<em class="lk">Kilitli · ${cost} puan</em>`}</div>`}).join('')}</div>
- ${treeTab==='spc'?spaceBox():''}<div class="hint" style="padding:6px 14px 12px;color:#bfae88">Teknoloji puanı, Vergi & Yatırım panelindeki teknoloji yatırımından ve kütüphanelerden gelir.</div>`}
-function unlock(k){const me=game.me,L=tl(me,k);if(L>=TREE[k].nodes.length)return;const c=tcost(k,L);if(game.tp<c)return;game.tp-=c;game.tree[me][k]=L+1;toast(`${TREE[k].n}: ${nodeName(me,TREE[k].nodes[L][0])} açıldı`);updQ();techUI()}
+ ${treeTab==='spc'&&!noSpc?spaceBox():''}<div class="hint" style="padding:6px 14px 12px;color:#bfae88">Teknoloji puanı, Vergi & Yatırım panelindeki teknoloji yatırımından ve kütüphanelerden gelir.</div>`}
+function unlock(k){if(k==='spc'&&game.scn!=='2027')return;const me=game.me,L=tl(me,k);if(L>=TREE[k].nodes.length)return;const c=tcost(k,L);if(game.tp<c)return;game.tp-=c;game.tree[me][k]=L+1;toast(`${TREE[k].n}: ${nodeName(me,TREE[k].nodes[L][0])} açıldı`);updQ();techUI()}
 // ---- cyber ----
 function cyberUI(c){const me=game.me,cd=(game.cybCd[c]||0)-game.turn,cost=tl(me,'cyb')>=4?1500:3000,ch=Math.round(Math.max(0.1,Math.min(0.9,0.5+(cybAtk(me)-cybDef(c))/150))*100);
  $('sub').innerHTML=`<div class="box">Siber saldırı: ${cname(c)}<div class="hint" style="color:#bfae88">Başarılı olursa hazinesini, ordularını, füzelerini ve silah teknolojisini görürsün. Ajan yakalanırsa ilişki 10–15 düşer.</div>
@@ -1491,6 +1492,10 @@ function cnameL(i){const c=C[i];if(!c)return '?';if(c.hist){return c.hist[LANG]|
  if(c.L)return c.L[li()]||c.n;return DISPLAY[c.n]||c.n}
 // UI dictionary: [tr, en, ar, zh, it, es, de, fr, ru]
 const DICT=[
+['🚀 Uzay araştırmaları','🚀 Space research','🚀 أبحاث الفضاء','🚀 太空研究','🚀 Ricerca spaziale','🚀 Investigación espacial','🚀 Raumfahrtforschung','🚀 Recherche spatiale','🚀 Космические исследования'],
+['Uzay programı sadece','The space programme is available only in','برنامج الفضاء متاح فقط في','太空计划仅在','Il programma spaziale è disponibile solo in','El programa espacial solo está disponible en','Das Raumfahrtprogramm gibt es nur im','Le programme spatial n\'est disponible que dans','Космическая программа доступна только в'],
+['2027 Modern dünya','2027 Modern world','عالم 2027 الحديث','2027 现代世界','Mondo moderno 2027','Mundo moderno 2027','Szenario 2027 Moderne Welt','le monde moderne 2027','сценарии «Современный мир 2027»'],
+['senaryosunda açılır. Orada Uzay Ajansı, Roket Motorları, Yörünge Bilimi ve Ay Programı araştırılır; başkentte Roket Kalkış Merkezi kurulup roket fırlatılır.','. There you research Space Agency, Rocket Engines, Orbital Science and the Moon Programme, build a Rocket Launch Centre in the capital and launch rockets.','. هناك تبحث في وكالة الفضاء ومحركات الصواريخ وعلم المدارات وبرنامج القمر، وتبني مركز إطلاق في العاصمة وتطلق الصواريخ.','中开放。在那里可研究航天局、火箭发动机、轨道科学和登月计划，在首都建造发射中心并发射火箭。','. Lì si ricercano Agenzia spaziale, Motori a razzo, Scienza orbitale e Programma lunare, si costruisce un centro di lancio nella capitale e si lanciano razzi.','. Allí investigas Agencia espacial, Motores cohete, Ciencia orbital y Programa lunar, construyes un centro de lanzamiento en la capital y lanzas cohetes.','. Dort erforschst du Raumfahrtagentur, Raketentriebwerke, Orbitalwissenschaft und Mondprogramm, baust ein Startzentrum in der Hauptstadt und startest Raketen.','. On y recherche Agence spatiale, Moteurs-fusées, Science orbitale et Programme lunaire, on construit un centre de lancement dans la capitale et on lance des fusées.','. Там изучаются космическое агентство, ракетные двигатели, орбитальная наука и лунная программа, строится стартовый центр в столице и запускаются ракеты.'],
 ['🔉 Efekt sesi','🔉 Effects volume','🔉 مستوى المؤثرات','🔉 音效音量','🔉 Volume effetti','🔉 Volumen de efectos','🔉 Effektlautstärke','🔉 Volume des effets','🔉 Громкость эффектов'],
 ['🎶 Müzik sesi','🎶 Music volume','🎶 مستوى الموسيقى','🎶 音乐音量','🎶 Volume musica','🎶 Volumen de música','🎶 Musiklautstärke','🎶 Volume de la musique','🎶 Громкость музыки'],
 ['📱 Telefonda tam ekran','📱 Fullscreen on phone','📱 ملء الشاشة على الهاتف','📱 手机全屏','📱 Schermo intero sul telefono','📱 Pantalla completa en el móvil','📱 Vollbild am Handy','📱 Plein écran sur téléphone','📱 Полный экран на телефоне'],
@@ -2753,7 +2758,8 @@ function sfx(k){if(!SET.sound)return;if(typeof ERA!=='undefined'&&ERA==='med'&&(
  case'win':tone(392,0.18,'triangle',0.12);setTimeout(()=>tone(523,0.3,'triangle',0.12),120);break;
  case'lose':tone(330,0.3,'triangle',0.1,250);break;
  case'fanfare':[392,523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,0.35,'triangle',0.13),i*140));break}}catch(e){}}
-document.addEventListener('pointerdown',()=>{audio();if(AC&&AC.state==='suspended')AC.resume()},{capture:true});
+const kickMusic=()=>{audio();if(!AC)return;const go=()=>{if(SET.music&&!document.hidden)musicStart()};if(AC.state==='suspended')AC.resume().then(go).catch(()=>{});else go()};
+document.addEventListener('pointerdown',kickMusic,{capture:true});document.addEventListener('keydown',kickMusic,{capture:true});document.addEventListener('touchstart',kickMusic,{capture:true,passive:true});
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('button'))sfx('click')},{capture:true});
 // ===== MUSIC: synthesized martial march (original, royalty free) =====
 let MUSI=null;const MBPM=92,MSTEP=60/MBPM/4;const mf=n=>440*Math.pow(2,(n-69)/12);
@@ -2768,13 +2774,13 @@ function musicSched(){if(!MUSI||!AC)return;const med=typeof ERA!=='undefined'&&E
   if(s===0){for(const n of MCH[ch])mVoice('sawtooth',mf(n),t,MSTEP*16,0.022,700,false);mVoice('triangle',mf(MROOT[ch]),t,MSTEP*7,0.11,400)}
   if(s===8)mVoice('triangle',mf(MROOT[ch]+7),t,MSTEP*7,0.09,400);
   if(s%4===0)mDrum(t,med?48:55,s===0?0.32:0.18,med?0.6:0.35);
-  if(sec>0&&(s===4||s===12))mSnare(t,0.11);if(sec>0&&(s===14||s===15||(bar%4===3&&s>=10)))mSnare(t,0.05);
-  if(sec===1||sec===3){const mel=MMEL[(sec===3?4:0)+ch];for(const [st,n,l] of mel)if(st===s)mVoice(med?'square':'sawtooth',mf(n),t,MSTEP*l*0.95,med?0.04:0.055,med?2200:1500,true)}
-  if(sec===2){const mel=MMEL[ch];for(const [st,n,l] of mel)if(st===s)mVoice('triangle',mf(n-12),t,MSTEP*l*0.95,0.06,1200,true)}
+  if((s===4||s===12))mSnare(t,0.11);if((s===14||s===15||(bar%4===3&&s>=10)))mSnare(t,0.05);
+  if(sec===0||sec===2){const mel=MMEL[(sec===2?4:0)+ch];for(const [st,n,l] of mel)if(st===s)mVoice(med?'square':'sawtooth',mf(n),t,MSTEP*l*0.95,med?0.04:0.055,med?2200:1500,true)}
+  if(sec===1){const mel=MMEL[ch];for(const [st,n,l] of mel)if(st===s)mVoice('triangle',mf(n-12),t,MSTEP*l*0.95,0.06,1200,true)}
   MUSI.next+=MSTEP;MUSI.step++}}
-function musicStart(){if(MUSI||!AC||AC.state!=='running')return;MUSI={next:AC.currentTime+0.15,step:0,g:AC.createGain()};MUSI.g.gain.value=0.0001;MUSI.g.gain.exponentialRampToValueAtTime(1,AC.currentTime+2);MUSI.g.connect(MUG);MUSI.iv=setInterval(musicSched,90)}
+function musicStart(){if(MUSI||!AC||AC.state!=='running')return;MUSI={next:AC.currentTime+0.05,step:0,g:AC.createGain()};MUSI.g.gain.value=0.0001;MUSI.g.gain.exponentialRampToValueAtTime(1,AC.currentTime+0.4);MUSI.g.connect(MUG);MUSI.iv=setInterval(musicSched,90)}
 function musicStop(){if(!MUSI)return;clearInterval(MUSI.iv);const g=MUSI.g;try{g.gain.setTargetAtTime(0.0001,AC.currentTime,0.3)}catch(e){}setTimeout(()=>{try{g.disconnect()}catch(e){}},1600);MUSI=null}
-setInterval(()=>{const on=SET.music&&AC&&!document.hidden;if(on&&!MUSI)musicStart();else if(!on&&MUSI)musicStop()},700);
+setInterval(()=>{const on=SET.music&&AC&&AC.state==='running'&&!document.hidden;if(on&&!MUSI)musicStart();else if(!on&&MUSI)musicStop()},700);
 // ===== ANIMATED MAIN MENU (cached world map, slow tour through countries) =====
 let MCV=null,TOUR=null;const MZ=2;
 function buildMenuCache(){if(MCV)return;const O=P.map(p=>p.c);const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;const t=tmp.getContext('2d');const im=t.createImageData(W,H),d=im.data;
