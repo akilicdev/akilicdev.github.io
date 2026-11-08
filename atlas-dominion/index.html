@@ -574,7 +574,7 @@ function endTurnNow(){if(!game||busy)return;busy=true;sfx('turn');dirty=false;ca
  if(fighters.size&&enemiesOf(game.me).length){const first=order.find(c=>c===game.me||atWar(c,game.me));game.firstMove=first}
  for(const c of order){if(c===game.me)moveAll(c);else{aiTurn(c);aiAir(c)}}seaQueue();moveFleets();navalBattles();aiWars();aiDiplomacy();aiPeace();aiPeaceRecruit();
  for(let i=0;i<N;i++){const cap=BASEPOP[i]*1.05;if(pop[i]<cap)pop[i]=Math.min(cap,pop[i]*1.001+1);const o=owner[i];const tgt=(CORE[i]===o?72:48)-Math.min(15,enemiesOf(o).length*6*(gov(o)==='dem'?1.5:1))-(unemp[i]-7)*0.8+govF(o,'hap')+(tl(o,'med')>=3?2:0)+(tl(o,'med')>=6?3:0)-((game.dmg[i]||0)>game.turn?6:0)+(o===game.me?(0.2-game.tax)*60-Math.max(0,(game.mob||2)-2)*4:0);hap[i]+=(tgt-hap[i])*0.03}
- game.dp=Math.min(50,game.dp+0.5+govF(game.me,'dp'));processEnvoys();unrestNews();buildTick();debtTick();coupTick();straitTick();projTick();spaceTick();stabTick();aiColonize();vassalTick();missileTick();aiBuild();aiCyber();game.tp+=tpGain();if(game.turn%10===0)aiTreeTick();game.mp=Math.min(30,game.mp+Math.min(12,5+Math.floor(provsOf(game.me).length/40)));const anyDis=diseaseTick();investTick();
+ game.dp=Math.min(50,game.dp+0.5+govF(game.me,'dp'));processEnvoys();unrestNews();buildTick();debtTick();coupTick();straitTick();projTick();spaceTick();stabTick();allyTick();aiColonize();vassalTick();missileTick();aiBuild();aiCyber();game.tp+=tpGain();if(game.turn%10===0)aiTreeTick();game.mp=Math.min(30,game.mp+Math.min(12,5+Math.floor(provsOf(game.me).length/40)));const anyDis=diseaseTick();investTick();
  consolidate();calcEco();game.gold+=income();game.turn++;if(!isModern(game.scn)&&typeof scenTick==='function')scenTick();if(!owner.includes(game.me)){busy=false;gameOver();return}
  const cq=BLOG.filter(e=>e.now!==undefined);if(cq.length){VOWN=owner.slice();for(let k=cq.length-1;k>=0;k--)VOWN[cq[k].p]=cq[k].prev}
  if(dirty){buildBorders();paint()}else if(MAPMODE!=='pol')paint();refreshBar();updHud();req();autoSave();busy=false;refreshPanels();if(game.offer)showOffer();if(BLOG.length)playReplay()}
@@ -604,7 +604,7 @@ function pick(sx,sy){const w=s2w(sx,sy);const x=((Math.floor(w.x)%W)+W)%W,y=Math
   if(selF){const f=fleets.find(x=>x.id===selF);if(!f){cancelMove();return}let t=null;
    if(v===OCEAN){const c=worldCell(wx,wy);if(c<0){toast('Bir deniz noktası seç');return}t={cell:c}}else{if(!PCELL[v].length){toast('⛔ Kıyı şehri seç');return}if(!canEnter(game.me,v)){toast('⛔ Sadece kendi topraklarına, müttefike veya savaştığın ülkeye çıkarma yapabilirsin');return}t={prov:v}}
    if(game.mp<2){toast('🏃 Yetersiz hareket puanı');return}if(!orderFleet(f,t)){toast('⛔ Deniz yolu bulunamadı');return}game.mp-=2;mode='play';updHud();toast(t.prov!==undefined?`🚢 Filo ${P[v].n} kıyısına çıkarma için yola çıktı`:'🚢 Filo denizde hedefe ilerliyor');selectFleet(f.id);req();return}
-  const a=homeArmy(selP,game.me);if(!a){cancelMove();return}if(v===selP){cancelMove();return}
+  const a=homeArmy(selP,game.me);if(!a){cancelMove();return}if(v===selP){cancelMove();return}if(tkBusy(a)){toast('🛡 Tank saldırısı yapan ordu bu tur hareket edemez');cancelMove();return}
   const n0=Math.min(a.n,Math.max(1,+($('mN')?.value||a.n)));const port=has(selP,B.PORT);
   if(v===OCEAN&&!port){const c=worldCell(wx,wy);if(c<0){toast('Bir deniz noktası seç');return}viaPort(a,n0,{cell:c});return}
   if(v===OCEAN){const c=worldCell(wx,wy);if(c<0){toast('Bir deniz noktası seç');return}
@@ -646,6 +646,7 @@ function refreshBar(){if(selF&&game){selectFleet(selF);return}if(selP<0||!game){
   <div class="acts g2"><button onclick="recruitUI()">⚔ Yetiştir</button><button onclick="startMove()" ${home?'':'disabled'}>➜ Hareket</button><button onclick="buildUI()">🏗 İnşa</button><button onclick="statsUI()">📊 İstatistik</button>${home&&tl(me,'tank')>=1?`<button class="b-red" style="grid-column:span 2" onclick="tankUI()">Tank saldırısı${(game.tankCd[v]||0)>game.turn?' ('+(game.tankCd[v]-game.turn)+' tur)':''}</button>`:''}${cmd?`<div class="cmdl" style="grid-column:span 2">🎖 <b>${cmd.n}</b>${cmd.r?' · '+cmd.r:''}</div>`:''}<button class="b-blue" style="grid-column:span 2" onclick="interiorUI()">🏛 İçişleri</button>${strOf(v)?`<button class="b-blue" style="grid-column:span 2" onclick="straitUI()">⚓ ${STR[strOf(v)].n}${game.strait&&game.strait[strOf(v)]&&enemiesOf(me).length?' (kapalı)':''}</button>`:''}${has(v,B.SILO)?`<button class="b-red" style="grid-column:span 2" onclick="missileUI()">🚀 Füze (${game.missiles})</button>`:''}${has(v,B.AIR)?`<button class="b-red" style="grid-column:span 2" onclick="airUI()">✈ Hava saldırısı${(game.airCd[v]||0)>game.turn?' ('+((game.airCd[v])-game.turn)+' tur)':''}</button>`:''}</div><div id="sub"></div>`}
  else{const r=game.rel[o]|0,w=atWar(me,o),al=game.allies.includes(o),tr=truce(me,o);
   cb.innerHTML=`<h3>${fimg(o,18)} ${cname(o)}</h3><div class="ab">${game.vas[o]===me?'👑 Vasal · ':''}${P[v].n} · İlişki: <b style="color:${r<=-10?'#d9826e':r>=30?'#9fc48a':'#d9b86a'}">${r}</b>${w?' · <b style="color:#d9654f">SAVAŞTA</b>':''}${al?' · <b style="color:#9fc48a">MÜTTEFİK</b>':''}${tr&&!w?' · 🕊 Ateşkes':''}${game.access[o]?' · 🛂':''}</div>
+  ${warLine(o)}${(()=>{const ha=homeArmy(v,me);if(!ha||atWar(me,o))return'';const n=armies.filter(a=>a.p===v&&a.o===me).reduce((s,a)=>s+a.n,0);return `<div class="ab" style="margin-top:4px">🪖 <span>Ordun burada</span>: <b>${fmt(n)}</b></div><div class="acts g2"><button onclick="startMove()">➜ Hareket</button>${tl(me,'tank')>=1?`<button class="b-red" onclick="tankUI()">Tank saldırısı${(game.tankCd[v]||0)>game.turn?' ('+(game.tankCd[v]-game.turn)+' tur)':''}</button>`:`<button onclick="mmStart()">👥 Toplu hareket</button>`}</div>`})()}
   <div class="acts sm"><button class="b-blue" onclick="foreignUI(${o})">🏛 Dış İşleri</button><button class="sec2" onclick="statsUI()">📊 İstatistik</button></div><div id="sub"></div>`}
  card.style.display='block'}
 
@@ -657,7 +658,7 @@ function recruitUI(){if(CORE[selP]!==game.me&&atWar(game.me,CORE[selP])){$('sub'
 function rcSync(v,fromNum){const s=$('rS'),nn=$('rN'),c=$('rC');if(!s||!nn)return;const mx=+s.max;v=Math.max(0,Math.min(mx,Math.floor(v)||0));if(fromNum)s.value=v;else nn.value=v;if(c)c.textContent=fmt(Math.ceil(v/PER_GOLD))}
 function doRecruit(){let n=Math.floor(+$('rN').value||0);n=Math.min(n,Math.floor(game.gold*PER_GOLD));const got=recruit(selP,n,game.me);
  if(got>0){game.gold-=Math.ceil(got/PER_GOLD);toast(`🪖 ${fmt(got)} asker yetiştirildi`);updHud();req();refreshBar()}else toast('Asker sayısı gir')}
-function startMove(){const a=homeArmy(selP,game.me);if(!a)return;mode='move';const n=a.n;const B_=(f,l)=>`<button class="sec2" onclick="mvSet(${Math.max(1,Math.round(n*f))})">${l}</button>`;
+function startMove(){const a=homeArmy(selP,game.me);if(!a)return;if(tkBusy(a)){toast('🛡 Tank saldırısı yapan ordu bu tur hareket edemez');return}mode='move';const n=a.n;const B_=(f,l)=>`<button class="sec2" onclick="mvSet(${Math.max(1,Math.round(n*f))})">${l}</button>`;
  $('sub').innerHTML=`<div class="box mvbox"><div class="mvh">🎯 Hedef şehre dokun</div>
  <div class="row"><span>Gönderilecek</span><b id="mL">${fmt(n)}</b></div><input type="range" id="mS" min="1" max="${n}" value="${n}" oninput="mvSet(+this.value)" style="width:100%"><input type="hidden" id="mN" value="${n}">
  <div class="mvq">${B_(0.25,'¼')}${B_(0.5,'½')}${B_(1,'Hepsi')}</div>
@@ -667,7 +668,8 @@ function startMove(){const a=homeArmy(selP,game.me);if(!a)return;mode='move';con
 function mvSet(v){const m=$('mS');if(!m)return;v=Math.max(1,Math.min(+m.max,v|0));m.value=v;$('mN').value=v;$('mL').textContent=fmt(v)}
 let MSEL=new Set(),MSELF=new Set();
 function mmStart(){MMP=-1;MSEL=new Set();MSELF=new Set();if(selF)MSELF.add(selF);if(selP>=0&&homeArmy(selP,game.me))MSEL.add(selP);mode='mmove';mmUI();req()}
-function mmIdle(){const r=[];for(const a of armies)if(a.o===game.me&&!a.path.length&&a.p>=0)r.push(a);return r}
+function mmIdle(){const r=[];for(const a of armies)if(a.o===game.me&&!a.path.length&&a.p>=0&&!tkBusy(a))r.push(a);return r}
+function tkBusy(a){return !!a&&(a.tk===game.turn||armies.some(x=>x.o===a.o&&x.p===a.p&&x.tk===game.turn))}
 function mmUI(){const L=mmIdle().filter(a=>MSEL.has(a.p));const FL=fleets.filter(f=>MSELF.has(f.id));const men=L.reduce((s,a)=>s+a.n,0)+FL.reduce((s,f)=>s+f.n,0);const cost=Math.max(1,Math.ceil((MSEL.size+MSELF.size)/2));
  $('sub').innerHTML=`<div class="box mvbox"><div class="mvh">👥 Toplu hareket</div><div class="mvi">Ordulu şehirlerine dokunarak seç veya çıkar. Sonra hedefe dokun: düşman şehri, boş şehir veya kendi şehrin.</div>${MMP>=0?`<div class="box" style="margin:6px 0;border-color:#c9a45c"><div>📍 <b>${P[MMP].n}</b> (kendi şehrin)</div><div class="mvq" style="margin-top:6px"><button onclick="MSEL.add(${MMP});MMP=-1;mmUI();req()">➕ Seçime ekle</button><button class="b-red" onclick="mmGo(${MMP})">➜ Buraya gönder</button></div></div>`:''}
  <div class="row"><span>Seçili</span><b>${MSEL.size} ordu${MSELF.size?' + '+MSELF.size+' filo':''} · ${fmt(men)} asker · ${cost} 🏃</b></div>
@@ -675,11 +677,11 @@ function mmUI(){const L=mmIdle().filter(a=>MSEL.has(a.p));const FL=fleets.filter
  <div class="mvq"><button class="sec2" onclick="MSEL.clear();MSELF.clear();mmUI();req()">Temizle</button><button class="sec2" onclick="cancelMove()">İptal</button></div></div>`}
 function mmPick(v,w){const f0=w?fleetAt(w.x,w.y):null;if(f0){MSELF.has(f0.id)?MSELF.delete(f0.id):MSELF.add(f0.id);mmUI();req();return}
  if(v===OCEAN){toast('Bir şehir veya filo seç');return}
- if(owner[v]===game.me&&homeArmy(v,game.me)){if(MSEL.has(v)||(!MSEL.size&&!MSELF.size)){MSEL.has(v)?MSEL.delete(v):MSEL.add(v);MMP=-1;mmUI();req();return}MMP=v;mmUI();req();return}
+ if(homeArmy(v,game.me)&&(owner[v]===game.me||!atWar(game.me,owner[v]))){if(MSEL.has(v)||(!MSEL.size&&!MSELF.size)){MSEL.has(v)?MSEL.delete(v):MSEL.add(v);MMP=-1;mmUI();req();return}MMP=v;mmUI();req();return}
  mmGo(v)}
 let MMP=-1;
 function mmGo(v){MMP=-1;if(!MSEL.size&&!MSELF.size){toast('Önce ordularını seç');return}const cost=Math.max(1,Math.ceil((MSEL.size+MSELF.size)/2));if(game.mp<cost){toast('🏃 Yetersiz hareket puanı');return}let ok=0,men=0,fail=0;
- for(const p of [...MSEL]){const a=homeArmy(p,game.me);if(!a||a.path.length)continue;const pth=findPath(game.me,p,v);if(!pth){fail++;continue}a.path=pth;ok++;men+=a.n}
+ for(const p of [...MSEL]){const a=homeArmy(p,game.me);if(!a||a.path.length||tkBusy(a))continue;const pth=findPath(game.me,p,v);if(!pth){fail++;continue}a.path=pth;ok++;men+=a.n}
  for(const id of [...MSELF]){const f=fleets.find(x=>x.id===id);if(!f)continue;if(!PCELL[v].length||!canEnter(game.me,v)||!orderFleet(f,{prov:v})){fail++;continue}ok++;men+=f.n}MSELF.clear();
  if(!ok){toast('⛔ Seçili ordular ve filolar için oraya yol yok');return}game.mp-=cost;mode='play';MSEL.clear();updHud();if(typeof tkOrder==='function')tkOrder(v);toast(`➜ ${ok} ordu (${kfmt(men)} asker) ${P[v].n} hedefine yola çıktı${fail?` · ${fail} ordu yol bulamadı`:''}`);selectProv(v);req()}
 function stopArmy(){for(const a of armies.filter(x=>x.p===selP&&x.o===game.me))a.path=[];const here=armies.filter(x=>x.p===selP&&x.o===game.me);
@@ -703,7 +705,7 @@ function insultUI(c){if(!useDP(1))return;game.rel[c]=Math.max(-100,game.rel[c]-(
 function betrayUI(c){if(!useDP(3))return;game.allies=game.allies.filter(x=>x!==c);game.rel[c]=Math.max(-100,game.rel[c]-60);game.cool[c]=game.turn+15;
  for(const n of CNB[game.me]){if(n!==c&&game.rel[n]!==undefined)game.rel[n]=Math.max(-100,game.rel[n]-(5+Math.random()*6|0))}
  for(const n of CNB[c]){if(n!==c&&n!==game.me&&game.rel[n]!==undefined)game.rel[n]=Math.max(-100,game.rel[n]-4)}
- news('ulusal',`🗡 ${cname(c)} ile ittifakımızı bozduk. Komşu devletler bu ihanete tepkili.`,true);toast('🗡 İhanet edildi');refreshBar()}
+ if(game.ext&&game.ext.ally)delete game.ext.ally[c];for(let i=0;i<N;i++)if(owner[i]===game.me)hap[i]=Math.max(0,hap[i]-3);news('ulusal',`🗡 ${cname(c)} ile ittifakımızı bozduk. Komşu devletler bu ihanete tepkili.`,true);toast('🗡 İhanet edildi');if(DIPO){DIPO=0;refreshBar();diploUI()}else refreshBar()}
 function armyVisible(a){const me=game.me;if(game.nofog||a.o===me||friendly(me,a.o))return true;if((game.cyberVis[a.o]||0)>game.turn)return true;if(a.p===undefined)return false;if(owner[a.p]===me||friendly(me,owner[a.p]))return true;
  for(const j of P[a.p].nb){if(owner[j]===me&&has(j,B.TOWER))return true;for(const k of P[j].nb)if(owner[k]===me&&lv(k,B.TOWER)>=3)return true}
  if(atWar(me,a.o)&&P[a.p].nb.some(j=>owner[j]===me))return true;return false}
@@ -941,7 +943,7 @@ function foreignUI(c){const me=game.me,r=game.rel[c]|0,w=atWar(me,c),al=game.all
  const wait=env?`<div class="hint">✉ Elçi yolda — yanıt ${Math.max(0,env.due-game.turn)} tur sonra</div>`:cl>0?`<div class="hint">⏳ ${cl} tur sonra tekrar görüşebilirsin</div>`:'';
  $('sub').innerHTML=`<div class="box fa">${wait}
  ${game.vas[c]===me?`<div class="hint" style="color:#d8b56a">👑 Vasalın · her tur gelirinin %10'unu öder</div><button onclick="annexVassal(${c})">👑 İlhak et · 10📜</button><button class="sec2" onclick="delete game.vas[${c}];toast('Bağımsızlık verildi');refreshBar()">🕊 Bağımsızlık ver</button>`:''}
- ${w?`<button class="b-blue" onclick="negotiate(${c})">📜 Barış müzakeresi (savaş skoru ${warScore(me,c)}%)</button>`:`<button class="b-red" onclick="warUI(${c})" ${r>-10||tr||pact?'disabled':''}>⚔ Savaş aç · 3📜</button>${pact?'<div class="hint">Saldırmazlık paktı var</div>':tr?'<div class="hint">Ateşkes sürüyor</div>':r>-10?'<div class="hint">Savaş için ilişki -10 veya altı olmalı</div>':''}`}
+ ${warLine(c)}${w?`<button class="b-blue" onclick="negotiate(${c})">📜 Barış müzakeresi (savaş skoru ${warScore(me,c)}%)</button>${callBtn(c)}`:`<button class="b-red" onclick="warUI(${c})" ${r>-10||tr||pact?'disabled':''}>⚔ Savaş aç · 3📜</button>${pact?'<div class="hint">Saldırmazlık paktı var</div>':tr?'<div class="hint">Ateşkes sürüyor</div>':r>-10?'<div class="hint">Savaş için ilişki -10 veya altı olmalı</div>':''}`}
  ${al?`<button class="b-red" onclick="betrayUI(${c})">🗡 İhanet et · 3📜</button>`:`<button onclick="allyUI(${c})" ${w||dis?'disabled':''}>🤝 Müttefik isteği · 3📜</button>`}
  <button class="b-green" onclick="envoyUI(${c})" ${w||dis?'disabled':''}>✉ Elçi gönder · 2📜</button>
  <button onclick="tradeUI(${c})" ${w||r<10?'disabled':''}>⚖ Ticaret yap</button>${!w&&r<10?'<div class="hint">Ticaret için ilişki +10 olmalı</div>':''}
@@ -1076,6 +1078,37 @@ function drawAnims(g,ox,oy,z,now){const S=Math.max(0.7,Math.min(1.6,z/6));
     if(fire){const su=((now/300+j*0.37)%1)/0.12;g.strokeStyle='rgba(255,210,120,.9)';g.lineWidth=1.5;g.beginPath();g.moveTo(tx+ux*14*S,ty+uy*14*S);g.lineTo(tx+(x1-tx)*su,ty+(y1-ty)*su);g.stroke()}}
    for(let q=0;q<4;q++){const t0=0.55+q*0.1;boom(g,x1+Math.cos(q*2.1)*10*S,y1+Math.sin(q*1.3)*7*S,18*S,(u-t0)/0.2)}}}
  ANIM=ANIM.filter(A=>now-A.t0<A.d)}
+// ---- diplomacy overview / alliances ----
+let DIPO=0;const ALLY_LEN=60;
+function allyInfo(c){const e=game.ext||(game.ext={});e.ally=e.ally||{};if(!e.ally[c])e.ally[c]={t:game.turn,exp:game.turn+ALLY_LEN};return e.ally[c]}
+function allyTick(){const e=game.ext;if(!e)return;e.ally=e.ally||{};for(const k in e.ally)if(!game.allies.includes(+k))delete e.ally[k];
+ for(const c of game.allies.slice()){const a=allyInfo(c),left=a.exp-game.turn;if(!owner.includes(c)){game.allies=game.allies.filter(x=>x!==c);delete e.ally[c];continue}
+  if(left<=0){game.allies=game.allies.filter(x=>x!==c);delete e.ally[c];game.rel[c]=Math.max(-100,(game.rel[c]|0)-5);news('ulusal',`⌛ ${cname(c)} ile ittifak süresi doldu ve sona erdi.`,true);toast(`⌛ ${cname(c)} ittifakı sona erdi`)}
+  else if(left===5)news('ulusal',`⏳ ${cname(c)} ile ittifakın bitmesine 5 tur kaldı. İçişleri › Diplomasi'den yenileyebilirsin.`,true)}}
+function warsOf(c){return game.wars.filter(w=>w[0]===c||w[1]===c).map(w=>({e:w[0]===c?w[1]:w[0],t:w[2]|0}))}
+function warLine(o){const W=warsOf(o).filter(x=>owner.includes(x.e)),ov=game.vas&&game.vas[o]!==undefined&&owner.includes(game.vas[o])?game.vas[o]:-1,vs=typeof vassalsOf==='function'?vassalsOf(o):[];
+ const L=W.length?W.slice(0,6).map(x=>`${fimg(x.e,12)} ${x.e===game.me?'<b style="color:#e0806a">'+cname(x.e)+'</b>':cname(x.e)} <span class="dim">(${game.turn-x.t} tur)</span>`).join(', ')+(W.length>6?` +${W.length-6}`:''):'<span>Barışta</span>';
+ return `<div class="hint wl" style="margin:4px 0;line-height:1.5">⚔ <span>Savaş durumu</span>: ${L}${ov>=0?`<br>👑 <span>Bağlı olduğu ülke</span>: ${cname(ov)}`:''}${vs.length?`<br>👑 <span>Vasalları</span>: ${vs.slice(0,5).map(cname).join(', ')}`:''}${game.allies.includes(o)?`<br>🤝 <b style="color:#9fc48a">Senin müttefikin</b>`:''}</div>`}
+function callBtn(c){const me=game.me,cd=((game.ext.call||{})[c]||0)-game.turn,av=game.allies.filter(a=>a!==c&&!atWar(a,c)&&owner.includes(a)).length+((typeof vassalsOf==='function'?vassalsOf(me):[]).filter(v=>v!==c&&!atWar(v,c)).length);
+ return `<button class="b-green" onclick="callAllies(${c})" ${cd>0||!av?'disabled':''}>🤝 Müttefikleri savaşa çağır · 1📜${cd>0?' ('+cd+' tur)':''}</button>${!av?'<div class="hint">Çağrılacak müttefik yok</div>':''}`}
+function callAllies(c){const me=game.me;if(!atWar(me,c))return;game.ext.call=game.ext.call||{};if((game.ext.call[c]||0)>game.turn)return;if(!useDP(1))return;game.ext.call[c]=game.turn+8;let yes=[],no=[];
+ for(const v of (typeof vassalsOf==='function'?vassalsOf(me):[]))if(v!==c&&!atWar(v,c)){game.wars.push([v,c,game.turn]);yes.push(v)}
+ for(const al of game.allies.slice()){if(al===c||atWar(al,c)||!owner.includes(al))continue;const r=game.rel[al]|0,p=truce(al,c)?0.1:r>=60?0.9:r>=30?0.65:r>=10?0.4:0.2;
+  if(Math.random()<p){game.wars.push([al,c,game.turn]);yes.push(al);game.rel[al]=Math.min(100,r+2)}else{no.push(al);game.rel[al]=r-3}}
+ if(yes.length)news('ulusal',`🤝 ${yes.map(cname).join(', ')}, ${cname(c)} ülkesine karşı savaşa girdi!`);if(no.length)news('ulusal',`✋ ${no.map(cname).join(', ')} savaş çağrımızı reddetti.`,true);
+ toast(yes.length?`🤝 ${yes.length} ülke savaşa katıldı`+(no.length?` · ${no.length} reddetti`:''):'✋ Müttefikler çağrıyı reddetti');if(yes.length)sfx('sword');buildBorders();req();updHud();refreshBar();foreignUI(c)}
+function renewAlly(c){if(!game.allies.includes(c))return;const a=allyInfo(c),r=game.rel[c]|0;if(a.exp-game.turn>40){toast('İttifak zaten uzun süre geçerli');return}if(!useDP(2))return;
+ if(r>=10||Math.random()<0.5+r/100){a.exp=Math.max(a.exp,game.turn)+ALLY_LEN;game.rel[c]=Math.min(100,r+3);news('ulusal',`🤝 ${cname(c)} ile ittifak ${ALLY_LEN} tur uzatıldı.`);toast('🤝 İttifak yenilendi')}else{game.rel[c]=r-5;toast(`✋ ${cname(c)} yenilemeyi reddetti`)}diploUI()}
+function diploUI(){const me=game.me,T=game.turn;DIPO=1;
+ const AL=game.allies.filter(c=>owner.includes(c)),W=warsOf(me).filter(x=>owner.includes(x.e)),PC=Object.keys(game.pact||{}).map(Number).filter(c=>game.pact[c]>T&&owner.includes(c)),VS=typeof vassalsOf==='function'?vassalsOf(me):[];
+ const ROW=(c,mid,btn)=>`<div class="drow" style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #3a3326"><span style="flex:1;min-width:0">${fimg(c,14)} <b>${cname(c)}</b><br><small style="color:#bfae88">${mid}</small></span>${btn||''}</div>`;
+ $('sub').innerHTML=`<div class="box fa"><div class="mvh">🤝 Diplomasi</div>
+ <div class="ngh">🤝 Müttefikler (${AL.length})</div>${AL.length?AL.map(c=>{const a=allyInfo(c),left=a.exp-T;return ROW(c,`${T-a.t} <span>turdur müttefik</span> · <span>kalan</span> <b style="color:${left<=10?'#e0806a':'#9fc48a'}">${left}</b> <span>tur</span>`,`<button style="width:auto;padding:4px 8px" onclick="renewAlly(${c})" ${left>40?'disabled':''}>🔄 Yenile · 2📜</button><button class="b-red" style="width:auto;padding:4px 8px" onclick="DIPO=1;betrayUI(${c})">🗡 İhanet · 3📜</button>`)}).join(''):'<div class="hint">Müttefikin yok</div>'}
+ <div class="ngh">⚔ Savaşlar (${W.length})</div>${W.length?W.map(x=>ROW(x.e,`${T-x.t} <span>turdur savaştasın</span> · <span>skor</span> ${warScore(me,x.e)}%`,`<button style="width:auto;padding:4px 8px" onclick="selectCountry(${x.e})">🏛</button>`)).join(''):'<div class="hint">Kimseyle savaşta değilsin</div>'}
+ <div class="ngh">📜 Saldırmazlık paktları (${PC.length})</div>${PC.length?PC.map(c=>ROW(c,`<span>kalan</span> <b>${game.pact[c]-T}</b> <span>tur</span>`)).join(''):'<div class="hint">Saldırmazlık paktın yok</div>'}
+ ${VS.length?`<div class="ngh">👑 Vasallar (${VS.length})</div>${VS.map(c=>ROW(c,'<span>Vasalın</span>')).join('')}`:''}
+ <button class="sec2" onclick="DIPO=0;interiorUI()">Geri</button></div>`}
+function selectCountry(c){if(!owner.includes(c))return;const v=owner[C[c].cap]===c?C[c].cap:owner.indexOf(c);DIPO=0;selectProv(v);foreignUI(c)}
 
 // ===== FLAGS / GOVERNMENT / COUPS / VASSALS / PEACE / MISSILES / AI BUILD =====
 var VOWN=null;
@@ -1196,7 +1229,7 @@ function aiBuild(){for(let c=0;c<C.length;c++){if(c===game.me||(c+game.turn)%8||
  for(let t=0;t<2&&opts.length;t++){const [i,k]=opts[(Math.random()*opts.length)|0];if(lv(i,k)>=3)continue;const cost=bcost(i,k);if(cost>budget)continue;budget-=cost;setLv(i,k,lv(i,k)+1)}}}
 // ---- interior ----
 function interiorUI(){const me=game.me,st=stabilityAll()[me],g=gov(me);const risk=Math.max(0,40-st)/40*5*govF(me,'coup');const caps=provsOf(me).sort((a,b)=>pop[b]-pop[a]).slice(0,40);const gcd=(game.govCd||0)-game.turn,fcd=(game.festCd||0)-game.turn;
- $('sub').innerHTML=`<div class="box fa"><div class="row"><span>🏛 Yönetim</span><b>${GOV[g].n}</b></div>${(()=>{const L=typeof leaderOf==='function'?leaderOf(me):null;return L?`<div class="row"><span>👤 ${L[2]}</span><b>${L[1]}</b></div>`:''})()}<div class="row"><span>⚖ İstikrar</span><b style="color:${st<45?'#e0806a':'#9fc48a'}">%${Math.round(st)}</b></div><div class="row"><span>💥 Darbe riski</span><b>%${risk.toFixed(1)} / tur</b></div>
+ $('sub').innerHTML=`<div class="box fa"><button class="b-blue" onclick="diploUI()">🤝 Diplomasi · ittifak, savaş, pakt</button><div class="row"><span>🏛 Yönetim</span><b>${GOV[g].n}</b></div>${(()=>{const L=typeof leaderOf==='function'?leaderOf(me):null;return L?`<div class="row"><span>👤 ${L[2]}</span><b>${L[1]}</b></div>`:''})()}<div class="row"><span>⚖ İstikrar</span><b style="color:${st<45?'#e0806a':'#9fc48a'}">%${Math.round(st)}</b></div><div class="row"><span>💥 Darbe riski</span><b>%${risk.toFixed(1)} / tur</b></div>
  <div class="ngh">Yönetim şeklini değiştir (25K💰 · 10📜)</div><select id="govS" onchange="govD.textContent=GOV[this.value].d">${Object.entries(GOV).map(([k,v])=>`<option value="${k}" ${k===g?'selected':''}>${v.n}</option>`).join('')}</select><div id="govD" class="hint" style="color:#cdbb92">${GOV[g].d}</div>
  <button onclick="changeGov()" ${gcd>0?'disabled':''}>🏛 Yönetimi değiştir${gcd>0?' ('+gcd+' tur)':''}</button>
  <div class="ngh">Başkenti taşı (şu an: ${P[C[me].cap].n})</div><select id="capS">${caps.filter(i=>i!==C[me].cap).map(i=>`<option value="${i}">${P[i].n} — ${kfmt(30000+provValue(i)*0.2)}💰</option>`).join('')}</select><button onclick="moveCap()">🏙 Başkenti taşı</button>
@@ -1299,12 +1332,12 @@ function aiCyber(){const me=game.me;for(let c=0;c<C.length;c++){if(c===me||!owne
  for(let i=0;i<N;i++)if(owner[i]===me)hap[i]=Math.max(0,hap[i]-5);for(const k in game.rel)if(game.rel[k]>20)game.rel[k]-=2+((Math.random()*3)|0);
  news('ulusal',`Ülkemiz siber saldırıya uğradı${known?` (${cname(c)} sorumlu tutuluyor)`:''}. Halk huzursuz, müttefiklerle ilişkiler zedelendi.`,true)}}
 // ---- tank assault ----
-function tankUI(){const v=selP,a=homeArmy(v,game.me),cd=(game.tankCd[v]||0)-game.turn;if(!a)return;
+function tankUI(){const v=selP,a=homeArmy(v,game.me),cd=(game.tankCd[v]||0)-game.turn;if(!a)return;if(tkBusy(a)){$('sub').innerHTML=`<div class="box"><span>Bu ordu bu tur tank saldırısı yaptı. Bir sonraki tur tekrar kullanılabilir.</span></div>`;return}
  if(cd>0){$('sub').innerHTML=`<div class="box">Tanklar bakımda: ${cd} tur</div>`;return}
  mode='tank';$('sub').innerHTML=`<div class="box"><div class="winfo"><b>Tank</b> · Sadece komşu şehre kara saldırısı · Şehri ele geçirebilir · Kale etkisi yarıya iner · Saldırı gücü çok yüksek</div>Tank saldırısı · ${nodeName(game.me,TREE.tank.nodes[tl(game.me,'tank')-1][0])} · güç x${tankMul(game.me).toFixed(2)}<br>Maliyet 3.000 altın + 1 HP. Komşu düşman şehre dokun.<br><button class="sec2" onclick="mode='play';refreshBar()">İptal</button></div>`}
-function doTank(t){const v=selP;mode='play';const a=homeArmy(v,game.me);if(!a){refreshBar();return}if(!P[v].nb.includes(t)||!atWar(game.me,owner[t])){toast('Sadece komşu düşman şehre tank saldırısı yapılır');refreshBar();return}
+function doTank(t){const v=selP;mode='play';const a=homeArmy(v,game.me);if(!a){refreshBar();return}if(tkBusy(a)){toast('Bu ordu bu tur zaten saldırdı');refreshBar();return}if(!P[v].nb.includes(t)||!atWar(game.me,owner[t])){toast('Sadece komşu düşman şehre tank saldırısı yapılır');refreshBar();return}
  if(game.gold<3000){toast('Yetersiz altın');return}if(game.mp<1){toast('Yetersiz hareket puanı');return}game.gold-=3000;game.mp-=1;game.tankCd[v]=game.turn+2;BLOG=[];
- sfx('tank');a.tank=1;a.path=[t];const prevO=owner[t];stepArmy(a);if(armies.includes(a)){delete a.tank;a.path=[]}
+ sfx('tank');a.tank=1;a.tk=game.turn;a.path=[t];const prevO=owner[t];stepArmy(a);if(armies.includes(a)){delete a.tank;a.path=[];if(a.p===t)game.tankCd[t]=game.turn+2}
  if(owner[t]!==prevO){VOWN=owner.slice();VOWN[t]=prevO}FXT={a:v,b:t,t0:performance.now()};ANIM.push({k:'tank',a:v,b:t,t0:performance.now(),d:2600,o:game.me});fxLoop();dirty=false;buildBorders();updHud();refreshBar();playReplay()}
 // ---- map selection actions ----
 const pc=(x,ref,amt,ex)=>Math.max(300,Math.round(amt*Math.pow(Math.max(0,x)/ref,ex)));
@@ -1552,6 +1585,41 @@ function cnameL(i){const c=C[i];if(!c)return '?';if(c.hist){return c.hist[LANG]|
  if(c.L)return c.L[li()]||c.n;return DISPLAY[c.n]||c.n}
 // UI dictionary: [tr, en, ar, zh, it, es, de, fr, ru]
 const DICT=[
+['Ordun burada','Your army is here','جيشك هنا','你的军队在此','Il tuo esercito è qui','Tu ejército está aquí','Deine Armee ist hier','Ton armée est ici','Твоя армия здесь'],
+['Savaş durumu','War status','حالة الحرب','战争状态','Stato di guerra','Estado de guerra','Kriegsstatus','État de guerre','Военное положение'],
+['Barışta','At peace','في سلام','和平','In pace','En paz','Im Frieden','En paix','В мире'],
+['Bağlı olduğu ülke','Overlord','الدولة المتبوعة','宗主国','Signore feudale','Soberano','Oberherr','Suzerain','Сюзерен'],
+['Vasalları','Its vassals','توابعها','其附庸','I suoi vassalli','Sus vasallos','Seine Vasallen','Ses vassaux','Его вассалы'],
+['Senin müttefikin','Your ally','حليفك','你的盟友','Tuo alleato','Tu aliado','Dein Verbündeter','Ton allié','Твой союзник'],
+['turdur müttefik','turns allied','دورًا في تحالف','回合结盟','turni di alleanza','turnos aliados','Runden verbündet','tours d\'alliance','ходов в союзе'],
+['turdur savaştasın','turns at war','دورًا في حرب','回合交战','turni in guerra','turnos en guerra','Runden im Krieg','tours de guerre','ходов в войне'],
+['kalan','left','متبقٍ','剩余','rimanenti','restantes','übrig','restants','осталось'],
+['skor','score','النتيجة','分数','punteggio','puntuación','Punkte','score','счёт'],
+['Vasalın','Your vassal','تابعك','你的附庸','Tuo vassallo','Tu vasallo','Dein Vasall','Ton vassal','Твой вассал'],
+['Diplomasi','Diplomacy','الدبلوماسية','外交','Diplomazia','Diplomacia','Diplomatie','Diplomatie','Дипломатия'],
+['Saldırmazlık paktları','Non-aggression pacts','معاهدات عدم الاعتداء','互不侵犯条约','Patti di non aggressione','Pactos de no agresión','Nichtangriffspakte','Pactes de non-agression','Пакты о ненападении'],
+['Müttefikin yok','You have no allies','ليس لديك حلفاء','你没有盟友','Non hai alleati','No tienes aliados','Du hast keine Verbündeten','Tu n\'as pas d\'alliés','У тебя нет союзников'],
+['Kimseyle savaşta değilsin','You are not at war','لست في حرب مع أحد','你未与任何国家交战','Non sei in guerra','No estás en guerra','Du führst keinen Krieg','Tu n\'es en guerre avec personne','Ты ни с кем не воюешь'],
+['Saldırmazlık paktın yok','You have no non-aggression pacts','ليس لديك معاهدات عدم اعتداء','你没有互不侵犯条约','Non hai patti di non aggressione','No tienes pactos de no agresión','Du hast keine Nichtangriffspakte','Tu n\'as aucun pacte de non-agression','У тебя нет пактов о ненападении'],
+['Vasallar','Vassals','التوابع','附庸','Vassalli','Vasallos','Vasallen','Vassaux','Вассалы'],
+['Yenile','Renew','تجديد','续约','Rinnova','Renovar','Erneuern','Renouveler','Продлить'],
+['İhanet','Betray','خيانة','背叛','Tradisci','Traicionar','Verraten','Trahir','Предать'],
+['Müttefikleri savaşa çağır','Call allies to war','استدعاء الحلفاء للحرب','号召盟友参战','Chiama gli alleati in guerra','Llamar aliados a la guerra','Verbündete zum Krieg rufen','Appeler les alliés à la guerre','Призвать союзников на войну'],
+['Çağrılacak müttefik yok','No allies to call','لا يوجد حلفاء لاستدعائهم','没有可号召的盟友','Nessun alleato da chiamare','No hay aliados que llamar','Keine Verbündeten zum Rufen','Aucun allié à appeler','Некого призвать'],
+['ittifak, savaş, pakt','alliances, wars, pacts','تحالفات، حروب، معاهدات','同盟、战争、条约','alleanze, guerre, patti','alianzas, guerras, pactos','Bündnisse, Kriege, Pakte','alliances, guerres, pactes','союзы, войны, пакты'],
+['Tank saldırısı yapan ordu bu tur hareket edemez','An army that made a tank attack cannot move this turn','الجيش الذي نفذ هجوم دبابات لا يمكنه التحرك هذا الدور','进行过坦克攻击的军队本回合不能移动','Un esercito che ha attaccato con i carri non può muoversi in questo turno','Un ejército que atacó con tanques no puede moverse este turno','Eine Armee nach einem Panzerangriff kann sich diese Runde nicht bewegen','Une armée ayant mené une attaque de chars ne peut pas bouger ce tour','Армия после танковой атаки не может двигаться в этом ходу'],
+['Bu ordu bu tur zaten saldırdı','This army already attacked this turn','هذا الجيش هاجم بالفعل هذا الدور','这支军队本回合已攻击','Questo esercito ha già attaccato in questo turno','Este ejército ya atacó este turno','Diese Armee hat diese Runde schon angegriffen','Cette armée a déjà attaqué ce tour','Эта армия уже атаковала в этом ходу'],
+['Bu ordu bu tur tank saldırısı yaptı. Bir sonraki tur tekrar kullanılabilir.','This army made a tank attack this turn. It can be used again next turn.','نفذ هذا الجيش هجوم دبابات هذا الدور. يمكن استخدامه مجددًا في الدور التالي.','这支军队本回合已进行坦克攻击，下回合可再次使用。','Questo esercito ha attaccato con i carri in questo turno. Potrà essere usato di nuovo il prossimo turno.','Este ejército hizo un ataque con tanques este turno. Podrá usarse de nuevo el próximo turno.','Diese Armee hat diese Runde einen Panzerangriff gemacht. Nächste Runde wieder verfügbar.','Cette armée a mené une attaque de chars ce tour. Elle sera de nouveau utilisable au prochain tour.','Эта армия провела танковую атаку в этом ходу. Снова доступна в следующем ходу.'],
+['İttifak yenilendi','Alliance renewed','تم تجديد التحالف','同盟已续约','Alleanza rinnovata','Alianza renovada','Bündnis erneuert','Alliance renouvelée','Союз продлён'],
+['yenilemeyi reddetti','refused to renew','رفضت التجديد','拒绝续约','ha rifiutato il rinnovo','rechazó la renovación','lehnte die Verlängerung ab','a refusé le renouvellement','отказалась продлить'],
+['İttifak zaten uzun süre geçerli','The alliance is still valid for a long time','التحالف ما زال ساريًا لفترة طويلة','同盟仍长期有效','L\'alleanza è ancora valida a lungo','La alianza sigue vigente por mucho tiempo','Das Bündnis gilt noch lange','L\'alliance est encore valable longtemps','Союз ещё долго действует'],
+['ülke savaşa katıldı','countries joined the war','دول انضمت إلى الحرب','个国家参战','paesi sono entrati in guerra','países se unieron a la guerra','Länder traten dem Krieg bei','pays sont entrés en guerre','стран вступили в войну'],
+['Müttefikler çağrıyı reddetti','Allies refused the call','رفض الحلفاء النداء','盟友拒绝了号召','Gli alleati hanno rifiutato','Los aliados rechazaron el llamado','Verbündete lehnten ab','Les alliés ont refusé l\'appel','Союзники отказались'],
+['ittifakı sona erdi','alliance ended','انتهى التحالف','同盟结束','alleanza terminata','alianza terminada','Bündnis beendet','alliance terminée','союз закончился'],
+['ile ittifak süresi doldu ve sona erdi.',': alliance term expired and ended.',': انتهت مدة التحالف.','：同盟期满结束。',': l\'alleanza è scaduta.',': la alianza expiró.',': Bündnis ist abgelaufen.',': l\'alliance a expiré.',': срок союза истёк.'],
+['savaş çağrımızı reddetti.','refused our call to war.','رفضت نداءنا للحرب.','拒绝了我们的参战号召。','ha rifiutato la nostra chiamata alle armi.','rechazó nuestro llamado a la guerra.','lehnte unseren Kriegsruf ab.','a refusé notre appel aux armes.','отказалась от нашего призыва к войне.'],
+['ülkesine karşı savaşa girdi!','entered the war against them!','دخلت الحرب ضدها!','对其参战！','è entrato in guerra contro di loro!','entró en guerra contra ellos!','trat gegen sie in den Krieg ein!','est entré en guerre contre eux !','вступила в войну против них!'],
+['ile ittifakın bitmesine 5 tur kaldı. İçişleri › Diplomasi\'den yenileyebilirsin.',': alliance ends in 5 turns. Renew it in Interior › Diplomacy.',': ينتهي التحالف بعد 5 أدوار. جدده من الشؤون الداخلية › الدبلوماسية.','：同盟将在5回合后结束，可在内政›外交中续约。',': l\'alleanza scade tra 5 turni. Rinnovala in Interni › Diplomazia.',': la alianza termina en 5 turnos. Renuévala en Interior › Diplomacia.',': Bündnis endet in 5 Runden. Erneuere es unter Inneres › Diplomatie.',': l\'alliance prend fin dans 5 tours. Renouvelle-la dans Intérieur › Diplomatie.',': союз закончится через 5 ходов. Продли его во Внутренних делах › Дипломатия.'],
 ['⏯ Kaldığın yerden devam et','⏯ Continue where you left off','⏯ تابع من حيث توقفت','⏯ 从上次中断处继续','⏯ Riprendi da dove eri','⏯ Continuar donde lo dejaste','⏯ Dort weitermachen, wo du warst','⏯ Reprendre où tu t\'étais arrêté','⏯ Продолжить с того места'],
 ['🖥 Arayüz boyutu','🖥 Interface size','🖥 حجم الواجهة','🖥 界面大小','🖥 Dimensione interfaccia','🖥 Tamaño de la interfaz','🖥 Oberflächengröße','🖥 Taille de l\'interface','🖥 Размер интерфейса'],
 ['Otomatik','Automatic','تلقائي','自动','Automatica','Automático','Automatisch','Automatique','Авто'],
@@ -2902,7 +2970,7 @@ function dateStr(t){const G=(typeof game!=='undefined'&&game)||{};const d=new Da
 const DIFF=['Kolay','Normal','Zor','Çok Zor'];
 function showMenu(html){mode='menu';if(!game)setTimeout(startTour,30);else stopTour();if($('selBar'))$('selBar').style.display='none';closeNews();closeEco();$('modeRank').style.display='none';$('log').style.display='none';$('menu').style.display='flex';$('mp').innerHTML=html;hud.style.display='none';$('pick').style.display='none';$('setup').style.display='none';card.style.display='none';0}
 function hideMenu(){$('menu').style.display='none';0}
-function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.0.7</div><div class="sub">Strateji · Tur Tabanlı · 1300 – 2027</div>
+function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.0.8</div><div class="sub">Strateji · Tur Tabanlı · 1300 – 2027</div>
  ${!game&&LS.get(LKEY,null)&&saves().some(s=>s.id===LS.get(LKEY,null))?'<button class="mb" onclick="continueGame()">⏯ Kaldığın yerden devam et</button>':''}<button class="mb ${!game&&LS.get(LKEY,null)?'sec':''}" onclick="gameMenu()">▶ Oyun</button><button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button>
  <button class="mb sec" onclick="leadersMenu()">👑 Liderler</button><button class="mb sec" onclick="helpMenu()">📖 Nasıl Oynanır</button><button class="mb sec" onclick="aboutMenu()">ℹ Hakkında</button>${game?'<button class="mb sec" onclick="resume()">↩ Oyuna Dön</button>':''}`)}
 const cleanName=s=>String(s||'').replace(/[<>&"'`\\]/g,'').trim().slice(0,28);
