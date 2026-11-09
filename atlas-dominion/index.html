@@ -1625,6 +1625,11 @@ function cnameL(i){const c=C[i];if(!c)return '?';if(c.hist){return c.hist[LANG]|
  if(c.L)return c.L[li()]||c.n;return DISPLAY[c.n]||c.n}
 // UI dictionary: [tr, en, ar, zh, it, es, de, fr, ru]
 const DICT=[
+['İnternet bağlantını kontrol edip tekrar dene. Oyunu tugrion.com adresinden veya uygulamadan açtığından emin ol.','Check your internet connection and try again. Make sure you opened the game from tugrion.com or the app.','تحقق من اتصالك بالإنترنت وحاول مجددًا. تأكد أنك فتحت اللعبة من tugrion.com أو من التطبيق.','请检查网络连接后重试。确认你是从 tugrion.com 或应用中打开游戏。','Controlla la connessione e riprova. Assicurati di aver aperto il gioco da tugrion.com o dall\'app.','Revisa tu conexión y vuelve a intentarlo. Asegúrate de abrir el juego desde tugrion.com o la app.','Prüfe deine Internetverbindung und versuche es erneut. Öffne das Spiel über tugrion.com oder die App.','Vérifie ta connexion et réessaie. Ouvre bien le jeu depuis tugrion.com ou l\'application.','Проверь интернет и попробуй снова. Открой игру с tugrion.com или из приложения.'],
+['Tekrar dene','Try again','حاول مجددًا','重试','Riprova','Reintentar','Erneut versuchen','Réessayer','Повторить'],
+['Tekrar deneniyor','Retrying','إعادة المحاولة','正在重试','Nuovo tentativo','Reintentando','Neuer Versuch','Nouvel essai','Повторная попытка'],
+['İnternet bağlantısı yok','No internet connection','لا يوجد اتصال بالإنترنت','没有网络连接','Nessuna connessione Internet','Sin conexión a Internet','Keine Internetverbindung','Pas de connexion Internet','Нет подключения к интернету'],
+['Hata','Error','خطأ','错误','Errore','Error','Fehler','Erreur','Ошибка'],
 ['Arkadaşlarla Oyna','Play with Friends','العب مع الأصدقاء','与好友一起玩','Gioca con gli amici','Jugar con amigos','Mit Freunden spielen','Jouer avec des amis','Играть с друзьями'],
 ['Oda kur, kodu arkadaşına söyle. Zaman akar, herkes aynı anda oynar.','Create a room and tell your friend the code. Time flows and everyone plays at the same time.','أنشئ غرفة وأخبر صديقك بالرمز. الوقت يمضي والجميع يلعب في الوقت نفسه.','创建房间并把代码告诉好友。时间持续流动，大家同时进行游戏。','Crea una stanza e di\' il codice al tuo amico. Il tempo scorre e tutti giocano insieme.','Crea una sala y dile el código a tu amigo. El tiempo fluye y todos juegan a la vez.','Erstelle einen Raum und sag deinem Freund den Code. Die Zeit läuft, alle spielen gleichzeitig.','Crée un salon et donne le code à ton ami. Le temps s\'écoule et tout le monde joue en même temps.','Создай комнату и скажи другу код. Время идёт, все играют одновременно.'],
 ['Adın','Your name','اسمك','你的名字','Il tuo nome','Tu nombre','Dein Name','Ton nom','Твоё имя'],
@@ -4104,13 +4109,17 @@ const mpHumans=()=>(game&&game.mpd&&game.mpd.humans)||[];
 const MPSPEEDS=[[30,'Yavaş · 30 sn'],[15,'Normal · 15 sn'],[8,'Hızlı · 8 sn']];
 // ---------- transport ----------
 let MPCH=null,MPCL=null;
-function mpConnect(code,cb){mpClose();MP.status='connecting';
+function mpConnect(code,cb,tryN){tryN=tryN||1;mpClose();MP.status='connecting';
  if(window.MPTEST){MPCH={send:m=>window.MPTEST(JSON.stringify(m))};MP.status='ok';setTimeout(()=>cb&&cb(true),0);return}
- if(!window.RTClient){toast('⚠ Bağlantı kütüphanesi yüklenemedi');cb&&cb(false);return}
- try{MPCL=new RTClient(MPCFG.url,{params:{apikey:MPCFG.key}});const ch=MPCL.channel('ad-room-'+code,{config:{broadcast:{self:false,ack:false}}});
+ if(!window.RTClient){toast('⚠ Bağlantı kütüphanesi yüklenemedi');cb&&cb(false,'lib');return}
+ if(navigator.onLine===false){cb&&cb(false,'offline');return}
+ let done=false;const fail=(why)=>{if(done)return;done=true;mpClose();if(tryN<4){toast(`🔌 Tekrar deneniyor (${tryN+1}/4)…`);setTimeout(()=>mpConnect(code,cb,tryN+1),2000+tryN*1500)}else{MP.status='err';MP.lastErr=why;cb&&cb(false,why)}};
+ try{MPCL=new RTClient(MPCFG.url,{params:{apikey:MPCFG.key},timeout:15000,heartbeatIntervalMs:20000});const ch=MPCL.channel('ad-room-'+code,{config:{broadcast:{self:false,ack:false},private:false}});
   ch.on('broadcast',{event:'m'},({payload})=>{try{mpOnMsg(payload)}catch(e){console.error(e)}});
-  let done=false;ch.subscribe(st=>{if(st==='SUBSCRIBED'){MP.status='ok';if(!done){done=true;cb&&cb(true)}}else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'){MP.status='err';if(!done){done=true;cb&&cb(false)}}else if(st==='CLOSED')MP.status='closed'});
-  MPCH={send:m=>ch.send({type:'broadcast',event:'m',payload:m})}}catch(e){console.error(e);cb&&cb(false)}}
+  const to=setTimeout(()=>fail('timeout'),16000);
+  ch.subscribe((st,err)=>{if(st==='SUBSCRIBED'){clearTimeout(to);MP.status='ok';if(!done){done=true;cb&&cb(true)}}else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'){clearTimeout(to);console.warn('mp',st,err);fail(st+(err&&err.message?': '+err.message:''))}else if(st==='CLOSED'){MP.status='closed';if(done&&MP.on)mpReconnect()}});
+  MPCH={send:m=>{try{ch.send({type:'broadcast',event:'m',payload:m})}catch(e){}}}}catch(e){console.error(e);fail('ex: '+e.message)}}
+function mpReconnect(){if(MP.rec||!MP.on)return;MP.rec=true;setTimeout(()=>{mpConnect(MP.code,ok=>{MP.rec=false;if(ok){if(MP.guest)mpSend('hello',{name:MP.name});else mpLobbyBroadcast(true)}})},2500)}
 function mpClose(){try{if(MPCL)MPCL.removeAllChannels()}catch(e){}MPCL=null;MPCH=null}
 function mpSend(t,d,to){if(!MPCH)return;MPCH.send({t,d,from:MP.pid,to:to||'',code:MP.code})}
 async function mpPackState(){const s=JSON.stringify(mpSnap());const cs=new CompressionStream('gzip'),w=cs.writable.getWriter();w.write(new TextEncoder().encode(s));w.close();const b=new Uint8Array(await new Response(cs.readable).arrayBuffer());let bin='';for(let i=0;i<b.length;i+=0x8000)bin+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(bin)}
@@ -4218,10 +4227,10 @@ function mpHostMenu(){const n=mpName();if(!n)return;MP.name=n;const sc=(y,t)=>`<
  showMenu(`<h2>🏠 Oda kur</h2><div class="sub">Zaman hızı</div><div class="opt"><select id="mpS" style="flex:1">${MPSPEEDS.map(([s,t])=>`<option value="${s}" ${s===15?'selected':''}>${t} / tur</option>`).join('')}</select></div><div class="sub">Harita</div>
  <div class="scnL">${sc('2027','Modern dünya')}${sc('1939','İkinci Dünya Savaşı')}${sc('1919','Kurtuluş Savaşı')}${sc('1914','Birinci Dünya Savaşı')}${sc('1800','Napolyon çağı')}${sc('1650','Barut imparatorlukları')}${sc('1400','Yıldırım ve Timur')}${sc('1350','Orhan Gazi dönemi')}${sc('1300','Beylikler dönemi')}${sc('1200','Selçuklu dönemi')}</div><button class="mb sec" onclick="mpMenu()">← Geri</button>`)}
 function mpHost(scn){MP.speed=+($('mpS')||{}).value||15;Object.assign(MP,{on:true,host:true,guest:false,code:mpCode(),pid:mpPid(),players:{},scn,started:false,paused:false,me:-1});mpWrapUI();
- toast('🔌 Bağlanıyor…');mpConnect(MP.code,ok=>{if(!ok){toast('⚠ Sunucuya bağlanılamadı');mpLeave();return}newGame(scn);mpLobbyUI();if(!MPIV)MPIV=setInterval(mpTick,250)})}
+ toast('🔌 Bağlanıyor…');mpConnect(MP.code,(ok,why)=>{if(!ok){mpFail(why);return}newGame(scn);mpLobbyUI();if(!MPIV)MPIV=setInterval(mpTick,250)})}
 function mpJoin(){const n=mpName();if(!n)return;const code=String(($('mpC')||{}).value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==6){toast('Kod 6 karakter olmalı');return}
  Object.assign(MP,{on:true,host:false,guest:true,code,pid:mpPid(),name:n,players:{},scn:'',started:false,me:-1,hostSeen:0});mpWrapUI();mpGuestOn();toast('🔌 Bağlanıyor…');
- mpConnect(code,ok=>{if(!ok){toast('⚠ Sunucuya bağlanılamadı');mpLeave();return}mpSend('hello',{name:n});hideMenu();mpLobbyUI();if(!MPIV)MPIV=setInterval(mpTick,250);
+ mpConnect(code,(ok,why)=>{if(!ok){mpFail(why);return}mpSend('hello',{name:n});hideMenu();mpLobbyUI();if(!MPIV)MPIV=setInterval(mpTick,250);
   setTimeout(()=>{if(MP.on&&MP.guest&&!MP.hostSeen){toast('⚠ Bu kodla oda bulunamadı');mpLeave();mainMenu()}},9000)})}
 function mpLobbyBroadcast(quiet){if(!MP.host)return;const players={...MP.players};players[MP.pid]={name:MP.name,c:MP.me,host:1};mpSend('lobby',{scn:MP.scn,speed:MP.speed,players,started:MP.started});if(!quiet)mpLobbyUI()}
 function mpLobbyUI(){let L=$('mpL');if(!L){L=document.createElement('div');L.id='mpL';document.body.appendChild(L)}if(!MP.on||MP.started){L.style.display='none';return}L.style.display='block';
@@ -4237,6 +4246,7 @@ function mpStart(){if(!MP.host||MP.me<0)return;const humans=[MP.me,...Object.val
  pend.me=MP.me;pend.nofog=false;startGame();game.mpd={humans:[...new Set(humans)],pl:{},names:{},paused:false,left:MP.speed};game.mpd.names[MP.me]=MP.name;for(const [pid,p] of Object.entries(MP.players))if(p.c>=0){game.mpd.names[p.c]=p.name}
  for(const c of game.mpd.humans)if(c!==MP.me)mpInitPlayer(c);mpStoreMe();MP.started=true;MP.next=Date.now()+MP.speed*1000;mpLobbyUI();
  const map={};for(const [pid,p] of Object.entries(MP.players))map[pid]=p.c;mpSend('start',{c:map});mpBroadcastState();toast('▶ Oyun başladı · oda '+MP.code)}
+function mpFail(why){mpLeave();showMenu(`<h2>⚠ Sunucuya bağlanılamadı</h2><div class=\"sub\">İnternet bağlantını kontrol edip tekrar dene. Oyunu tugrion.com adresinden veya uygulamadan açtığından emin ol.</div><div class=\"sub\" style=\"font-size:11px;opacity:.6\">Hata: ${escH(String(why||'?'))}</div><button class=\"mb\" onclick=\"mpMenu()\">↻ Tekrar dene</button><button class=\"mb sec\" onclick=\"mainMenu()\">← Ana menü</button>`)}
 function mpLeave(){if(MP.on){mpSend(MP.host?'end':'bye',{})}setTimeout(mpClose,300);mpGuestOff();Object.assign(MP,{on:false,host:false,guest:false,started:false,code:'',players:{},me:-1});const L=$('mpL');if(L)L.style.display='none';mpHud()}
 addEventListener('beforeunload',()=>{if(MP.on)mpSend(MP.host?'end':'bye',{})});
 
@@ -4254,7 +4264,7 @@ function dateStr(t){const G=(typeof game!=='undefined'&&game)||{};const d=new Da
 const DIFF=['Kolay','Normal','Zor','Çok Zor'];
 function showMenu(html){mode='menu';if(!game)setTimeout(startTour,30);else stopTour();if($('selBar'))$('selBar').style.display='none';closeNews();closeEco();$('modeRank').style.display='none';$('log').style.display='none';$('menu').style.display='flex';$('mp').innerHTML=html;hud.style.display='none';$('pick').style.display='none';$('setup').style.display='none';card.style.display='none';0}
 function hideMenu(){$('menu').style.display='none';0}
-function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.1.0</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
+function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.1.1</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
  ${!game&&LS.get(LKEY,null)&&saves().some(s=>s.id===LS.get(LKEY,null))?'<button class="mb" onclick="continueGame()">⏯ Kaldığın yerden devam et</button>':''}<button class="mb ${!game&&LS.get(LKEY,null)?'sec':''}" onclick="gameMenu()">▶ Oyun</button><button class="mb sec" onclick="mpMenu()">👥 Arkadaşlarla Oyna</button><button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button>
  <button class="mb sec" onclick="leadersMenu()">👑 Liderler</button><button class="mb sec" onclick="helpMenu()">📖 Nasıl Oynanır</button><button class="mb sec" onclick="aboutMenu()">ℹ Hakkında</button>${game?'<button class="mb sec" onclick="resume()">↩ Oyuna Dön</button>':''}`)}
 const cleanName=s=>String(s||'').replace(/[<>&"'`\\]/g,'').trim().slice(0,28);
