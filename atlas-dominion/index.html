@@ -413,7 +413,7 @@ function zoomAt(sx,sy,f){const a=s2w(sx,sy);cam.z*=f;clamp();const b=s2w(sx,sy);
 let rq=0;function req(){if(!rq)rq=requestAnimationFrame(()=>{rq=0;draw()})}
 
 // ===== GAME LOGIC =====
-const isMed=s=>s==='1300'||s==='1200'||s==='1400';const isModern=s=>s==='2027'||s==='2026';const MEDPOP={'1300':0.06,'1200':0.05,'1400':0.065};
+const isMed=s=>['1200','1300','1350','1400','1650','1800'].includes(s);const isModern=s=>s==='2027'||s==='2026';const MEDPOP={'1300':0.06,'1200':0.05,'1350':0.05,'1400':0.065,'1650':0.075,'1800':0.12};
 function QO(k,q,by){if(!game)return;if(!game.ext)game.ext={};const o=game.ext.qo||(game.ext.qo={});if(o[k])return;o[k]=1;by=by||'Mustafa Kemal Atatürk';setTimeout(()=>showQuote(q,by),400);news('ulusal',`💬 “${q}” — ${by}`)}
 const stabOf=i=>{const s=game&&game.ext&&game.ext.stab;return s&&s[i]!==undefined?s[i]:100};
 function setStab(i,v){if(!game)return;const X=game.ext||(game.ext={});const s=X.stab||(X.stab={});if(v>=100)delete s[i];else s[i]=Math.max(0,v)}
@@ -778,7 +778,7 @@ const LVMUL=[1,1.6,2.4],BUILD_TURNS=3;
 let bld=new Int32Array(N),ecoP=P.map(p=>p.eco),unemp=new Float32Array(N),ign=new Float32Array(N),inf=new Float32Array(N),dis=new Int32Array(N),deaths=new Float32Array(N);
 const lv=(i,k)=>(bld[i]>>(k*2))&3;const has=(i,k)=>lv(i,k)>0;
 function setLv(i,k,l){bld[i]=(bld[i]&~(3<<(k*2)))|(Math.min(3,l)<<(k*2))}
-const bcost=(i,k)=>Math.round(BINFO[k].c*LVMUL[lv(i,k)]*({med:0.35,ww1:0.7,ww2:0.85}[ERA]||1));
+const bcost=(i,k)=>Math.round(BINFO[k].c*LVMUL[lv(i,k)]*({med:0.35,gun:0.5,ww1:0.7,ww2:0.85}[ERA]||1));
 const GDPPC=C.map(c=>c.pop>0?c.gdp*1e9/c.pop:1000);
 const LEAD=new Set(['United States','China','Japan','South Korea','Taiwan']);
 let TECH=C.map((c,i)=>Math.min(5,1+3*Math.sqrt(Math.min(1,GDPPC[i]/60000))+(LEAD.has(c.n)?1:0)));
@@ -867,7 +867,7 @@ function diseaseTick(){if(Math.random()<0.025)spawnDisease(false);if(Math.random
   if(!live){o.on=false;if(o.hit||o.p)news(o.p?'ulusal':'yerel',`🦠 ${o.name} salgını sona erdi. Toplam ölü: ${fmt(o.deaths)}`)}}
  return any}
 // ---- tax / investment / upkeep ----
-function grossOf(c){return grossAdj(c,(c===game.me&&game.ext&&game.ext.prest?1+Math.min(0.3,game.ext.prest*0.05):1)*ecoAdjF(c)*0.25*(c===game.me?game.tax:0.2)*GS*(isMed(game.scn)?(c===game.me?5:1.25):SCNDEF[game.scn]?(c===game.me?2:1.3):1))}
+function grossOf(c){return grossAdj(c,(c===game.me&&game.ext&&game.ext.prest?1+Math.min(0.3,game.ext.prest*0.05):1)*ecoAdjF(c)*0.25*(c===game.me?game.tax:0.2)*GS*(isMed(game.scn)?(c===game.me?Math.max(1.4,Math.min(5,5*Math.sqrt(10/Math.max(1,INITCNT[c]||1)))):1.25):SCNDEF[game.scn]?(c===game.me?2:1.3):1))}
 function invTotal(){return game.inv.e+game.inv.p+game.inv.t}
 function upkeep(){return armyTotal(game.me)*UPKEEP*(SCNDEF[game.scn]?0.3:1)}
 function netIncome(){const g=grossOf(game.me);return g-g*invTotal()-upkeep()+(game.vasInc||0)+straitIncome()+resIncome(game.me)}
@@ -1029,9 +1029,9 @@ function cityList(c,s){cityC=c;if(s)citySort=s;closeSide();const p=$('cityP');p.
  <div class="ctl"><div class="cr hd"><b>Şehir</b><span>Nüfus</span><span>Ekonomi</span><span>Değer</span></div>${L.map(i=>`<div class="cr" onclick="cam={x:P[${i}].x,y:P[${i}].y,z:Math.max(cam.z,7)};selectProv(${i})"><b>${P[i].n}${i===C[c].cap?' ⭐':''}</b><span>${kfmt(pop[i])}</span><span>${ecoP[i].toFixed(1)}</span><span>${kfmt(provValue(i))}</span></div>`).join('')}</div>`}
 
 // ---- air strikes ----
-const airRange=i=>Math.round((70+40*lv(i,B.AIR))*({med:0.35,ww1:0.7,ww2:0.9}[ERA]||1));
+const airRange=i=>Math.round((70+40*lv(i,B.AIR))*({med:0.35,gun:0.5,ww1:0.7,ww2:0.9}[ERA]||1));
 function wrapD(a,b){let dx=Math.abs(P[a].x-P[b].x);dx=Math.min(dx,W-dx);return Math.hypot(dx,P[a].y-P[b].y)}
-function airStrike(base,tgt,o){if(o===game.me||owner[tgt]===game.me)sfx('air');const L=lv(base,B.AIR);if(!L)return false;game.airCd[base]=game.turn+2;const A=tl(o,'air');const pw=6000*L*Q[o]*(1+(A>=1?0.15:0)+(A>=2?0.3:0)+(A>=5?0.3:0)+(A>=6?0.4:0))*(o===game.me?1:MULT[game.diff])*(1-0.25*lv(tgt,B.AD)*(A>=3?0.5:1));if(A>=4)game.airCd[base]=game.turn+1;game.supp[tgt]=game.turn+1;FXA={a:base,b:tgt,t0:performance.now()};ANIM.push({k:'air',a:base,b:tgt,t0:performance.now(),d:2600,o});fxLoop();
+function airStrike(base,tgt,o){if(o===game.me||owner[tgt]===game.me)sfx('air');const L=lv(base,B.AIR);if(!L)return false;game.airCd[base]=game.turn+2;const A=tl(o,'air');const pw=6000*(isMed(game.scn)?(ERA==='gun'?0.2:0.12):1)*L*Q[o]*(1+(A>=1?0.15:0)+(A>=2?0.3:0)+(A>=5?0.3:0)+(A>=6?0.4:0))*(o===game.me?1:MULT[game.diff])*(1-0.25*lv(tgt,B.AD)*(A>=3?0.5:1));if(A>=4)game.airCd[base]=game.turn+1;game.supp[tgt]=game.turn+1;FXA={a:base,b:tgt,t0:performance.now()};ANIM.push({k:'air',a:base,b:tgt,t0:performance.now(),d:2600,o});fxLoop();
  const here=armies.filter(a=>a.p===tgt&&atWar(o,a.o));let killed=0;
  if(here.length){let left=pw;for(const a of here){const k=Math.min(a.n,Math.round(left/Math.max(0.3,Q[a.o])));a.n-=k;killed+=k;left-=k*Q[a.o];if(a.n<=0)armies=armies.filter(x=>x!==a);if(left<=0)break}}
  else{ecoP[tgt]*=0.98;hap[tgt]=Math.max(0,hap[tgt]-6);pop[tgt]=Math.max(10,pop[tgt]-pw*0.05)}
@@ -1229,7 +1229,7 @@ function endWar(a,b){game.wars=game.wars.filter(w=>!((w[0]===a&&w[1]===b)||(w[0]
  for(const x of armies)if((x.o===a&&owner[x.p]===b)||(x.o===b&&owner[x.p]===a)){const h=provsOf(x.o);x.p=owner[C[x.o].cap]===x.o?C[x.o].cap:h[0];x.path=[]}armies=armies.filter(x=>owner.includes(x.o));dirty=true}
 function afterPeace(){buildBorders();paint();dirty=false;updHud();refreshBar();req()}
 // ---- missiles ----
-const MISCOST=8000;const misRange=i=>{const m=tl(owner[i],'mis');return Math.round([0,250,400,700][lv(i,B.SILO)]*(m>=4?2:m>=1?1.2:1)*({med:0.2,ww1:0.3,ww2:0.6}[ERA]||1))};
+const MISCOST=8000;const misRange=i=>{const m=tl(owner[i],'mis');return Math.round([0,250,400,700][lv(i,B.SILO)]*(m>=4?2:m>=1?1.2:1)*({med:0.2,gun:0.25,ww1:0.3,ww2:0.6}[ERA]||1))};
 function missileUI(){const v=selP;const q=game.mprod.filter(x=>x.p===v).length;
  $('sub').innerHTML=`<div class="box"><div class="winfo"><b>Füze</b> · Çok uzun menzil · Binaları yıkar, ekonomiyi %10 vurur · Halk direnişini 3 tur yarıya indirir · Askerlere az etki · Tek kullanımlık</div>🚀 Füze stoğu: <b>${game.missiles}</b> · menzil ${misRange(v)}
  <div style="display:flex;gap:6px;margin-top:6px"><button onclick="makeMissile()">🏭 Füze üret · ${kfmt(MISCOST)}💰 (2 tur)</button><button class="b-red" onclick="aimMissile()" ${game.missiles<1?'disabled':''}>🚀 Fırlat · 1🏃</button></div>${q?`<div class="hint" style="color:#cdbb92">Üretimde: ${q}</div>`:''}</div>`}
@@ -1238,7 +1238,7 @@ function aimMissile(){if(game.missiles<1)return;mode='missile';toast('🎯 Sava�
 function fireMissile(from,t,o){const me=game.me;if(o===me||owner[t]===me)sfx('missile');const ad=lv(t,B.AD);let txt;const M=tl(o,'mis');const dm=M>=2?1.4:1;
  if(Math.random()<Math.min(0.9,0.25*ad*(M>=3?0.5:1)+(tl(owner[t],'mis')>=6?0.3:0)))txt=`🚀 ${cname(o)} füzesi → ${P[t].n}: hava savunması füzeyi düşürdü`;
  else{const bl=[];for(let k=0;k<BINFO.length;k++)if(lv(t,k))bl.push(k);let hit='';if(bl.length){const k=bl[(Math.random()*bl.length)|0];setLv(t,k,Math.max(0,lv(t,k)-(M>=2?2:1)));hit=`, ${BINFO[k].n} hasar gördü`}
-  const dm2=dm*(M>=5?1.4:1);ecoP[t]*=1-0.1*dm2;game.shock[t]=game.turn+3;pop[t]=Math.max(10,pop[t]*(1-0.01*dm));hap[t]=Math.max(0,hap[t]-12);game.dmg[t]=game.turn+6;let k2=0;for(const a of armies)if(a.p===t&&a.o!==o){const d=Math.min(a.n,Math.round((a.n*0.18+1500)*dm));a.n-=d;k2+=d}armies=armies.filter(x=>x.n>0);
+  const dm2=dm*(M>=5?1.4:1);ecoP[t]*=1-0.1*dm2;game.shock[t]=game.turn+3;pop[t]=Math.max(10,pop[t]*(1-0.01*dm));hap[t]=Math.max(0,hap[t]-12);game.dmg[t]=game.turn+6;let k2=0;for(const a of armies)if(a.p===t&&a.o!==o){const d=Math.min(a.n,Math.round((a.n*0.18+(isMed(game.scn)?150:1500))*dm));a.n-=d;k2+=d}armies=armies.filter(x=>x.n>0);
   txt=`🚀 ${cname(o)} füzesi → ${P[t].n}: isabet${hit}${k2?`, ${kfmt(k2)} asker öldü`:''}. Şehir 6 tur hasarlı, halk direnişi 3 tur yarıda.`}
  if(o===me||owner[t]===me)bev(t,txt,o===me,o);FXL={a:from,b:t,t0:performance.now()}}
 function doMissile(t){const v=selP;mode='play';if(!atWar(game.me,owner[t])){toast('⛔ Sadece savaştığın ülkeyi vurabilirsin');refreshBar();return}if(wrapD(v,t)>misRange(v)){toast('⛔ Menzil dışında');refreshBar();return}
@@ -1326,7 +1326,7 @@ const tl=(c,k)=>(game&&game.tree&&game.tree[c]?game.tree[c][k]:0)||0;
 function initTree(){game.tree={};for(let c=0;c<C.length;c++){const L=Math.max(0,Math.min(4,Math.round((TECH[c]-1.5)/1.1)));game.tree[c]={inf:L,tank:L,air:L,mis:Math.max(0,L-1),med:L,cyb:Math.max(0,L-1)}}game.tp=0}
 function aiTreeTick(){for(let c=0;c<C.length;c++){if(c===game.me)continue;const L=Math.max(0,Math.min(4,Math.round((TECH[c]-1.5)/1.1)));const t=game.tree[c]||(game.tree[c]={});for(const k in TREE)if((t[k]||0)<L&&Math.random()<0.3)t[k]=(t[k]||0)+1;if(TECH[c]>5.5)for(const k in TREE)if((t[k]||0)<6&&Math.random()<0.08)t[k]=(t[k]||0)+1}}
 const infMul=c=>{const L=tl(c,'inf');return 1+(L>=1?0.05:0)+(L>=2?0.05:0)+(L>=4?0.08:0)+(L>=5?0.08:0)+(L>=6?0.1:0)};
-const tankMul=c=>{const L=tl(c,'tank');return L?1.35+(L>=2?0.25:0)+(L>=3?0.25:0)+(L>=4?0.4:0)+(L>=6?0.4:0):1};
+const tankMul=c=>{const L=tl(c,'tank');if(ERA==='med'||ERA==='gun')return L?1.06+0.04*L:1;return L?1.35+(L>=2?0.25:0)+(L>=3?0.25:0)+(L>=4?0.4:0)+(L>=6?0.4:0):1};
 const cybAtk=c=>30+TECH[c]*6+(tl(c,'cyb')>=2?20:0)+(tl(c,'cyb')>=4?30:0)+(tl(c,'cyb')>=6?40:0);
 const cybDef=c=>30+TECH[c]*6+(tl(c,'cyb')>=1?20:0)+(tl(c,'cyb')>=3?30:0)+(tl(c,'cyb')>=5?30:0);
 function tpGain(){const me=game.me;let libs=0;for(let i=0;i<N;i++)if(owner[i]===me)libs+=lv(i,B.LIB);return Math.round((spBonusTP()+grossOf(me)*game.inv.t/900+libs*0.2+(isModern(game.scn)?0.3:0.6))*10)/10}
@@ -1610,6 +1610,67 @@ function cnameL(i){const c=C[i];if(!c)return '?';if(c.hist){return c.hist[LANG]|
  if(c.L)return c.L[li()]||c.n;return DISPLAY[c.n]||c.n}
 // UI dictionary: [tr, en, ar, zh, it, es, de, fr, ru]
 const DICT=[
+['Napolyon çağı','Age of Napoleon','عصر نابليون','拿破仑时代','L\'età di Napoleone','La era de Napoleón','Zeitalter Napoleons','L\'ère napoléonienne','Эпоха Наполеона'],
+['Fransız Devrimi Avrupa\'yı sarstı. Osmanlı, Rusya, Avusturya, Prusya ve Britanya; Hindistan\'da Marathalar, Amerika\'da genç ABD','The French Revolution has shaken Europe. Ottomans, Russia, Austria, Prussia and Britain; the Marathas in India, the young USA in America','هزّت الثورة الفرنسية أوروبا. العثمانيون وروسيا والنمسا وبروسيا وبريطانيا؛ المراثا في الهند والولايات المتحدة الفتية في أمريكا','法国大革命震撼欧洲。奥斯曼、俄国、奥地利、普鲁士和英国；印度有马拉塔，美洲有年轻的美国','La Rivoluzione francese ha scosso l\'Europa. Ottomani, Russia, Austria, Prussia e Gran Bretagna; i Maratha in India, i giovani USA in America','La Revolución francesa ha sacudido Europa. Otomanos, Rusia, Austria, Prusia y Gran Bretaña; los marathas en la India, los jóvenes EE. UU. en América','Die Französische Revolution erschüttert Europa. Osmanen, Russland, Österreich, Preußen und Britannien; die Marathen in Indien, die jungen USA in Amerika','La Révolution française a ébranlé l\'Europe. Ottomans, Russie, Autriche, Prusse et Grande-Bretagne ; les Marathes en Inde, les jeunes États-Unis en Amérique','Французская революция потрясла Европу. Османы, Россия, Австрия, Пруссия и Британия; в Индии маратхи, в Америке молодые США'],
+['Barut imparatorlukları','Gunpowder empires','إمبراطوريات البارود','火药帝国','Imperi della polvere da sparo','Imperios de la pólvora','Schießpulverreiche','Empires de la poudre','Пороховые империи'],
+['Osmanlı üç kıtada. Safeviler, Babürler, Rusya Çarlığı ve Lehistan; Avrupa\'da Habsburglar ve İsveç; Amerika\'da sömürgeler','The Ottomans span three continents. Safavids, Mughals, Tsardom of Russia and Poland; Habsburgs and Sweden in Europe; colonies in America','العثمانيون في ثلاث قارات. الصفويون والمغول وروسيا القيصرية وبولندا؛ آل هابسبورغ والسويد في أوروبا؛ مستعمرات في أمريكا','奥斯曼横跨三大洲。萨法维、莫卧儿、沙皇俄国和波兰；欧洲有哈布斯堡和瑞典；美洲有殖民地','Gli Ottomani su tre continenti. Safavidi, Moghul, Russia zarista e Polonia; Asburgo e Svezia in Europa; colonie in America','Los otomanos en tres continentes. Safávidas, mogoles, Rusia zarista y Polonia; Habsburgo y Suecia en Europa; colonias en América','Die Osmanen auf drei Kontinenten. Safawiden, Moguln, Zarentum Russland und Polen; Habsburger und Schweden in Europa; Kolonien in Amerika','Les Ottomans sur trois continents. Safavides, Moghols, Russie tsariste et Pologne ; Habsbourg et Suède en Europe ; colonies en Amérique','Османы на трёх континентах. Сефевиды, Моголы, Русское царство и Польша; в Европе Габсбурги и Швеция; в Америке колонии'],
+['Orhan Gazi dönemi','Age of Orhan Gazi','عصر أورخان غازي','奥尔汗加齐时代','L\'epoca di Orhan Gazi','La época de Orhan Gazi','Zeit Orhan Gazis','L\'époque d\'Orhan Gazi','Эпоха Орхан-гази'],
+['Osmanlı Rumeli\'ye geçmek üzere. İlhanlılar çöktü: Eretna, Karaman ve beylikler. Balkanlar\'da güçlü Sırp İmparatorluğu','The Ottomans are about to cross into Europe. The Ilkhanate has collapsed: Eretna, Karaman and the beyliks. A strong Serbian Empire in the Balkans','العثمانيون على وشك العبور إلى أوروبا. انهار الإلخانيون: إرتنا وقرمان والإمارات. إمبراطورية صربية قوية في البلقان','奥斯曼即将进入欧洲。伊儿汗国已崩溃：埃雷特纳、卡拉曼和诸贝伊国。巴尔干有强大的塞尔维亚帝国','Gli Ottomani stanno per passare in Europa. L\'Ilkhanato è crollato: Eretna, Karaman e i beylik. Un forte Impero serbo nei Balcani','Los otomanos están a punto de cruzar a Europa. El Iljanato se ha derrumbado: Eretna, Karaman y los beylicatos. Un fuerte Imperio serbio en los Balcanes','Die Osmanen setzen bald nach Europa über. Das Ilchanat ist zerfallen: Eretna, Karaman und die Beyliks. Ein starkes Serbisches Reich auf dem Balkan','Les Ottomans s\'apprêtent à passer en Europe. L\'Ilkhanat s\'est effondré : Eretna, Karaman et les beylicats. Un puissant Empire serbe dans les Balkans','Османы готовятся перейти в Европу. Ильханат распался: Эретна, Караман и бейлики. На Балканах сильная Сербская империя'],
+['Top atışı','Artillery barrage','قصف مدفعي','炮击','Fuoco d\'artiglieria','Bombardeo de artillería','Artilleriefeuer','Tir d\'artillerie','Артобстрел'],
+['top atışı','artillery barrage','قصف مدفعي','炮击','fuoco d\'artiglieria','bombardeo de artillería','Artilleriefeuer','tir d\'artillerie','артобстрел'],
+['Topçu Kışlası','Artillery Barracks','ثكنة المدفعية','炮兵营','Caserma d\'artiglieria','Cuartel de artillería','Artilleriekaserne','Caserne d\'artillerie','Артиллерийские казармы'],
+['Tabya','Redoubt','معقل','棱堡','Ridotta','Reducto','Schanze','Redoute','Редут'],
+['Topçu','Artillery','المدفعية','炮兵','Artiglieria','Artillería','Artillerie','Artillerie','Артиллерия'],
+['Toplar hazırlanıyor','Guns are being readied','تُجهّز المدافع','火炮正在准备','Cannoni in preparazione','Preparando cañones','Geschütze werden bereitgemacht','Canons en préparation','Орудия готовятся'],
+['Toplar','Guns','المدافع','火炮','Cannoni','Cañones','Geschütze','Canons','Орудия'],
+['Havan Atölyesi','Mortar Workshop','ورشة الهاون','迫击炮工坊','Officina dei mortai','Taller de morteros','Mörserwerkstatt','Atelier de mortiers','Мортирная мастерская'],
+['Gülle stoğu','Shot stockpile','مخزون القذائف','炮弹储备','Scorta di proiettili','Reserva de balas','Kugelvorrat','Réserve de boulets','Запас ядер'],
+['Havan menzili','Mortar range','مدى الهاون','迫击炮射程','Gittata dei mortai','Alcance de morteros','Mörserreichweite','Portée des mortiers','Дальность мортир'],
+['Havan hasarı','Mortar damage','ضرر الهاون','迫击炮伤害','Danno dei mortai','Daño de morteros','Mörserschaden','Dégâts des mortiers','Урон мортир'],
+['Gülle dök','Cast shot','اصنع قذائف','铸造炮弹','Fondi proiettili','Fundir balas','Kugeln gießen','Couler des boulets','Отлить ядра'],
+['Havan güllesi döker','Casts mortar shells','يصنع قذائف الهاون','铸造迫击炮弹','Fonde granate da mortaio','Funde granadas de mortero','Gießt Mörsergranaten','Coule des obus de mortier','Отливает мортирные бомбы'],
+['Havan','Mortar','الهاون','迫击炮','Mortaio','Mortero','Mörser','Mortier','Мортира'],
+['havan','mortar','الهاون','迫击炮','mortaio','mortero','Mörser','mortier','мортира'],
+['Topçu üstünlüğü','Artillery superiority','تفوق المدفعية','炮兵优势','Superiorità d\'artiglieria','Superioridad artillera','Artillerieüberlegenheit','Supériorité d\'artillerie','Превосходство артиллерии'],
+['Süvari hücumu','Cavalry charge','هجوم الفرسان','骑兵冲锋','Carica di cavalleria','Carga de caballería','Kavallerieangriff','Charge de cavalerie','Кавалерийская атака'],
+['Tüfekli piyade','Musket infantry','مشاة البنادق','火枪步兵','Fanteria con moschetto','Infantería mosquetera','Musketeninfanterie','Infanterie à mousquet','Мушкетёры'],
+['Süngü','Bayonet','الحربة','刺刀','Baionetta','Bayoneta','Bajonett','Baïonnette','Штык'],
+['Düzenli alaylar','Regular regiments','أفواج نظامية','正规团','Reggimenti regolari','Regimientos regulares','Reguläre Regimenter','Régiments réguliers','Регулярные полки'],
+['Hat piyadesi','Line infantry','مشاة الخط','线列步兵','Fanteria di linea','Infantería de línea','Linieninfanterie','Infanterie de ligne','Линейная пехота'],
+['Hafif piyade','Light infantry','مشاة خفيفة','轻步兵','Fanteria leggera','Infantería ligera','Leichte Infanterie','Infanterie légère','Лёгкая пехота'],
+['Muhafız alayları','Guard regiments','أفواج الحرس','近卫团','Reggimenti della guardia','Regimientos de la guardia','Garderegimenter','Régiments de la garde','Гвардейские полки'],
+['Ejderha süvarisi','Dragoons','الفرسان الخيالة','龙骑兵','Dragoni','Dragones','Dragoner','Dragons','Драгуны'],
+['Kırma süvari','Hussars','الهوسار','骠骑兵','Ussari','Húsares','Husaren','Hussards','Гусары'],
+['Hücum taktikleri','Shock tactics','تكتيكات الصدمة','冲击战术','Tattiche d\'urto','Tácticas de choque','Schocktaktik','Tactiques de choc','Ударная тактика'],
+['Sahra topu','Field gun','مدفع ميداني','野战炮','Cannone da campagna','Cañón de campaña','Feldgeschütz','Canon de campagne','Полевое орудие'],
+['Obüs','Howitzer','مدفع هاوتزر','榴弹炮','Obice','Obús','Haubitze','Obusier','Гаубица'],
+['Atlı topçu','Horse artillery','مدفعية الخيالة','骑炮兵','Artiglieria a cavallo','Artillería a caballo','Reitende Artillerie','Artillerie à cheval','Конная артиллерия'],
+['Topçu okulu','Artillery school','مدرسة المدفعية','炮兵学校','Scuola d\'artiglieria','Escuela de artillería','Artillerieschule','École d\'artillerie','Артиллерийская школа'],
+['Ağır topçu','Heavy artillery','مدفعية ثقيلة','重炮','Artiglieria pesante','Artillería pesada','Schwere Artillerie','Artillerie lourde','Тяжёлая артиллерия'],
+['Seri ateşli toplar','Rapid-fire guns','مدافع سريعة','速射炮','Cannoni a tiro rapido','Cañones de tiro rápido','Schnellfeuergeschütze','Canons à tir rapide','Скорострельные орудия'],
+['Kuşatma topu','Siege gun','مدفع حصار','攻城炮','Cannone d\'assedio','Cañón de asedio','Belagerungsgeschütz','Canon de siège','Осадное орудие'],
+['Humbara','Bomb shells','قنابل الهاون','爆炸弹','Bombe','Bombas','Bombengranaten','Bombes','Бомбы'],
+['Lağımcılar','Sappers','خبراء الألغام','工兵','Zappatori','Zapadores','Pioniere','Sapeurs','Сапёры'],
+['Kale topçusu','Fortress artillery','مدفعية القلاع','要塞炮','Artiglieria da fortezza','Artillería de fortaleza','Festungsartillerie','Artillerie de forteresse','Крепостная артиллерия'],
+['Tahkimat','Fortifications','التحصينات','防御工事','Fortificazioni','Fortificaciones','Befestigungen','Fortifications','Укрепления'],
+['Çiçek aşısı','Smallpox vaccine','لقاح الجدري','天花疫苗','Vaccino del vaiolo','Vacuna de la viruela','Pockenimpfung','Vaccin antivariolique','Прививка от оспы'],
+['Askerî hastaneler','Military hospitals','مستشفيات عسكرية','军医院','Ospedali militari','Hospitales militares','Militärlazarette','Hôpitaux militaires','Военные госпитали'],
+['Tıp fakülteleri','Medical schools','كليات الطب','医学院','Facoltà di medicina','Facultades de medicina','Medizinische Fakultäten','Facultés de médecine','Медицинские факультеты'],
+['Ulak ağı','Courier network','شبكة السعاة','信使网络','Rete di corrieri','Red de correos','Kuriernetz','Réseau de courriers','Сеть гонцов'],
+['Gizli servis','Secret service','جهاز سري','秘密机构','Servizio segreto','Servicio secreto','Geheimdienst','Service secret','Тайная служба'],
+['Kalyon filosu','Galleon fleet','أسطول الغليون','盖伦船队','Flotta di galeoni','Flota de galeones','Galeonenflotte','Flotte de galions','Флот галеонов'],
+['Çıkarma filikaları','Landing boats','قوارب الإنزال','登陆艇','Scialuppe da sbarco','Lanchas de desembarco','Landungsboote','Chaloupes de débarquement','Десантные шлюпки'],
+['Hat gemisi','Ship of the line','سفينة الخط','战列舰','Vascello di linea','Navío de línea','Linienschiff','Vaisseau de ligne','Линейный корабль'],
+['Deniz ticaret kumpanyası','Maritime trading company','شركة تجارة بحرية','海上贸易公司','Compagnia commerciale marittima','Compañía de comercio marítimo','Seehandelskompanie','Compagnie de commerce maritime','Морская торговая компания'],
+['Firkateyn','Frigate','فرقاطة','护卫舰','Fregata','Fragata','Fregatte','Frégate','Фрегат'],
+['Ağır hat gemisi','Heavy ship of the line','سفينة خط ثقيلة','重型战列舰','Vascello pesante','Navío de línea pesado','Schweres Linienschiff','Vaisseau de ligne lourd','Тяжёлый линейный корабль'],
+['Su pompaları','Water pumps','مضخات المياه','水泵','Pompe idrauliche','Bombas de agua','Wasserpumpen','Pompes à eau','Водяные насосы'],
+['Buhar pompası','Steam pump','مضخة بخارية','蒸汽泵','Pompa a vapore','Bomba de vapor','Dampfpumpe','Pompe à vapeur','Паровой насос'],
+['Maden mühendisliği','Mining engineering','هندسة التعدين','采矿工程','Ingegneria mineraria','Ingeniería de minas','Bergbautechnik','Génie minier','Горное инженерство'],
+['Dokuma fabrikaları','Textile mills','مصانع النسيج','纺织厂','Filande','Fábricas textiles','Textilfabriken','Filatures','Текстильные фабрики'],
+['Buhar makinesi','Steam engine','المحرك البخاري','蒸汽机','Macchina a vapore','Máquina de vapor','Dampfmaschine','Machine à vapeur','Паровая машина'],
+['Demir dökümhaneleri','Iron foundries','مسابك الحديد','铸铁厂','Fonderie di ferro','Fundiciones de hierro','Eisengießereien','Fonderies de fer','Чугунолитейные заводы'],
+['Fabrika sistemi','Factory system','نظام المصانع','工厂制度','Sistema di fabbrica','Sistema fabril','Fabriksystem','Système des usines','Фабричная система'],
 ['Yıldırım ve Timur','Bayezid and Timur','بايزيد وتيمور','巴耶济德与帖木儿','Bayezid e Tamerlano','Bayezid y Tamerlán','Bayezid und Timur','Bayezid et Tamerlan','Баязид и Тимур'],
 ['Yıldırım Bayezid Anadolu ve Balkanlar\'ı birleştirdi. Doğuda Timur, güneyde Memlükler; Bizans yalnızca İstanbul\'da','Bayezid the Thunderbolt has united Anatolia and the Balkans. Timur in the east, the Mamluks in the south; Byzantium holds only Constantinople','وحّد بايزيد الصاعقة الأناضول والبلقان. تيمور في الشرق والمماليك في الجنوب؛ بيزنطة لم يبق لها إلا القسطنطينية','“雷霆”巴耶济德统一了安纳托利亚和巴尔干。东有帖木儿，南有马穆鲁克；拜占庭只剩君士坦丁堡','Bayezid il Fulmine ha unito Anatolia e Balcani. A est Tamerlano, a sud i Mamelucchi; a Bisanzio resta solo Costantinopoli','Bayezid el Rayo ha unido Anatolia y los Balcanes. Al este Tamerlán, al sur los mamelucos; Bizancio solo conserva Constantinopla','Bayezid der Blitz hat Anatolien und den Balkan vereint. Im Osten Timur, im Süden die Mamluken; Byzanz hält nur noch Konstantinopel','Bayezid la Foudre a uni l\'Anatolie et les Balkans. À l\'est Tamerlan, au sud les Mamelouks ; Byzance ne tient plus que Constantinople','Баязид Молниеносный объединил Анатолию и Балканы. На востоке Тимур, на юге мамлюки; у Византии остался только Константинополь'],
 ['topraklarında isyan!',': uprising in its lands!',': انتفاضة في أراضيها!','：境内爆发起义！',': rivolta nelle sue terre!',': ¡levantamiento en sus tierras!',': Aufstand in seinen Ländern!',': soulèvement sur ses terres !',': восстание на её землях!'],
@@ -2565,11 +2626,11 @@ const ERAW={
   'Siber saldırı':'Casus operasyonu','Siber savunma':'Karşı casusluk','siber saldırıya':'casus operasyonuna','Siber istihbarat':'Casus ağı','Siber ordu':'Casus teşkilatı','Siber':'İstihbarat','siber':'istihbarat',
   'Hava Savunma':'Uçaksavar','Hava savunması':'Uçaksavar','hava savunması':'uçaksavar','Hava savunmasının':'Uçaksavarın'}};
 let ERE=null,EMAPW=null;
-function setEra(e){ERA=e||'mod';TREE=ERA==='med'?TREE_MED:ERA==='ww1'?TREE_WW1:ERA==='ww2'?TREE_WW2:TREE_MOD;const m=ERAW[ERA];
+function setEra(e){ERA=e||'mod';TREE=ERA==='med'?TREE_MED:ERA==='gun'?TREE_GUN:ERA==='ww1'?TREE_WW1:ERA==='ww2'?TREE_WW2:TREE_MOD;const m=ERAW[ERA];
  if(!m){ERE=null;EMAPW=null}else{EMAPW=m;const ks=Object.keys(m).sort((a,b)=>b.length-a.length);ERE=new RegExp('(?<![\\p{L}])('+ks.join('|')+')(?![\\p{L}])','gu')}
  if(typeof document!=='undefined'&&document.body)translateTree(document.body)}
-const eraOf=s=>isMed(s)?'med':s==='1914'||s==='1919'?'ww1':s==='1939'?'ww2':'mod';
-function trText(v){if(ERE)v=v.replace(ERE,m=>EMAPW[m]||m);if(!DRE)return v;return v.replace(DRE,m=>DMAP.get(m)||m).replace(/%(\d+(?:[.,]\d+)?)/g,'$1%')}
+const eraOf=s=>s==='1650'||s==='1800'?'gun':isMed(s)?'med':s==='1914'||s==='1919'?'ww1':s==='1939'?'ww2':'mod';
+function trText(v){if(ERE)v=v.replace(ERE,m=>EMAPW[m]||m);if(ERA==='med'||ERA==='gun')v=v.replace(/✈️?/g,ERA==='gun'?'💣':'🏹').replace(/🚀/g,'🎯');if(!DRE)return v;return v.replace(DRE,m=>DMAP.get(m)||m).replace(/%(\d+(?:[.,]\d+)?)/g,'$1%')}
 const TORIG=new WeakMap(),TOUT=new WeakMap();
 function translateTree(root){if(!root)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;const L=[];while(n=w.nextNode())L.push(n);for(const t of L){const p=t.parentNode;if(!p||p.nodeName==='SCRIPT'||p.nodeName==='STYLE')continue;let v=t.nodeValue;const o=TOUT.get(t)===v?TORIG.get(t):v;if(o===undefined)continue;const nv=(DRE||ERE)?trText(o):o;if(nv!==o||TORIG.has(t)){TORIG.set(t,o);TOUT.set(t,nv);if(nv!==v)t.nodeValue=nv}}}
 function setLang(l){LANG=l;SET.uiLang=l;document.documentElement.lang=l;LS.set(SETKEY,SET);buildDict();for(let i=0;i<N;i++)P[i].n=P[i].L?P[i].L[li()]||P[i].ne:P[i].ne;if(typeof provNames==='function')provNames();AY.length=0;AY.push(...MONTHS[l]);document.documentElement.dir='ltr';
@@ -2674,7 +2735,7 @@ function scenarioOwner1300(L){L=L||S1300;const out=new Int32Array(N).fill(-1);co
    if(r.p&&r.p.some(pg=>inPoly(x,y,pg))){out[i]=si;continue}if(cset.has(P[i].c))out[i]=si}});
  return out}
 function applyScenario1300(){applyScenarioMed('1300')}
-function applyScenarioMed(scn){const L=scn==='1200'?S1200:scn==='1400'?S1400:S1300;const sid=scenarioOwner1300(L);const made=[];
+function applyScenarioMed(scn){const L={'1200':S1200,'1350':S1350,'1400':S1400,'1650':S1650,'1800':S1800}[scn]||S1300;const sid=scenarioOwner1300(L);const made=[];
  L.forEach((s,si)=>{const ids=[];for(let i=0;i<N;i++)if(sid[i]===si)ids.push(i);if(!ids.length){made.push(-1);return}
   let cap=ids.find(i=>P[i].ne===s[6])??ids.slice().sort((a,b)=>BASEPOP[b]-BASEPOP[a])[0];if(s[6]&&!ids.some(i=>P[i].ne===s[6])){const k=ids.find(i=>P[i].L&&P[i].L.includes(s[6]));if(k!==undefined)cap=k}
   const parent=P[ids[0]].c;const d={n:'S:'+s[0],cap,parent,col:s[3],size:ids.length,hist:{tr:s[1],en:s[2]},tribal:s[7]?1:0,fl:s[4],scn:1};const c=addCountryRaw(d);SCN_NEWC.push(d);made.push(c);for(const i of ids){owner[i]=c;CORE[i]=c}});
@@ -2683,7 +2744,7 @@ function applyScenarioMed(scn){const L=scn==='1200'?S1200:scn==='1400'?S1400:S13
  for(let c=C0;c<C.length;c++){CNEAR[c]=new Set()}for(let c=C0;c<C.length;c++){refreshNb(c);let p=0;for(let i=0;i<N;i++)if(owner[i]===c)p+=pop[i];C[c].pop=p;C[c].gdp=0;for(let i=0;i<N;i++)if(owner[i]===c)C[c].gdp+=P[i].eco;MIL[c]=C[c].tribal?0:Math.round(p*0.03);TECH[c]=1;GDPPC[c]=3000}
  for(let c=0;c<C0;c++)MIL[c]=0;updQ()}
 function scenFlag(c){const d=C[c];if(!d||!d.fl)return null;if(d.fl.startsWith('h:'))return histFlag(d.fl.slice(2));if(d.fl.startsWith('m:'))return FLAGS[d.fl.slice(2)]||genFlag(c);if(GENF['s'+c])return GENF['s'+c];const col=d.col||CC[c],hex='#'+col.map(x=>Math.max(0,Math.min(255,x)).toString(16).padStart(2,'0')).join('');
- const url=d.fl==='cres'?drawFlag('cres',hex,'#f4ecd8','#000'):d.fl==='cross'?drawFlag('cross',hex,'#f4ecd8','#000'):d.fl==='sun'?drawFlag('star',hex,'#e8c54a','#000'):drawFlag('h2',hex,'#5a4a32','#000');return GENF['s'+c]=url}
+ const url=d.fl==='star'?drawFlag('star',hex,'#ffffff','#000'):d.fl==='cres'?drawFlag('cres',hex,'#f4ecd8','#000'):d.fl==='cross'?drawFlag('cross',hex,'#f4ecd8','#000'):d.fl==='sun'?drawFlag('star',hex,'#e8c54a','#000'):drawFlag('h2',hex,'#5a4a32','#000');return GENF['s'+c]=url}
 function restoreModern(){for(let i=0;i<N;i++)BASEPOP[i]=POP0[i];if(typeof CPOP0!=='undefined')C.forEach((c,i)=>{if(i<C0){c.pop=CPOP0[i];c.gdp=CGDP0[i]}});for(let c=0;c<C0;c++)MIL[c]=C[c].mil>=0?C[c].mil:(MILX[C[c].n]??Math.round(C[c].pop*0.002))}
 
 function scenPost(){bld=new Int32Array(N);TECH.fill(1);updQ();for(let c=C0;c<C.length;c++){if(C[c].tribal)continue;const cap=C[c].cap;setLv(cap,B.FORT,1);const coast=[];for(let i=0;i<N;i++)if(owner[i]===c&&P[i].co&&PCELL[i].length)coast.push(i);coast.sort((a,b)=>pop[b]-pop[a]).slice(0,2).forEach(i=>setLv(i,B.PORT,1))}}
@@ -2860,7 +2921,7 @@ const HN_MED={Turkey:{Istanbul:['Konstantinopolis','Constantinople'],Bursa:['Pru
  Spain:{'Community of Madrid':['Toledo','Toledo']},Italy:{'Vatican City':['Roma','Rome']},Kazakhstan:{Almaty:['Almalık','Almaliq'],'Almaty City':['Almalık','Almaliq']},China:{Beijing:['Hanbalık','Khanbaliq']},Vietnam:{'Ho Chi Minh City':['Prey Nokor','Prey Nokor']},Indonesia:{Jakarta:['Sunda Kelapa','Sunda Kelapa']}};
 const HN_MOD={Italy:{'Vatican City':['Roma','Rome']}};
 const HN_1919={Poland:{'Greater Poland Voivodeship':['Poznań','Poznań'],'Kuyavian-Pomeranian Voivodeship':['Bydgoszcz','Bydgoszcz'],'Silesian Voivodeship':['Katowice','Katowice'],'Lesser Poland Voivodeship':['Krakov','Kraków'],'Podkarpackie Voivodeship':['Przemyśl','Przemyśl']},Ukraine:{Lviv:['Lwów','Lwów']},Romania:{'Cluj-Napoca':['Cluj','Cluj'],'Timiș':['Timişoara','Timișoara'],Oradea:['Oradea','Oradea'],'Brașov':['Braşov','Brașov'],'Satu Mare':['Satu Mare','Satu Mare']}};
-const HNG={'1200':[HN_MED],'1300':[HN_MED],'1400':[HN_MED],'1914':[HN_OTT,HN_WW1],'1919':[HN_OTT,HN_WW1,HN_1919],'1939':[HN_WW2],'2027':[HN_MOD],'2026':[HN_MOD]};
+const HNG={'1200':[HN_MED],'1300':[HN_MED],'1350':[HN_MED],'1400':[HN_MED],'1650':[HN_OTT],'1800':[HN_OTT],'1914':[HN_OTT,HN_WW1],'1919':[HN_OTT,HN_WW1,HN_1919],'1939':[HN_WW2],'2027':[HN_MOD],'2026':[HN_MOD]};
 var NAMESCN='2027';
 function provNames(scn){if(scn)NAMESCN=scn;const L=HNG[NAMESCN]||[HN_MOD];const k=li();
  for(let i=0;i<N;i++){let n=P[i].L?P[i].L[k]||P[i].ne:P[i].ne;const cn=C[P[i].c].n;for(const T of L){const t=T[cn]&&T[cn][P[i].ne];if(t)n=k===0?t[0]:t[1]}P[i].n=n}
@@ -3028,6 +3089,261 @@ const S1400=[
  ['nam','Kuzey Amerika yerlileri','North American peoples',[140,120,90],'tribe',{c:['United States','Canada','Mexico','Bahamas']},'',1],
  ['cam','Orta Amerika ve Karayip halkları','Central American & Caribbean peoples',[130,130,90],'tribe',{c:['Honduras','Nicaragua','Costa Rica','Panama','El Salvador','Cuba','Haiti','Dominican Rep.','Jamaica','Trinidad and Tobago','Barbados','Grenada','Saint Lucia','Saint Vincent and the Grenadines','Dominica','Antigua and Barbuda','Saint Kitts and Nevis','Caribbean Netherlands']},'',1],
  ['sam','Güney Amerika yerlileri','South American peoples',[120,130,80],'tribe',{c:['Brazil','Argentina','Chile','Colombia','Venezuela','Ecuador','Bolivia','Paraguay','Uruguay','Guyana','Suriname']},'',1],
+ ['aus','Avustralya Aborjinleri','Aboriginal Australia',[160,110,70],'tribe',{c:['Australia']},'',1],
+ ['oce','Okyanusya halkları','Peoples of Oceania',[110,130,130],'tribe',{c:['New Zealand','Papua New Guinea','Fiji','Solomon Islands','Vanuatu','Samoa','Tonga','Kiribati','Micronesia','Marshall Islands','Palau','Nauru','Tuvalu','Spratly Is.']},'',1]];
+// ===== 1350, 1650, 1800 =====
+const TRALL=P.filter(p=>D.countries[p.c]&&D.countries[p.c].n==='Turkey').map(p=>p.ne);
+const S1350=[
+ ['osm','Osmanlı Beyliği','Ottoman Beylik',[175,40,40],'cres',{tr:['Bursa','Bilecik','Eskişehir','Kocaeli','Sakarya','Yalova','Balıkesir','Çanakkale']},'Bursa'],
+ ['byz','Bizans İmparatorluğu','Byzantine Empire',[110,45,120],'cross',{tr:['Istanbul','Edirne','Kırklareli','Tekirdağ'],cp:[['Greece'],[[21,36.2],[21,38.3],[23.4,38.1],[23.4,36.2]]],p:[[[22.5,40.1],[22.5,41.1],[24.3,41.1],[24.3,40.1]]]},'Istanbul'],
+ ['ven','Venedik Cumhuriyeti','Republic of Venice',[170,60,80],'cross',{cp:[['Italy'],[[11.2,45],[11.2,46.6],[13.9,46.6],[13.5,45.4],[12.3,44.9]]],p:[[[23.4,34.7],[23.4,35.8],[26.5,35.8],[26.5,34.7]]]},'Venice'],
+ ['srb','Sırp İmparatorluğu','Serbian Empire',[150,50,50],'cross',{c:['Serbia','Kosovo','Montenegro','North Macedonia','Albania'],cp:[['Greece'],[[19.5,38.8],[19.5,41.8],[23.6,41.8],[23.6,38.8]]]},'Skopje'],
+ ['lat','Latin Dukalıkları','Latin Duchies',[190,170,120],'cross',{c:['Greece']},'Athens'],
+ ['bul','Bulgar Çarlığı','Bulgarian Empire',[60,120,70],'cross',{c:['Bulgaria']}],
+ ['cnd','Candaroğulları','Jandarid Beylik',[150,60,90],'cres',{tr:['Kastamonu','Çankırı','Sinop','Bolu','Zonguldak','Bartın','Karabük','Düzce']},'Kastamonu'],
+ ['srh','Saruhan Beyliği','Saruhanid Beylik',[170,120,60],'cres',{tr:['Manisa']},'Manisa'],
+ ['ayd','Aydınoğulları','Aydinid Beylik',[60,120,110],'cres',{tr:['İzmir','Aydın']},'Aydın'],
+ ['mnt','Menteşe Beyliği','Menteshe Beylik',[140,150,70],'cres',{tr:['Muğla']},'Muğla'],
+ ['grm','Germiyanoğulları','Germiyanid Beylik',[120,60,40],'cres',{tr:['Kütahya','Uşak','Afyonkarahisar','Denizli']},'Kütahya'],
+ ['hmd','Hamidoğulları','Hamidid Beylik',[80,140,80],'cres',{tr:['Isparta','Burdur']},'Isparta'],
+ ['tke','Tekeoğulları','Teke Beylik',[190,150,70],'cres',{tr:['Antalya']},'Antalya'],
+ ['krm','Karamanoğulları','Karamanid Beylik',[70,100,60],'cres',{tr:['Konya','Karaman','Aksaray','Niğde']},'Karaman'],
+ ['ert','Eretna Beyliği','Eretnid Beylik',[100,90,150],'cres',{tr:['Ankara','Kırıkkale','Kırşehir','Kayseri','Sivas','Tokat','Amasya','Çorum','Yozgat','Nevşehir','Samsun','Ordu','Erzincan','Erzurum','Bayburt','Gümüşhane','Tunceli','Elazığ']},'Kayseri'],
+ ['tre','Trabzon İmparatorluğu','Empire of Trebizond',[150,80,130],'cross',{tr:['Trabzon','Rize','Giresun']},'Trabzon'],
+ ['dlk','Dulkadiroğulları','Dulkadirid Beylik',[90,130,90],'cres',{tr:['Kahramanmaraş']},'Kahramanmaraş'],
+ ['cil','Kilikya Ermeni Krallığı','Armenian Kingdom of Cilicia',[180,140,100],'cross',{tr:['Adana','Osmaniye','Mersin']},'Adana'],
+ ['art','Artuklular','Artuqids',[150,110,60],'cres',{tr:['Mardin','Batman']},'Mardin'],
+ ['akk','Akkoyunlular','Aq Qoyunlu',[225,225,220],'cres',{tr:['Diyarbakır','Siirt','Bingöl','Şırnak']},'Diyarbakır'],
+ ['geo','Gürcistan Krallığı','Kingdom of Georgia',[170,60,60],'cross',{tr:['Artvin','Ardahan'],c:['Georgia']},'Tbilisi'],
+ ['mam','Memlük Sultanlığı','Mamluk Sultanate',[200,170,80],'cres',{tr:['Hatay','Gaziantep','Kilis','Malatya','Adıyaman','Şanlıurfa'],c:['Egypt','Syria','Lebanon','Israel','Gaza Strip','West Bank','Jordan'],p:[[[34.5,29.5],[38,30],[40.5,25],[41.5,21],[39.2,21.4],[37,24.5]]]},'Cairo'],
+ ['kib','Kıbrıs Krallığı','Kingdom of Cyprus',[200,180,90],'cross',{c:['Cyprus','Northern Cyprus']}],
+ ['chb','Çobanoğulları','Chobanids',[90,110,70],'cres',{tr:['Van','Bitlis','Muş','Ağrı','Iğdır','Hakkâri','Kars'],c:['Azerbaijan','Armenia'],cp:[['Iran'],[[44,35],[44,39.8],[48.5,39.8],[50.5,37],[49,35]]]},'Tabriz'],
+ ['mzf','Muzafferîler','Muzaffarids',[170,120,90],'cres',{cp:[['Iran'],[[50,25],[50,33],[61,33],[61,25]]]},'Shiraz'],
+ ['sbd','Serbedarlar','Sarbadars',[120,90,60],'cres',{cp:[['Iran'],[[55,33],[55,38.5],[61.5,38.5],[61.5,33]]]},'Sabzevar'],
+ ['jal','Celayirliler','Jalayirid Sultanate',[110,150,140],'cres',{c:['Iraq','Iran']},'Baghdad'],
+ ['krt','Kartlar','Kartids',[130,150,90],'cres',{c:['Afghanistan']},'Herat'],
+ ['cag','Çağatay Hanlığı','Chagatai Khanate',[110,140,170],'sun',{c:['Uzbekistan','Tajikistan','Turkmenistan']},'Samarkand'],
+ ['mgh','Moğolistan Hanlığı','Moghulistan',[130,160,190],'sun',{c:['Kyrgyzstan'],cp:[['China'],[[73,35],[73,49.5],[96,44],[96,35]]]},'Almaliq'],
+ ['wal','Eflak Prensliği','Principality of Wallachia',[60,90,150],'cross',{cp:[['Romania'],[[22,43.6],[22,45.4],[27.3,45.4],[28.6,44.8],[28.6,43.6]]]}],
+ ['mld','Boğdan Prensliği','Principality of Moldavia',[140,60,50],'cross',{cp:[['Romania'],[[25.3,45.4],[25.3,48.4],[28.3,48.4],[28.2,45.3]]]}],
+ ['bos','Bosna Banlığı','Banate of Bosnia',[60,80,140],'cross',{c:['Bosnia']}],
+ ['hun','Macaristan Krallığı','Kingdom of Hungary',[160,70,60],'cross',{c:['Hungary','Slovakia','Croatia','Romania']}],
+ ['rus','Rus Knezlikleri','Russian Principalities',[90,120,70],'cross',{cp:[['Russia'],[[27,54],[27,69],[60,69],[60,62],[52,56],[42,54.5]]]}],
+ ['gho','Altın Orda','Golden Horde',[200,160,60],'sun',{c:['Ukraine','Moldova','Kazakhstan'],cp:[['Russia'],[[27,54],[42,54.5],[52,56],[60,62],[70,57],[70,40],[45,40],[37,43],[33,44]]]},'Sarai'],
+ ['lit','Litvanya Büyük Dükalığı','Grand Duchy of Lithuania',[140,60,70],'cross',{c:['Lithuania','Belarus']}],
+ ['pol','Polonya Krallığı','Kingdom of Poland',[190,60,70],'cross',{c:['Poland']}],
+ ['teu','Töton Şövalyeleri','Teutonic Order',[200,200,190],'cross',{c:['Latvia','Estonia'],cp:[['Russia'],[[19.5,54.3],[22.9,54.3],[22.9,55.4],[19.5,55.4]]]}],
+ ['swe','İsveç Krallığı','Kingdom of Sweden',[50,90,150],'cross',{c:['Sweden','Finland']}],
+ ['nor','Norveç Krallığı','Kingdom of Norway',[150,60,60],'cross',{c:['Norway','Iceland']}],
+ ['grn','Grönland halkları','Greenland peoples',[120,120,110],'tribe',{cp:[['Denmark'],[[-75,58],[-75,84],[-10,84],[-10,58]]]},'',1],
+ ['den','Danimarka Krallığı','Kingdom of Denmark',[170,60,60],'cross',{c:['Denmark']}],
+ ['hre','Kutsal Roma İmparatorluğu','Holy Roman Empire',[200,180,70],'cross',{c:['Germany','Austria','Czechia','Netherlands','Belgium','Luxembourg','Switzerland','Slovenia']}],
+ ['fra','Fransa Krallığı','Kingdom of France',[50,70,150],'cross',{c:['France']}],
+ ['sco','İskoçya Krallığı','Kingdom of Scotland',[70,80,140],'cross',{cp:[['United Kingdom'],[[-9,55.1],[-9,61],[0,61],[0,55.1]]]}],
+ ['eng','İngiltere Krallığı','Kingdom of England',[170,40,50],'cross',{c:['United Kingdom','Ireland']}],
+ ['por','Portekiz Krallığı','Kingdom of Portugal',[60,120,80],'cross',{c:['Portugal']}],
+ ['gra','Gırnata Emirliği','Emirate of Granada',[80,140,90],'cres',{cp:[['Spain'],[[-5.9,36],[-1.6,37.3],[-2.6,37.7],[-4.6,37.5],[-6.1,36.6]]]}],
+ ['nav','Navarra Krallığı','Kingdom of Navarre',[160,120,60],'cross',{cp:[['Spain'],[[-2.5,42.4],[-2.5,43.3],[-1.2,43.3],[-1.2,42.4]]]}],
+ ['ara','Aragon Tacı','Crown of Aragon',[200,170,60],'cross',{cp:[['Spain'],[[-2.2,43],[3.8,43],[4.5,39.5],[3,38.5],[-0.5,37.9],[-1.6,40.6]]],p:[[[8,38.8],[8,41.3],[10,41.3],[10,38.8]]]}],
+ ['cas','Kastilya Krallığı','Crown of Castile',[180,120,60],'cross',{c:['Spain']}],
+ ['sic','Sicilya Krallığı','Kingdom of Sicily',[190,150,80],'cross',{c:['Malta'],cp:[['Italy'],[[12,36.5],[16,36.5],[16,38.4],[12,38.4]]]}],
+ ['nap','Napoli Krallığı','Kingdom of Naples',[90,110,160],'cross',{cp:[['Italy'],[[13,41.9],[16.5,41.9],[19,40.2],[16,37.8],[15.5,38.4],[13.5,40.5]]]}],
+ ['pap','Papalık Devleti','Papal States',[220,200,120],'cross',{cp:[['Italy'],[[11.3,42.3],[13,41.9],[13.5,42.3],[13.9,43.6],[12.5,44.6],[11.6,44.3]]]}],
+ ['mil','Milano Senyörlüğü','Lordship of Milan',[90,140,110],'cross',{cp:[['Italy'],[[8.4,44.6],[8.4,46.6],[11.2,46.6],[11.2,44.6]]]},'Milan'],
+ ['ita','İtalyan Şehir Devletleri','Italian City-States',[150,120,90],'cross',{c:['Italy','San Marino']}],
+ ['haf','Hafsiler','Hafsid Sultanate',[120,160,90],'cres',{c:['Tunisia','Libya'],cp:[['Algeria'],[[5,30],[5,37.5],[9,37.5],[9.5,30]]]}],
+ ['zey','Zeyyaniler','Zayyanid Kingdom',[90,140,120],'cres',{cp:[['Algeria'],[[-2,30],[-2,36],[5,37.5],[5,30]]]}],
+ ['mer','Merinîler','Marinid Sultanate',[170,90,60],'cres',{c:['Morocco']}],
+ ['sah','Sahra kabileleri','Saharan tribes',[150,130,100],'tribe',{c:['Algeria','Mauritania','Niger']},'',1],
+ ['mak','Makurya Krallığı','Kingdom of Makuria',[140,100,70],'cross',{c:['Sudan']}],
+ ['eth','Habeşistan','Ethiopian Empire',[60,130,70],'cross',{c:['Ethiopia','Eritrea','Djibouti']}],
+ ['mal','Mali İmparatorluğu','Mali Empire',[200,150,50],'sun',{c:['Mali','Senegal','Gambia','Guinea','Guinea-Bissau']}],
+ ['kan','Kanem İmparatorluğu','Kanem Empire',[160,110,60],'sun',{c:['Chad']}],
+ ['kil','Kilva Sultanlığı','Kilwa Sultanate',[90,140,110],'cres',{c:['Tanzania','Kenya','Somalia','Comoros']}],
+ ['zim','Büyük Zimbabve','Kingdom of Zimbabwe',[140,110,70],'sun',{c:['Zimbabwe','Mozambique']}],
+ ['afr','Afrika kabileleri','African tribes',[130,110,80],'tribe',{c:['Nigeria','Ghana','Togo','Benin','Burkina Faso',"Côte d'Ivoire",'Liberia','Sierra Leone','Cameroon','Central African Rep.','S. Sudan','Uganda','Rwanda','Burundi','DR Congo','Congo','Gabon','Equatorial Guinea','Angola','Zambia','Malawi','Namibia','Botswana','South Africa','Lesotho','Swaziland','Madagascar','Sao Tome and Principe','Cape Verde','Mauritius','Seychelles']},'',1],
+ ['yem','Resulîler','Rasulid Sultanate',[120,150,100],'cres',{c:['Yemen']}],
+ ['omn','Umman İmamlığı','Imamate of Oman',[170,80,70],'cres',{c:['Oman','United Arab Emirates']}],
+ ['arb','Arap kabileleri','Arab tribes',[170,140,100],'tribe',{c:['Saudi Arabia','Qatar','Bahrain','Kuwait']},'',1],
+ ['del','Delhi Sultanlığı','Delhi Sultanate',[60,120,70],'cres',{c:['Pakistan'],cp:[['India'],[[66,20],[66,37],[90,37],[88,26],[84,22],[78,20]]]},'Delhi'],
+ ['ben','Bengal Sultanlığı','Bengal Sultanate',[90,150,120],'cres',{c:['Bangladesh'],cp:[['India'],[[84,21.5],[84,27.5],[90,27.5],[90,21.5]]]}],
+ ['bah','Behmenî Sultanlığı','Bahmani Sultanate',[100,130,70],'cres',{cp:[['India'],[[73,15.5],[73,20],[81,20],[81,15.5]]]}],
+ ['hin','Vijayanagara İmparatorluğu','Vijayanagara Empire',[170,100,60],'sun',{c:['India']}],
+ ['nep','Nepal Krallığı','Kingdom of Nepal',[170,60,70],'sun',{c:['Nepal','Bhutan']}],
+ ['srl','Seylan Krallığı','Kingdom of Ceylon',[120,150,90],'sun',{c:['Sri Lanka','Maldives']}],
+ ['yua','Yuan Hanedanı','Yuan Dynasty',[200,180,90],'sun',{c:['China','Mongolia','Macau S.A.R'],cp:[['Russia'],[[85,49],[85,56],[135,56],[135,42],[120,45]]]},'Beijing'],
+ ['gor','Goryeo Krallığı','Goryeo',[80,130,160],'sun',{c:['North Korea','South Korea']}],
+ ['jap','Ashikaga Şogunluğu','Ashikaga Shogunate',[220,220,215],'sun',{c:['Japan']}],
+ ['dvi','Đại Việt','Đại Việt',[190,80,60],'sun',{cp:[['Vietnam'],[[100,16],[100,24],[110,24],[110,16]]]}],
+ ['chm','Champa','Champa',[120,90,140],'sun',{c:['Vietnam']}],
+ ['khm','Khmer İmparatorluğu','Khmer Empire',[90,120,80],'sun',{c:['Cambodia','Laos']}],
+ ['ayu','Ayutthaya Krallığı','Ayutthaya Kingdom',[180,140,90],'sun',{c:['Thailand']}],
+ ['myn','Pinya Krallığı','Pinya Kingdom',[150,120,60],'sun',{c:['Myanmar']}],
+ ['maj','Majapahit','Majapahit',[160,60,50],'sun',{c:['Indonesia','Malaysia','Brunei','Singapore','Timor-Leste']}],
+ ['sib','Sibirya kabileleri','Siberian tribes',[120,130,130],'tribe',{c:['Russia']},'',1],
+ ['tai','Tayvan ve Filipin halkları','Formosan & Philippine peoples',[120,140,110],'tribe',{c:['Taiwan','Philippines']},'',1],
+ ['may','Maya şehir devletleri','Maya city-states',[60,140,110],'sun',{c:['Guatemala','Belize'],cp:[['Mexico'],[[-92,22],[-86,22],[-86,17.8],[-92,17.8]]]}],
+ ['mex','Mezoamerika şehir devletleri','Mesoamerican city-states',[170,90,50],'sun',{cp:[['Mexico'],[[-106,23.5],[-97,23.5],[-92,17.8],[-92,14.5],[-106,18]]]}],
+ ['chi','Chimú Krallığı','Chimú Kingdom',[150,120,80],'sun',{cp:[['Peru'],[[-82,-11],[-82,-3],[-76,-3],[-76,-11]]]}],
+ ['cus','Cusco Krallığı','Kingdom of Cusco',[190,150,50],'sun',{c:['Peru']}],
+ ['nam','Kuzey Amerika yerlileri','North American peoples',[140,120,90],'tribe',{c:['United States','Canada','Mexico','Bahamas']},'',1],
+ ['cam','Orta Amerika ve Karayip halkları','Central American & Caribbean peoples',[130,130,90],'tribe',{c:['Honduras','Nicaragua','Costa Rica','Panama','El Salvador','Cuba','Haiti','Dominican Rep.','Jamaica','Trinidad and Tobago','Barbados','Grenada','Saint Lucia','Saint Vincent and the Grenadines','Dominica','Antigua and Barbuda','Saint Kitts and Nevis','Caribbean Netherlands']},'',1],
+ ['sam','Güney Amerika yerlileri','South American peoples',[120,130,80],'tribe',{c:['Brazil','Argentina','Chile','Colombia','Venezuela','Ecuador','Bolivia','Paraguay','Uruguay','Guyana','Suriname']},'',1],
+ ['aus','Avustralya Aborjinleri','Aboriginal Australia',[160,110,70],'tribe',{c:['Australia']},'',1],
+ ['oce','Okyanusya halkları','Peoples of Oceania',[110,130,130],'tribe',{c:['New Zealand','Papua New Guinea','Fiji','Solomon Islands','Vanuatu','Samoa','Tonga','Kiribati','Micronesia','Marshall Islands','Palau','Nauru','Tuvalu','Spratly Is.']},'',1]];
+const S1650=[
+ ['ven','Venedik Cumhuriyeti','Republic of Venice',[170,60,80],'cross',{cp:[['Italy'],[[10.4,44.9],[10.4,46.6],[13.9,46.6],[13.5,45.4],[12.3,44.9]]],p:[[[23.4,34.7],[23.4,35.8],[26.5,35.8],[26.5,34.7]]]},'Venice'],
+ ['osm','Osmanlı İmparatorluğu','Ottoman Empire',[175,40,40],'cres',{tr:TRALL,c:['Greece','Bulgaria','North Macedonia','Albania','Kosovo','Serbia','Montenegro','Bosnia','Cyprus','Northern Cyprus','Syria','Lebanon','Israel','Gaza Strip','West Bank','Jordan','Iraq','Kuwait','Egypt','Libya'],cp:[['Hungary','Croatia','Romania'],[[16.8,45.2],[16.8,47.9],[21.6,47.9],[21.6,45.2]]],p:[[[34.5,29.5],[38,30],[40.5,25],[41.5,21],[39.2,21.4],[37,24.5]]]},'Istanbul'],
+ ['krm','Kırım Hanlığı','Crimean Khanate',[90,150,110],'cres',{cp:[['Ukraine','Russia'],[[30,44.3],[30,47.6],[39.5,47.6],[39.5,44.3]]]},'Bakhchysarai'],
+ ['wal','Eflak Prensliği','Principality of Wallachia',[60,90,150],'cross',{cp:[['Romania'],[[22,43.6],[22,45.4],[27.3,45.4],[28.6,44.8],[28.6,43.6]]]},'Bucharest'],
+ ['mld','Boğdan Prensliği','Principality of Moldavia',[140,60,50],'cross',{c:['Moldova'],cp:[['Romania'],[[25.3,45.4],[25.3,48.4],[28.3,48.4],[28.2,45.3]]]},'Iași'],
+ ['trs','Erdel Prensliği','Principality of Transylvania',[150,120,60],'cross',{c:['Romania']}],
+ ['hab','Habsburg Monarşisi','Habsburg Monarchy',[215,190,125],'h:aus',{c:['Austria','Czechia','Slovenia','Croatia','Slovakia','Hungary']},'Vienna'],
+ ['coss','Kazak Hetmanlığı','Cossack Hetmanate',[60,100,170],'cross',{cp:[['Ukraine'],[[29.5,47.6],[29.5,51.8],[36.5,51.8],[36.5,47.6]]]},'Chyhyryn'],
+ ['plc','Lehistan-Litvanya','Polish–Lithuanian Commonwealth',[190,60,70],'cross',{c:['Poland','Lithuania','Belarus','Ukraine'],cp:[['Russia','Latvia'],[[21,55.6],[21,56.6],[28,56.4],[28,55.6]]],p:[[[30.5,53.6],[30.5,56],[35,56],[35,53.6]]]},'Warsaw'],
+ ['swe','İsveç İmparatorluğu','Swedish Empire',[50,90,150],'cross',{c:['Sweden','Finland','Estonia','Latvia'],cp:[['Russia'],[[27.5,59],[27.5,61.2],[31.5,61.2],[31.5,59]]],p:[[[12.4,53.4],[12.4,54.8],[15.4,54.8],[15.4,53.4]],[[8.4,52.9],[8.4,53.9],[9.9,53.9],[9.9,52.9]]]},'Stockholm'],
+ ['bra','Brandenburg-Prusya','Brandenburg-Prussia',[60,60,60],'cross',{cp:[['Germany'],[[11.2,51.4],[11.2,53.6],[15,53.6],[15,51.4]]],p:[[[19.5,54.3],[22.9,54.3],[22.9,55.4],[19.5,55.4]]]},'Berlin'],
+ ['rus','Rusya Çarlığı','Tsardom of Russia',[90,120,70],'cross',{c:['Russia']},'Moscow'],
+ ['den','Danimarka-Norveç','Denmark–Norway',[170,60,60],'cross',{c:['Denmark','Norway','Iceland']},'Copenhagen'],
+ ['grn','Grönland halkları','Greenland peoples',[120,120,110],'tribe',{cp:[['Denmark'],[[-75,58],[-75,84],[-10,84],[-10,58]]]},'',1],
+ ['bav','Bavyera','Electorate of Bavaria',[90,140,200],'cross',{cp:[['Germany'],[[10,47.3],[10,50.4],[13.9,50.4],[13.9,47.3]]]},'Munich'],
+ ['sax','Saksonya','Electorate of Saxony',[80,140,80],'cross',{cp:[['Germany'],[[11.8,50.2],[11.8,51.4],[15,51.4],[15,50.2]]]},'Dresden'],
+ ['ned','Hollanda Cumhuriyeti','Dutch Republic',[230,120,40],'cross',{c:['Netherlands','Suriname','Guyana','Taiwan'],cp:[['United States'],[[-75.6,39.6],[-75.6,43],[-73,43],[-73,39.6]]]},'Amsterdam'],
+ ['ger','Alman Prenslikleri','German Principalities',[200,180,70],'cross',{c:['Germany']}],
+ ['swi','İsviçre Konfederasyonu','Swiss Confederacy',[200,40,40],'cross',{c:['Switzerland']}],
+ ['sav','Savoya Dükalığı','Duchy of Savoy',[160,40,60],'cross',{cp:[['Italy'],[[6.6,44.1],[6.6,46.5],[8.7,46.5],[8.7,44.1]]]},'Turin'],
+ ['pap','Papalık Devleti','Papal States',[220,200,120],'cross',{c:['San Marino'],cp:[['Italy'],[[11.3,42.3],[13,41.9],[13.5,42.3],[13.9,43.6],[12.5,44.6],[11.6,44.3]]]},'Rome'],
+ ['tus','Toskana Büyük Dükalığı','Grand Duchy of Tuscany',[180,60,60],'cross',{cp:[['Italy'],[[9.7,42.3],[9.7,44.5],[12.3,44.5],[12.3,42.3]]]},'Florence'],
+ ['fra','Fransa Krallığı','Kingdom of France',[50,70,150],'cross',{c:['France'],cp:[['Canada'],[[-80,44],[-80,52],[-55,52],[-55,44]]]},'Paris'],
+ ['sco','İskoçya Krallığı','Kingdom of Scotland',[70,80,140],'cross',{cp:[['United Kingdom'],[[-9,55.1],[-9,61],[0,61],[0,55.1]]]},'Edinburgh'],
+ ['eng','İngiltere Milletler Topluluğu','Commonwealth of England',[170,40,50],'cross',{c:['United Kingdom','Ireland','Barbados','Antigua and Barbuda','Saint Kitts and Nevis'],cp:[['United States'],[[-82,31.5],[-82,45.5],[-69,45.5],[-69,41],[-75.6,39.6],[-77,36]]]},'London'],
+ ['por','Portekiz İmparatorluğu','Portuguese Empire',[60,120,80],'cross',{c:['Portugal','Brazil','Cape Verde','Sao Tome and Principe','Guinea-Bissau','Macau S.A.R','Timor-Leste'],cp:[['Angola'],[[11.5,-10],[11.5,-7.5],[14.5,-7.5],[14.5,-10]]]},'Lisbon'],
+ ['spa','İspanya İmparatorluğu','Spanish Empire',[200,150,40],'cross',{c:['Spain','Belgium','Luxembourg','Italy','Malta','Mexico','Guatemala','Belize','Honduras','El Salvador','Nicaragua','Costa Rica','Panama','Cuba','Dominican Rep.','Haiti','Jamaica','Colombia','Venezuela','Ecuador','Peru','Bolivia','Chile','Argentina','Paraguay','Uruguay','Philippines','Trinidad and Tobago'],cp:[['United States'],[[-87.6,24.5],[-87.6,31],[-80,31],[-80,24.5]]]},'Madrid'],
+ ['mor','Sadi Fas Sultanlığı','Saadi Sultanate of Morocco',[170,90,60],'cres',{c:['Morocco']},'Marrakesh'],
+ ['alg','Cezayir Ocağı','Regency of Algiers',[90,140,120],'cres',{cp:[['Algeria'],[[-2,32],[-2,37.5],[8.5,37.5],[8.5,32]]]},'Algiers'],
+ ['tun','Tunus Beyliği','Beylik of Tunis',[120,160,90],'cres',{c:['Tunisia']}],
+ ['sah','Sahra kabileleri','Saharan tribes',[150,130,100],'tribe',{c:['Algeria','Mauritania']},'',1],
+ ['fun','Funj Sultanlığı','Funj Sultanate',[140,100,70],'cres',{c:['Sudan']},'Sennar'],
+ ['eth','Habeşistan','Ethiopian Empire',[60,130,70],'cross',{c:['Ethiopia','Eritrea']},'Gondar'],
+ ['som','Somali Sultanlıkları','Somali Sultanates',[120,150,90],'cres',{c:['Somalia','Djibouti']}],
+ ['pas','Timbuktu Paşalığı','Pashalik of Timbuktu',[200,150,50],'cres',{c:['Mali','Niger']}],
+ ['jol','Jolof Krallığı','Jolof Kingdom',[160,130,70],'sun',{c:['Senegal','Gambia','Guinea']}],
+ ['bor','Bornu Sultanlığı','Bornu Sultanate',[160,110,60],'cres',{c:['Chad']}],
+ ['oyo','Oyo İmparatorluğu','Oyo Empire',[150,90,60],'sun',{c:['Nigeria','Benin','Togo']}],
+ ['akn','Akan Krallıkları','Akan States',[200,160,50],'sun',{c:['Ghana',"Côte d'Ivoire"]}],
+ ['kon','Kongo Krallığı','Kingdom of Kongo',[170,80,70],'sun',{c:['Congo'],cp:[['DR Congo','Angola'],[[12,-7.5],[12,-4],[17,-4],[17,-7.5]]]},'Mbanza Kongo'],
+ ['ndo','Ndongo-Matamba','Ndongo and Matamba',[150,110,70],'sun',{c:['Angola']}],
+ ['lub','Luba Krallığı','Luba Kingdom',[140,120,80],'sun',{c:['DR Congo','Zambia']}],
+ ['mut','Mutapa Krallığı','Kingdom of Mutapa',[140,110,70],'sun',{c:['Zimbabwe','Mozambique']}],
+ ['swa','Svahili Şehir Devletleri','Swahili City-States',[90,140,110],'cres',{c:['Tanzania','Kenya','Comoros']}],
+ ['mad','Madagaskar Krallıkları','Malagasy Kingdoms',[120,150,100],'sun',{c:['Madagascar']}],
+ ['afr','Afrika kabileleri','African tribes',[130,110,80],'tribe',{c:['Liberia','Sierra Leone','Burkina Faso','Cameroon','Central African Rep.','S. Sudan','Uganda','Rwanda','Burundi','Gabon','Equatorial Guinea','Malawi','Namibia','Botswana','South Africa','Lesotho','Swaziland','Mauritius','Seychelles']},'',1],
+ ['zay','Zeydî İmamlığı','Zaydi Imamate',[120,150,100],'cres',{c:['Yemen']},'Sanaa'],
+ ['omn','Umman İmamlığı','Imamate of Oman',[170,80,70],'cres',{c:['Oman','United Arab Emirates']},'Muscat'],
+ ['arb','Arap kabileleri','Arab tribes',[170,140,100],'tribe',{c:['Saudi Arabia','Qatar']},'',1],
+ ['geo','Gürcü Krallıkları','Georgian Kingdoms',[170,60,60],'cross',{c:['Georgia']},'Tbilisi'],
+ ['saf','Safevi İmparatorluğu','Safavid Empire',[50,130,90],'cres',{c:['Iran','Azerbaijan','Armenia','Bahrain'],cp:[['Afghanistan'],[[60,29],[60,37.5],[66.5,37.5],[66.5,29]]]},'Isfahan'],
+ ['mug','Babür İmparatorluğu','Mughal Empire',[60,120,70],'cres',{c:['Pakistan','Bangladesh','Afghanistan'],cp:[['India'],[[66,19],[66,37],[97,37],[97,21],[87,21.5],[84,19.5],[78,19]]]},'Agra'],
+ ['bij','Bijapur Sultanlığı','Bijapur Sultanate',[100,130,70],'cres',{cp:[['India'],[[73,14.5],[73,19],[77.5,19],[77.5,14.5]]]},'Bijapur'],
+ ['gol','Golkonda Sultanlığı','Golconda Sultanate',[130,150,90],'cres',{cp:[['India'],[[77.5,15],[77.5,19.5],[84.5,19.5],[84.5,15]]]},'Golconda'],
+ ['hin','Güney Hint Krallıkları','South Indian Kingdoms',[170,100,60],'sun',{c:['India']}],
+ ['nep','Nepal Krallıkları','Nepalese Kingdoms',[170,60,70],'sun',{c:['Nepal','Bhutan']}],
+ ['kdy','Kandy Krallığı','Kingdom of Kandy',[120,150,90],'sun',{c:['Sri Lanka','Maldives']},'Kandy'],
+ ['bkh','Buhara Hanlığı','Khanate of Bukhara',[110,140,170],'cres',{c:['Uzbekistan','Tajikistan']},'Bukhara'],
+ ['khi','Hive Hanlığı','Khanate of Khiva',[150,140,100],'cres',{c:['Turkmenistan']},'Khiva'],
+ ['kaz','Kazak Hanlığı','Kazakh Khanate',[90,150,190],'sun',{c:['Kazakhstan','Kyrgyzstan']},'Turkistan'],
+ ['dzu','Cungar Hanlığı','Dzungar Khanate',[140,110,150],'sun',{cp:[['China'],[[73,38],[73,49.5],[96,49.5],[96,38]]]},'Ghulja'],
+ ['tib','Tibet','Tibet',[170,110,60],'sun',{cp:[['China'],[[78,27],[78,38],[100,36.5],[100,27]]]},'Lhasa'],
+ ['khl','Halha Moğolları','Khalkha Mongols',[150,130,90],'sun',{c:['Mongolia']},'Urga'],
+ ['smi','Güney Ming','Southern Ming',[200,90,60],'sun',{cp:[['China'],[[97,21],[97,27],[112,27],[112,21]]]},'Guilin'],
+ ['qng','Qing Hanedanı','Qing Dynasty',[220,180,60],'sun',{c:['China']},'Beijing'],
+ ['jos','Joseon Krallığı','Joseon',[80,130,160],'sun',{c:['North Korea','South Korea']},'Seoul'],
+ ['tok','Tokugawa Şogunluğu','Tokugawa Shogunate',[220,220,215],'sun',{c:['Japan']},'Edo'],
+ ['dvi','Đại Việt','Đại Việt',[190,80,60],'sun',{cp:[['Vietnam'],[[100,17],[100,24],[110,24],[110,17]]]}],
+ ['ngu','Nguyễn Beyleri','Nguyễn Lords',[170,110,70],'sun',{c:['Vietnam']}],
+ ['khm','Kamboçya Krallığı','Kingdom of Cambodia',[90,120,80],'sun',{c:['Cambodia']}],
+ ['lxa','Lan Xang Krallığı','Lan Xang',[160,130,80],'sun',{c:['Laos']}],
+ ['ayu','Ayutthaya Krallığı','Ayutthaya Kingdom',[180,140,90],'sun',{c:['Thailand']}],
+ ['tou','Toungoo Hanedanı','Toungoo Dynasty',[150,120,60],'sun',{c:['Myanmar']}],
+ ['ace','Açe Sultanlığı','Aceh Sultanate',[90,130,70],'cres',{cp:[['Indonesia'],[[94.9,1.8],[94.9,6],[98.6,6],[98.6,1.8]]]},'Banda Aceh'],
+ ['mat','Mataram Sultanlığı','Mataram Sultanate',[150,100,70],'cres',{cp:[['Indonesia'],[[108,-9],[108,-5.8],[115,-5.8],[115,-9]]]},'Plered'],
+ ['joh','Johor Sultanlığı','Johor Sultanate',[100,150,110],'cres',{c:['Malaysia','Singapore','Brunei']},'Johor'],
+ ['voc','Hollanda Doğu Hindistan Şirketi','Dutch East India Company',[240,140,60],'cross',{c:['Indonesia']},'Batavia'],
+ ['tai','Filipin halkları','Philippine peoples',[120,140,110],'tribe',{c:['Papua New Guinea']},'',1],
+ ['nam','Kuzey Amerika yerlileri','North American peoples',[140,120,90],'tribe',{c:['United States','Canada','Bahamas']},'',1],
+ ['cam','Karayip halkları','Caribbean peoples',[130,130,90],'tribe',{c:['Grenada','Saint Lucia','Saint Vincent and the Grenadines','Dominica','Caribbean Netherlands']},'',1],
+ ['aus','Avustralya Aborjinleri','Aboriginal Australia',[160,110,70],'tribe',{c:['Australia']},'',1],
+ ['oce','Okyanusya halkları','Peoples of Oceania',[110,130,130],'tribe',{c:['New Zealand','Fiji','Solomon Islands','Vanuatu','Samoa','Tonga','Kiribati','Micronesia','Marshall Islands','Palau','Nauru','Tuvalu','Spratly Is.']},'',1]];
+const S1800=[
+ ['osm','Osmanlı İmparatorluğu','Ottoman Empire',[175,40,40],'cres',{tr:TRALL,c:['Greece','Bulgaria','North Macedonia','Albania','Kosovo','Serbia','Bosnia','Romania','Cyprus','Northern Cyprus','Syria','Lebanon','Israel','Gaza Strip','West Bank','Jordan','Iraq','Kuwait','Egypt','Libya'],p:[[[34.5,29.5],[38,30],[40.5,25],[41.5,21],[39.2,21.4],[37,24.5]]]},'Istanbul'],
+ ['mne','Karadağ Prens-Piskoposluğu','Prince-Bishopric of Montenegro',[180,60,50],'cross',{c:['Montenegro']},'Cetinje'],
+ ['wal','Eflak Prensliği','Principality of Wallachia',[60,90,150],'cross',{cp:[['Romania'],[[22,43.6],[22,45.4],[27.3,45.4],[28.6,44.8],[28.6,43.6]]]},'Bucharest'],
+ ['mld','Boğdan Prensliği','Principality of Moldavia',[140,60,50],'cross',{c:['Moldova'],cp:[['Romania'],[[25.3,45.4],[25.3,47.6],[28.3,47.9],[28.2,45.3]]]},'Iași'],
+ ['prs','Prusya Krallığı','Kingdom of Prussia',[60,60,60],'cross',{c:['Poland'],cp:[['Germany'],[[9.6,50.8],[9.6,54.7],[15,54.7],[15,50.8]]],p:[[[19.5,54.3],[19.5,55.8],[22.9,55.8],[22.9,54.3]]]},'Berlin'],
+ ['aus','Avusturya İmparatorluğu','Austrian Empire',[215,190,125],'h:aus',{c:['Austria','Czechia','Hungary','Slovakia','Slovenia','Croatia'],p:[[[18.8,49],[18.8,51.2],[24.2,51.2],[24.2,49]],[[22,47.8],[22,50.6],[26.5,50.6],[26.5,47.8]],[[21,45.4],[21,47.9],[26.4,47.9],[26.4,45.4]],[[10.4,44.9],[10.4,46.6],[13.9,46.6],[13.5,45.4],[12.3,44.9]]]},'Vienna'],
+ ['rus','Rusya İmparatorluğu','Russian Empire',[90,120,70],'cross',{c:['Russia','Ukraine','Belarus','Lithuania','Latvia','Estonia','Georgia'],cp:[['Kazakhstan'],[[50,49],[50,55.5],[87,55.5],[87,49]]],p:[[[-170,54],[-170,72],[-130,72],[-130,54]]]},'Saint Petersburg'],
+ ['swe','İsveç Krallığı','Kingdom of Sweden',[50,90,150],'cross',{c:['Sweden','Finland'],p:[[[12.4,53.8],[12.4,54.8],[14.5,54.8],[14.5,53.8]]]},'Stockholm'],
+ ['den','Danimarka-Norveç','Denmark–Norway',[170,60,60],'cross',{c:['Denmark','Norway','Iceland']},'Copenhagen'],
+ ['bav','Bavyera','Electorate of Bavaria',[90,140,200],'cross',{cp:[['Germany'],[[10,47.3],[10,50.4],[13.9,50.4],[13.9,47.3]]]},'Munich'],
+ ['sax','Saksonya','Electorate of Saxony',[80,140,80],'cross',{cp:[['Germany'],[[11.8,50.2],[11.8,51.4],[15,51.4],[15,50.2]]]},'Dresden'],
+ ['fra','Fransız Cumhuriyeti','French Republic',[50,70,150],'cross',{c:['France','Belgium','Luxembourg'],cp:[['Germany'],[[5.9,48.9],[5.9,51.8],[7.6,51.8],[8.3,49.8],[8.2,48.9]]]},'Paris'],
+ ['bat','Batavya Cumhuriyeti','Batavian Republic',[230,120,40],'cross',{c:['Netherlands','Suriname','Indonesia']},'Amsterdam'],
+ ['hel','Helvetik Cumhuriyet','Helvetic Republic',[200,40,40],'cross',{c:['Switzerland']},'Aarau'],
+ ['ger','Alman Devletleri','German States',[200,180,70],'cross',{c:['Germany']}],
+ ['cis','Cisalpine Cumhuriyeti','Cisalpine Republic',[80,150,90],'cross',{cp:[['Italy'],[[8.4,43.9],[8.4,46.6],[10.4,46.6],[12.4,45],[12.4,43.9]]]},'Milan'],
+ ['sar','Sardinya Krallığı','Kingdom of Sardinia',[160,40,60],'cross',{cp:[['Italy'],[[8,38.8],[8,41.3],[10,41.3],[10,38.8]]]},'Cagliari'],
+ ['pap','Papalık Devleti','Papal States',[220,200,120],'cross',{c:['San Marino'],cp:[['Italy'],[[11.3,42.3],[13,41.9],[13.5,42.3],[13.9,43.6],[12.5,44.6],[11.6,44.3]]]},'Rome'],
+ ['tus','Toskana Büyük Dükalığı','Grand Duchy of Tuscany',[180,60,60],'cross',{cp:[['Italy'],[[9.7,42.3],[9.7,44.5],[12.3,44.5],[12.3,42.3]]]},'Florence'],
+ ['nap','Napoli Krallığı','Kingdom of Naples',[90,110,160],'cross',{cp:[['Italy'],[[12,36.5],[19,36.5],[19,41.9],[13,41.9],[13.5,40.5]]]},'Naples'],
+ ['pie','Piyemonte','Piedmont',[120,90,140],'cross',{c:['Italy']},'Turin'],
+ ['spa','İspanya İmparatorluğu','Spanish Empire',[200,150,40],'cross',{c:['Spain','Mexico','Guatemala','Belize','Honduras','El Salvador','Nicaragua','Costa Rica','Panama','Cuba','Dominican Rep.','Colombia','Venezuela','Ecuador','Peru','Bolivia','Chile','Argentina','Paraguay','Uruguay','Philippines','Equatorial Guinea'],p:[[[-87.6,24.5],[-87.6,31],[-80,31],[-80,24.5]],[[-125,29],[-125,42],[-109,42],[-103,37],[-94,33],[-94,29]],[[-111,29],[-111,49],[-89.5,49],[-89.5,29]]]},'Madrid'],
+ ['por','Portekiz İmparatorluğu','Portuguese Empire',[60,120,80],'cross',{c:['Portugal','Brazil','Angola','Mozambique','Cape Verde','Sao Tome and Principe','Guinea-Bissau','Macau S.A.R','Timor-Leste']},'Lisbon'],
+ ['usa','Amerika Birleşik Devletleri','United States',[60,80,160],'star',{cp:[['United States'],[[-89.5,30],[-89.5,47.5],[-66,47.5],[-66,30]]]},'Washington'],
+ ['haw','Hawaii Krallığı','Kingdom of Hawaii',[170,60,60],'sun',{cp:[['United States'],[[-161,18.5],[-161,22.5],[-154,22.5],[-154,18.5]]]}],
+ ['hai','Saint-Domingue','Saint-Domingue',[60,80,170],'cross',{c:['Haiti']},'Port-au-Prince'],
+ ['gbr','Büyük Britanya Krallığı','Kingdom of Great Britain',[170,40,50],'cross',{c:['United Kingdom','Ireland','Canada','Malta','Bahamas','Jamaica','Barbados','Trinidad and Tobago','Antigua and Barbuda','Saint Kitts and Nevis','Saint Lucia','Saint Vincent and the Grenadines','Grenada','Dominica','Guyana','South Africa','Sri Lanka'],cp:[['India','Bangladesh'],[[84,20.5],[84,27.5],[92.5,27.5],[92.5,20.5]]],p:[[[74,8],[74,15.5],[80.5,15.5],[80.5,8]],[[140,-38.5],[140,-28],[154,-28],[154,-38.5]]]},'London'],
+ ['mar','Maratha Konfederasyonu','Maratha Confederacy',[230,130,40],'sun',{cp:[['India'],[[69,15.5],[69,28.5],[84,28.5],[84,21],[81,15.5]]]},'Pune'],
+ ['hyd','Haydarabad Nizamlığı','Hyderabad State',[100,130,70],'cres',{cp:[['India'],[[76,15.5],[76,21],[81.5,21],[81.5,15.5]]]},'Hyderabad'],
+ ['sik','Sih İmparatorluğu','Sikh Empire',[230,180,60],'sun',{cp:[['Pakistan','India'],[[71.5,29.5],[71.5,34.5],[77.6,34.5],[77.6,29.5]]]},'Lahore'],
+ ['hin','Hint Prenslikleri','Indian Princely States',[170,100,60],'sun',{c:['India']}],
+ ['nep','Gurkha Krallığı','Gorkha Kingdom',[170,60,70],'sun',{c:['Nepal','Bhutan']},'Kathmandu'],
+ ['dur','Dürrani İmparatorluğu','Durrani Empire',[60,120,70],'cres',{c:['Afghanistan','Pakistan']},'Kabul'],
+ ['qaj','Kaçar İran','Qajar Iran',[50,130,90],'cres',{c:['Iran','Azerbaijan','Armenia']},'Tehran'],
+ ['bkh','Buhara Emirliği','Emirate of Bukhara',[110,140,170],'cres',{c:['Uzbekistan','Tajikistan']},'Bukhara'],
+ ['khi','Hive Hanlığı','Khanate of Khiva',[150,140,100],'cres',{c:['Turkmenistan']},'Khiva'],
+ ['kok','Hokand Hanlığı','Khanate of Kokand',[120,170,140],'cres',{c:['Kyrgyzstan']},'Kokand'],
+ ['kaz','Kazak Cüzleri','Kazakh Hordes',[90,150,190],'sun',{c:['Kazakhstan']}],
+ ['qng','Qing Hanedanı','Qing Dynasty',[220,180,60],'sun',{c:['China','Mongolia','Taiwan']},'Beijing'],
+ ['jos','Joseon Krallığı','Joseon',[80,130,160],'sun',{c:['North Korea','South Korea']},'Seoul'],
+ ['tok','Tokugawa Şogunluğu','Tokugawa Shogunate',[220,220,215],'sun',{c:['Japan']},'Edo'],
+ ['tay','Tây Sơn Hanedanı','Tây Sơn Dynasty',[190,80,60],'sun',{cp:[['Vietnam'],[[100,15.5],[100,24],[110,24],[110,15.5]]]}],
+ ['ngu','Nguyễn Beyleri','Nguyễn Lords',[170,110,70],'sun',{c:['Vietnam']}],
+ ['sia','Siyam Krallığı','Kingdom of Siam',[180,140,90],'sun',{c:['Thailand','Laos','Cambodia']},'Bangkok'],
+ ['kon','Konbaung Hanedanı','Konbaung Dynasty',[150,120,60],'sun',{c:['Myanmar']},'Amarapura'],
+ ['mly','Malay Sultanlıkları','Malay Sultanates',[100,150,110],'cres',{c:['Malaysia','Singapore','Brunei']}],
+ ['dir','Diriye Emirliği','Emirate of Diriyah',[60,130,60],'cres',{c:['Saudi Arabia','Qatar','Bahrain']},'Diriyah'],
+ ['zay','Zeydî İmamlığı','Zaydi Imamate',[120,150,100],'cres',{c:['Yemen']},'Sanaa'],
+ ['omn','Umman Sultanlığı','Sultanate of Oman',[170,80,70],'cres',{c:['Oman','United Arab Emirates']},'Muscat'],
+ ['mor','Fas Sultanlığı','Sultanate of Morocco',[170,90,60],'cres',{c:['Morocco']},'Fez'],
+ ['alg','Cezayir Ocağı','Regency of Algiers',[90,140,120],'cres',{cp:[['Algeria'],[[-2,32],[-2,37.5],[8.5,37.5],[8.5,32]]]},'Algiers'],
+ ['tun','Tunus Beyliği','Beylik of Tunis',[120,160,90],'cres',{c:['Tunisia']}],
+ ['sah','Sahra kabileleri','Saharan tribes',[150,130,100],'tribe',{c:['Algeria','Mauritania']},'',1],
+ ['fun','Sennar Sultanlığı','Sultanate of Sennar',[140,100,70],'cres',{c:['Sudan']},'Sennar'],
+ ['eth','Habeşistan','Ethiopian Empire',[60,130,70],'cross',{c:['Ethiopia','Eritrea']},'Gondar'],
+ ['som','Somali Sultanlıkları','Somali Sultanates',[120,150,90],'cres',{c:['Somalia','Djibouti']}],
+ ['seg','Segu İmparatorluğu','Bambara Empire',[200,150,50],'sun',{c:['Mali']},'Ségou'],
+ ['fut','Futa Cellon İmamlığı','Imamate of Futa Jallon',[90,130,90],'cres',{c:['Guinea','Senegal','Gambia','Sierra Leone']}],
+ ['hau','Hausa Krallıkları','Hausa Kingdoms',[160,120,70],'sun',{c:['Niger'],cp:[['Nigeria'],[[3.5,10],[3.5,14],[14.7,14],[14.7,10]]]}],
+ ['bor','Bornu Sultanlığı','Bornu Sultanate',[160,110,60],'cres',{c:['Chad']}],
+ ['oyo','Oyo İmparatorluğu','Oyo Empire',[150,90,60],'sun',{c:['Nigeria','Benin','Togo']}],
+ ['ash','Aşanti İmparatorluğu','Ashanti Empire',[200,160,50],'sun',{c:['Ghana',"Côte d'Ivoire"]},'Kumasi'],
+ ['kng','Kongo Krallığı','Kingdom of Kongo',[170,80,70],'sun',{c:['Congo'],cp:[['DR Congo'],[[12,-7.5],[12,-4],[17,-4],[17,-7.5]]]}],
+ ['lub','Luba-Lunda Krallıkları','Luba-Lunda Kingdoms',[140,120,80],'sun',{c:['DR Congo','Zambia']}],
+ ['mer','Merina Krallığı','Merina Kingdom',[120,150,100],'sun',{c:['Madagascar']}],
+ ['afr','Afrika kabileleri','African tribes',[130,110,80],'tribe',{c:['Liberia','Burkina Faso','Cameroon','Central African Rep.','S. Sudan','Uganda','Rwanda','Burundi','Gabon','Kenya','Tanzania','Comoros','Malawi','Zimbabwe','Namibia','Botswana','Lesotho','Swaziland','Mauritius','Seychelles']},'',1],
+ ['grn','Grönland halkları','Greenland peoples',[120,120,110],'tribe',{cp:[['Denmark'],[[-75,58],[-75,84],[-10,84],[-10,58]]]},'',1],
+ ['nam','Kuzey Amerika yerlileri','North American peoples',[140,120,90],'tribe',{c:['United States']},'',1],
+ ['cam','Karayip halkları','Caribbean peoples',[130,130,90],'tribe',{c:['Caribbean Netherlands']},'',1],
  ['aus','Avustralya Aborjinleri','Aboriginal Australia',[160,110,70],'tribe',{c:['Australia']},'',1],
  ['oce','Okyanusya halkları','Peoples of Oceania',[110,130,130],'tribe',{c:['New Zealand','Papua New Guinea','Fiji','Solomon Islands','Vanuatu','Samoa','Tonga','Kiribati','Micronesia','Marshall Islands','Palau','Nauru','Tuvalu','Spratly Is.']},'',1]];
 // ===== 1200: SELJUK ERA =====
@@ -3287,8 +3603,8 @@ const RK=new Array(N),RQ=new Float32Array(N);
   if(cn==='Turkey'){for(const t in RTR)if(RTR[t].includes(P[i].n))k=t}
   else for(const t of ['elm','pet','alt','bor','tah']){const s=RLIST[t][cn];if(s&&hsh(i,t.charCodeAt(0)+t.charCodeAt(1)*7)<s){k=t;break}}
   RK[i]=k;RQ[i]=(1+2*hsh(i,11))*(0.6+Math.sqrt(P[i].px||1)/8)*(k==='gid'||k==='tah'?Math.min(1.6,0.5+Math.log10(Math.max(10,P[i].pop||1e5))/6):1)}})();
-function resAvail(k){if(ERA==='med')return k!=='pet'&&k!=='bor';if(ERA==='ww1'||ERA==='ww2')return true;return true}
-function rPrice(k){const X=XT(),rp=(X.rp&&X.rp[k])||1;return RES[k].p*rp*(ERA==='med'&&(k==='pet'||k==='bor')?0:(ERA==='ww1'||ERA==='ww2')&&k==='bor'?0.3:1)}
+function resAvail(k){if(ERA==='med'||ERA==='gun')return k!=='pet'&&k!=='bor';if(ERA==='ww1'||ERA==='ww2')return true;return true}
+function rPrice(k){const X=XT(),rp=(X.rp&&X.rp[k])||1;return RES[k].p*rp*((ERA==='med'||ERA==='gun')&&(k==='pet'||k==='bor')?0:(ERA==='ww1'||ERA==='ww2')&&k==='bor'?0.3:1)}
 const minMul=c=>[1,1.15,1.3,1.5,1.7,1.9,2.2][tl(c,'min')]||1;
 function provRes(i){const o=owner[i];const k=RK[i];let q=RQ[i]*(k==='gid'||k==='tah'?1+0.15*lv(i,B.FARM):minMul(o));q*=1+0.25*((XT().rinv||{})[i]||0);q*=0.5+0.5*stabOf(i)/100;if((game.dmg[i]||0)>game.turn)q*=0.7;if(atWar(o,CORE[i])&&CORE[i]!==o)q*=0.6;return q}
 function rK(){const X=XT();if(X.rK)return X.rK;calcEco();let sv=0;for(let i=0;i<N;i++)sv+=RQ[i]*rPrice(RK[i]);const me=game.me,base=grossOf(me)/Math.max(0.05,game.tax)*0.2/Math.max(1,ECO[me]);let se=0;for(let c=0;c<C.length;c++)se+=ECO[c];X.rK=Math.max(1e-6,0.13*base*se/Math.max(1,sv));return X.rK}
@@ -3467,6 +3783,11 @@ function mmStart(){MMP=-1;MSEL=new Set();MSELF=new Set();if(selF)MSELF.add(selF)
 // ---------- news: tap to go to country ----------
 function newsCountry(t){let best=-1,bl=0;for(let c=0;c<C.length;c++){if(!owner.includes(c))continue;const n=cname(c);if(n&&n.length>bl&&t.includes(n)&&c!==game.me){best=c;bl=n.length}}if(best<0&&t.includes(cname(game.me)))best=game.me;return best}
 function newsGo(k){const L=game.news.filter(x=>x.cat===newsTab),x=L[k];if(!x)return;const c=x.c!==undefined&&x.c>=0&&owner.includes(x.c)?x.c:newsCountry(x.t);if(c<0){toast('Bu haberde bir ülke yok');return}closeNews();selectCountry(c)}
+// ---------- gunpowder era (1650, 1800): tech names and terms ----------
+const TREE_GUN=(()=>{const N_={inf:['Tüfekli piyade','Süngü','Düzenli alaylar','Hat piyadesi','Hafif piyade','Muhafız alayları'],tank:['Hafif süvari','Ejderha süvarisi','Ağır süvari','Kırma süvari','Hücum taktikleri','Seçkin süvari'],air:['Sahra topu','Obüs','Atlı topçu','Topçu okulu','Ağır topçu','Seri ateşli toplar'],mis:['Havan','Kuşatma topu','Humbara','Lağımcılar','Kale topçusu','Tahkimat'],med:['Karantina','Çiçek aşısı','Cerrahlık','Askerî hastaneler','Hıfzıssıhha','Tıp fakülteleri'],cyb:['Gözcüler','Ulak ağı','Şifreli mektuplar','Casus ağı','Karşı casusluk','Gizli servis']};
+ const TN={inf:'Piyade',tank:'Süvari',air:'Topçu',mis:'Kuşatma',med:'Sağlık',cyb:'İstihbarat'};const o={};for(const k in N_)o[k]={n:TN[k],nodes:N_[k].map((x,i)=>[x,TREE_MOD[k].nodes[i][1]])};return o})();
+ERAW.gun=Object.assign({},ERAW.med,{'Hava saldırısı':'Top atışı','hava saldırısı':'top atışı','Hava Üssü':'Topçu Kışlası','Hava üssü':'Topçu kışlası','Hava Savunma':'Tabya','Hava savunması':'Tabya','hava savunması':'tabya','Hava savunmasının':'Tabyanın','Hava Kuvvetleri':'Topçu','Hava üstünlüğü':'Topçu üstünlüğü','Uçaklar hazırlanıyor':'Toplar hazırlanıyor','Uçaklar':'Toplar','uçak':'top','Hava':'Topçu',
+ 'Füze Silosu':'Havan Atölyesi','Füze stoğu':'Gülle stoğu','Füze menzili':'Havan menzili','Füze hasarı':'Havan hasarı','Füze üret':'Gülle dök','Füze üretir':'Havan güllesi döker','Füze kalkanı':'Tabya','Füzeler':'Kuşatma','Füze':'Havan','füzesi':'havanı','füzeleri':'havanları','füzelerini':'havan güllelerini','füzeyi':'gülleyi','füze':'havan','Üniversite':'Üniversite','üniversite':'üniversite'});
 // ---------- new technology branches ----------
 (function(){const MODN={nav:['Modern savaş gemileri','Hızlı çıkarma gemileri','Denizaltı filosu','Deniz ticaret filosu','Uçak gemisi','İnsansız deniz araçları'],min:['Jeolojik araştırma','Ağır iş makineleri','Derin madencilik','Otomatik madenler','Nadir toprak elementleri','Akıllı madencilik'],ind:['Montaj hatları','Ağır sanayi','Otomasyon','Robotik fabrikalar','Yarı iletken üretimi','Yapay zekâ ile üretim']};
  const MEDN={nav:['Kadırga filosu','Hızlı çıkarma kayıkları','Kalyon','Deniz ticaret yolları','Ağır savaş gemisi','Pusula ve haritacılık'],min:['Maden ocakları','Demir aletler','Su çarklı pompalar','Barutla kazı','Derin kuyular','Maden loncaları'],ind:['Zanaat atölyeleri','Loncalar','Su değirmenleri','Dokuma tezgâhları','Matbaa','Manifaktür']};
@@ -3475,7 +3796,8 @@ function newsGo(k){const L=game.news.filter(x=>x.cat===newsTab),x=L[k];if(!x)ret
  const TN={nav:'⚓ Donanma',min:'⛏ Madencilik',ind:'🏭 Sanayi'};
  const mk=nm=>{const o={};for(const k in TN)o[k]={n:TN[k],nodes:nm[k].map((x,i)=>[x,EFF[k][i]])};return o};
  const SPC={n:'🚀 Uzay',nodes:[['Uzay Ajansı','Roket Kalkış Merkezi inşa edilebilir (başkentte veya en değerli şehirde).'],['Roket Motorları','Roket üretimi ve test fırlatması açılır.'],['Yörünge Bilimi','Fırlatma başarı şansı +%20.'],['Uydu Teknolojisi','Uydu fırlatılır: her uydu gelir +%1,5 ve teknoloji puanı verir (en fazla 8).'],['Uzay Teleskobu','Teleskop fırlatılır: galaksi, bulutsu ve ötegezegen keşifleri yapılır.'],['Ay Programı','Ay\'a iniş ve Ay\'dan numune getirme görevi.'],['Derin Uzay Sondaları','Mars, Jüpiter, Satürn ve Neptün\'e sonda gönderilir.'],['Uzay İstasyonu','Yörüngeye istasyon modülleri kurulur: her modül teknoloji puanı verir.']]};
- for(const [T,nm] of [[TREE_MOD,MODN],[TREE_MED,MEDN],[TREE_WW1,WWN],[TREE_WW2,WWN]]){const add=mk(nm);delete T.spc;Object.assign(T,add);T.spc=SPC}})();
+ const GUNN={nav:['Kalyon filosu','Çıkarma filikaları','Hat gemisi','Deniz ticaret kumpanyası','Firkateyn','Ağır hat gemisi'],min:['Maden ocakları','Barutla kazı','Su pompaları','Buhar pompası','Derin kuyular','Maden mühendisliği'],ind:['Manifaktür','Dokuma fabrikaları','Su değirmenleri','Buhar makinesi','Demir dökümhaneleri','Fabrika sistemi']};
+ for(const [T,nm] of [[TREE_MOD,MODN],[TREE_MED,MEDN],[TREE_WW1,WWN],[TREE_WW2,WWN],[TREE_GUN,GUNN]]){const add=mk(nm);delete T.spc;Object.assign(T,add);T.spc=SPC}})();
 TCOST.splice(0,TCOST.length,18,38,70,112,175,260,340,430);
 const navMul=c=>[1,1.15,1.15,1.35,1.35,1.6,1.9][tl(c,'nav')]||1;
 const seaC=()=>tl(game.me,'nav')>=2?1:2;
@@ -3560,6 +3882,40 @@ function medRevolt(){if(!game||!isMed(game.scn)||game.turn<10)return;const me=ga
   refreshNb(d);refreshNb(o);if(game.rel[d]===undefined||o===me)game.rel[d]=o===me?-60:10;startWarQuiet(d,o);dirty=true;
   if(o===me||CNEAR[me].has(o)||CNEAR[me].has(d))news('ulusal',`⚔ ${cname(o)} topraklarında isyan! ${cname(d)} yeniden bağımsızlığını ilan etti.`,o===me)}}
 
+// ---------- pre-industrial animations: cavalry charge, arrow volleys, cannon fire ----------
+function horse(g,x,y,ang,s,col,ph){g.save();g.translate(x,y);g.rotate(ang);g.scale(s,s);const l=Math.sin(ph)*2.2;g.strokeStyle='#2a1d12';g.lineWidth=1;g.beginPath();g.moveTo(-4,1.5);g.lineTo(-4-l,5);g.moveTo(-2,1.5);g.lineTo(-2+l,5);g.moveTo(3,1.5);g.lineTo(3+l,5);g.moveTo(5,1.5);g.lineTo(5-l,5);g.stroke();
+ g.fillStyle='#6b4a2b';g.beginPath();g.ellipse(0.5,0,6,2.6,0,0,7);g.fill();g.beginPath();g.moveTo(5,-1);g.lineTo(8.5,-4);g.lineTo(9.5,-3);g.lineTo(6.5,0.5);g.closePath();g.fill();g.fillStyle='#3a2616';g.fillRect(-6.8,-1.2,1.6,3);
+ g.fillStyle=col;g.fillRect(-1.5,-6,3,4.5);g.fillStyle='#e0c9a0';g.beginPath();g.arc(0,-7.2,1.4,0,7);g.fill();g.strokeStyle='#cfc6b0';g.lineWidth=0.7;g.beginPath();g.moveTo(-2,-4.5);g.lineTo(11,-6.5);g.stroke();g.restore()}
+function dust(g,x,y,s,u,c){if(u<0||u>1)return;g.fillStyle=`rgba(${c||'150,125,90'},${0.45*(1-u)})`;g.beginPath();g.arc(x,y,s*(0.4+u),0,7);g.fill()}
+function preAnim(g,A,u,x0,y0,x1,y1,ang,S,col,ux,uy,px,py,now){
+ if(A.k==='tank'){for(let j=0;j<5;j++){const off=(j-2)*9*S,v=Math.min(1,Math.max(0,(u-j*0.04)/0.72)),e=v<0.5?2*v*v:1-Math.pow(-2*v+2,2)/2,stop=0.88;const tx=x0+(x1-x0)*e*stop+px*off,ty=y0+(y1-y0)*e*stop+py*off;
+   for(let d=1;d<4;d++){const du=((now/200+d*0.33+j*0.2)%1);dust(g,tx-ux*(8+du*14)*S,ty-uy*(8+du*14)*S+3*S,5*S,du)}horse(g,tx,ty,ang,S*1.25,col,now/70+j)}
+  for(let q=0;q<5;q++)dust(g,x1+Math.cos(q*2.1)*11*S,y1+Math.sin(q*1.3)*7*S,16*S,(u-0.6-q*0.06)/0.3);return}
+ if(A.k==='air'){const gun=ERA==='gun';const n=gun?4:14;for(let j=0;j<n;j++){const st=j*(gun?0.12:0.035),v=(u-st)/(gun?0.45:0.5);if(v<0||v>1)continue;const sx=x0+px*((j%5)-2)*5*S,sy=y0+py*((j%5)-2)*5*S,tx=x1+Math.cos(j*2.7)*10*S,ty=y1+Math.sin(j*1.9)*7*S;
+   const hx=sx+(tx-sx)*v,hy=sy+(ty-sy)*v-Math.sin(v*Math.PI)*Math.hypot(tx-sx,ty-sy)*0.25;
+   if(gun){if(v<0.15)dust(g,sx,sy,10*S,v/0.15,'220,220,210');g.fillStyle='#1b1712';g.beginPath();g.arc(hx,hy,2.2*S,0,7);g.fill()}
+   else{const v2=Math.min(1,v+0.04),hx2=sx+(tx-sx)*v2,hy2=sy+(ty-sy)*v2-Math.sin(v2*Math.PI)*Math.hypot(tx-sx,ty-sy)*0.25;const a2=Math.atan2(hy2-hy,hx2-hx);g.strokeStyle='#2a1d12';g.lineWidth=1.1;g.beginPath();g.moveTo(hx-Math.cos(a2)*6*S,hy-Math.sin(a2)*6*S);g.lineTo(hx,hy);g.stroke()}}
+  for(let q=0;q<5;q++){const t0=(gun?0.55:0.6)+q*0.06;dust(g,x1+Math.cos(q*2.3)*12*S,y1+Math.sin(q*1.7)*8*S,(gun?18:10)*S,(u-t0)/0.25,gun?'90,85,80':'150,125,90')}}}
+function drawAnims(g,ox,oy,z,now){const PRE=ERA==='med'||ERA==='gun';const S=Math.max(0.7,Math.min(1.6,z/6));
+ for(const A of ANIM){const u=(now-A.t0)/A.d;if(u<0)continue;const [x0,y0,x1,y1]=animPts(A.a,A.b,ox,oy,z),ang=Math.atan2(y1-y0,x1-x0),dist=Math.hypot(x1-x0,y1-y0),col=CC[A.o]?`rgb(${CC[A.o].map(v=>Math.round(v*0.55+70)).join(',')})`:'#8a8a7a';
+  const ux=(x1-x0)/(dist||1),uy=(y1-y0)/(dist||1),px=-uy,py=ux;
+  if(PRE){preAnim(g,A,u,x0,y0,x1,y1,ang,S,col,ux,uy,px,py,now);continue}
+  if(A.k==='air'){const prop=ERA==='ww1'||ERA==='ww2';
+   for(let j=0;j<3;j++){const off=[0,-0.9,0.9][j],lag=j?0.05:0,v=Math.max(0,u-lag);let pos,alt;
+    if(v<0.18){pos=v/0.18*0.08;alt=v/0.18}else if(v<0.82){pos=0.08+(v-0.18)/0.64*0.92;alt=1}else{pos=1+(v-0.82)/0.18*0.35;alt=1}
+    const bx=x0+(x1-x0)*pos+px*off*14*S-ux*Math.abs(off)*12*S,by=y0+(y1-y0)*pos+py*off*14*S-uy*Math.abs(off)*12*S-alt*18*S;
+    g.fillStyle=`rgba(0,0,0,${0.18*alt+0.05})`;g.beginPath();g.ellipse(bx+6*alt*S,by+18*alt*S,9*S,3*S,ang,0,7);g.fill();
+    g.globalAlpha=v>0.92?Math.max(0,(1-v)/0.08):1;plane(g,bx,by,ang,S*(0.6+alt*0.25),col,prop);g.globalAlpha=1;
+    if(v>0.6&&v<0.86){for(let q=0;q<3;q++){const bu=(v-0.6-q*0.06)/0.12;if(bu>0&&bu<1){g.fillStyle='#1a1410';g.beginPath();g.arc(bx+(x1-bx)*bu*0.3,by+(y1+6-by)*bu,1.8*S,0,7);g.fill()}}}}
+   for(let q=0;q<5;q++){const t0=0.72+q*0.045;boom(g,x1+Math.cos(q*2.3)*12*S,y1+Math.sin(q*1.7)*8*S,22*S,(u-t0)/0.22)}}
+  else if(A.k==='tank'){const n=3;for(let j=0;j<n;j++){const off=(j-1)*16*S,v=Math.min(1,Math.max(0,(u-j*0.06)/0.7)),e=v<0.5?2*v*v:1-Math.pow(-2*v+2,2)/2,stop=0.82;
+    const tx=x0+(x1-x0)*e*stop+px*off,ty=y0+(y1-y0)*e*stop+py*off;
+    for(let d=1;d<5;d++){const du=((now/220+d*0.25+j*0.3)%1);g.fillStyle=`rgba(150,130,100,${0.35*(1-du)})`;g.beginPath();g.arc(tx-ux*(10+du*18)*S+Math.sin(d*3)*3,ty-uy*(10+du*18)*S+Math.cos(d*2)*3,(2+du*5)*S,0,7);g.fill()}
+    const fire=u>0.45&&((now/300+j*0.37)%1)<0.12;tank(g,tx,ty,ang,S*1.6,col,fire);
+    if(fire){const su=((now/300+j*0.37)%1)/0.12;g.strokeStyle='rgba(255,210,120,.9)';g.lineWidth=1.5;g.beginPath();g.moveTo(tx+ux*14*S,ty+uy*14*S);g.lineTo(tx+(x1-tx)*su,ty+(y1-ty)*su);g.stroke()}}
+   for(let q=0;q<4;q++){const t0=0.55+q*0.1;boom(g,x1+Math.cos(q*2.1)*10*S,y1+Math.sin(q*1.3)*7*S,18*S,(u-t0)/0.2)}}}
+ ANIM=ANIM.filter(A=>now-A.t0<A.d)}
+
 // ===== SOUND (synthesized, quiet) =====
 let AC=null,MG=null,MUS=null,MUG=null;
 function applyVol(){if(!AC)return;const sv=(SET.svol??6)/10,mv=(SET.mvol??8)/10;MG.gain.value=0.45*sv*sv;MUG.gain.value=2.8*mv*mv}
@@ -3567,7 +3923,7 @@ function audio(){if(AC)return AC;try{AC=new (window.AudioContext||window.webkitA
 function tone(f,d,type,vol,slide){const a=audio();if(!a)return;const o=a.createOscillator(),g=a.createGain(),t=a.currentTime;o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+d);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol||0.3,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(g);g.connect(MG);o.start(t);o.stop(t+d+0.02)}
 function noise(d,vol,fc,q,delay,sweep){const a=audio();if(!a)return;const len=Math.ceil(a.sampleRate*d),buf=a.createBuffer(1,len,a.sampleRate),ch=buf.getChannelData(0);for(let i=0;i<len;i++)ch[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
  const s=a.createBufferSource();s.buffer=buf;const f=a.createBiquadFilter();f.type='lowpass';const t=a.currentTime+(delay||0);f.frequency.setValueAtTime(fc||800,t);if(sweep)f.frequency.exponentialRampToValueAtTime(sweep,t+d);f.Q.value=q||0.7;const g=a.createGain();g.gain.value=vol||0.5;s.connect(f);f.connect(g);g.connect(MG);s.start(t)}
-function sfx(k){if(!SET.sound)return;if(typeof ERA!=='undefined'&&ERA==='med'&&(k==='air'||k==='tank'||k==='missile'))k='m_'+k;try{switch(k){
+function sfx(k){if(!SET.sound)return;if(typeof ERA!=='undefined'&&(ERA==='med'||ERA==='gun')&&(k==='air'||k==='tank'||k==='missile'))k=(ERA==='gun'&&k==='air')?'m_missile':'m_'+k;try{switch(k){
  case'm_air':for(let j=0;j<7;j++)setTimeout(()=>noise(0.18,0.12,3200,1.5,0,1800),j*70);setTimeout(()=>{for(let j=0;j<5;j++)setTimeout(()=>noise(0.08,0.25,900,2),j*60)},650);break;
  case'm_tank':for(let j=0;j<10;j++)setTimeout(()=>{noise(0.06,0.3,450,2);tone(110,0.05,'sine',0.08,80)},j*95+(j%2)*30);break;
  case'm_missile':tone(180,0.35,'sawtooth',0.05,90);setTimeout(()=>{noise(0.6,0.7,350,0.8,0,60);tone(55,0.4,'sine',0.3,30)},700);break;
@@ -3592,33 +3948,44 @@ const MSC={min:[0,2,3,5,7,8,10],maj:[0,2,4,5,7,9,11],dor:[0,2,3,5,7,9,10],hmin:[
 const TRACKS=[
  {m:'menu',bpm:64,root:50,sc:'maj',prog:[0,4,5,3],arp:1,pad:'sine',lead:'triangle',dr:0,seed:11},
  {m:'menu',bpm:58,root:45,sc:'dor',prog:[0,3,6,4],arp:2,pad:'triangle',lead:'sine',dr:0,seed:23},
- {m:'menu',bpm:70,root:52,sc:'min',prog:[0,5,2,6],arp:1,pad:'sine',lead:'triangle',dr:0,seed:37},
- {m:'menu',bpm:62,root:47,sc:'maj',prog:[0,5,3,4],arp:2,pad:'sine',lead:'sine',dr:0,seed:131},
- {m:'peace',bpm:84,root:48,sc:'maj',prog:[0,3,4,0],arp:1,pad:'triangle',lead:'square',dr:'light',seed:41},
- {m:'peace',bpm:78,root:50,sc:'dor',prog:[0,6,3,4],arp:2,pad:'sine',lead:'triangle',dr:'light',seed:53},
- {m:'peace',bpm:90,root:43,sc:'maj',prog:[0,5,3,4],arp:1,pad:'sawtooth',lead:'triangle',dr:'light',seed:67},
- {m:'peace',bpm:74,root:45,sc:'hmin',prog:[0,3,4,0],arp:2,pad:'triangle',lead:'sine',dr:'light',seed:71},
- {m:'war',bpm:92,root:38,sc:'min',prog:[0,5,6,4],arp:0,pad:'sawtooth',lead:'sawtooth',dr:'march',seed:83},
- {m:'war',bpm:116,root:40,sc:'hmin',prog:[0,5,4,0],arp:3,pad:'sawtooth',lead:'square',dr:'war',seed:97},
- {m:'war',bpm:104,root:36,sc:'min',prog:[0,6,5,4],arp:3,pad:'sawtooth',lead:'sawtooth',dr:'war',seed:101},
- {m:'war',bpm:96,root:41,sc:'dor',prog:[0,2,6,4],arp:0,pad:'triangle',lead:'sawtooth',dr:'march',seed:113},
- {m:'war',bpm:124,root:38,sc:'hmin',prog:[0,1,4,0],arp:3,pad:'sawtooth',lead:'square',dr:'war',seed:127}];
+ {m:'peace',orig:1,bpm:92},
+ {m:'war',bpm:138,root:38,sc:'hmin',prog:[0,5,4,0],arp:4,pad:'sawtooth',lead:'sawtooth',dr:'brutal',seed:97},
+ {m:'war',bpm:148,root:40,sc:'min',prog:[0,6,5,4],arp:4,pad:'sawtooth',lead:'square',dr:'brutal',seed:101},
+ {m:'war',bpm:132,root:36,sc:'hmin',prog:[0,1,4,0],arp:4,pad:'sawtooth',lead:'sawtooth',dr:'brutal',seed:127}];
+const MCH=[[50,53,57],[46,50,53],[48,52,55],[45,49,52]],MROOT=[38,34,36,33];
+const MMEL=[[[0,62,6],[6,65,2],[8,69,6],[14,67,2]],[[0,65,4],[4,62,4],[8,70,6],[14,69,2]],[[0,67,4],[4,64,4],[8,72,4],[12,70,4]],[[0,69,8],[8,61,4],[12,64,4]],
+ [[0,74,4],[4,72,2],[6,70,2],[8,69,6],[14,65,2]],[[0,70,4],[4,69,4],[8,67,4],[12,65,4]],[[0,64,4],[4,67,4],[8,72,6],[14,70,2]],[[0,69,6],[6,67,2],[8,65,2],[10,64,2],[12,62,4]]];
+function origStep(t,s,bar,ST,med){const ch=bar%4,sec=Math.floor((bar%16)/4);
+ if(s===0){for(const n of MCH[ch])mVoice('sawtooth',mf(n),t,ST*16,0.022,700,false);mVoice('triangle',mf(MROOT[ch]),t,ST*7,0.11,400)}
+ if(s===8)mVoice('triangle',mf(MROOT[ch]+7),t,ST*7,0.09,400);
+ if(s%4===0)mDrum(t,med?48:55,s===0?0.32:0.18,med?0.6:0.35);
+ if((s===4||s===12))mSnare(t,0.11);if((s===14||s===15||(bar%4===3&&s>=10)))mSnare(t,0.05);
+ if(sec===0||sec===2){const mel=MMEL[(sec===2?4:0)+ch];for(const [st,n,l] of mel)if(st===s)mVoice(med?'square':'sawtooth',mf(n),t,ST*l*0.95,med?0.04:0.055,med?2200:1500,true)}
+ if(sec===1){const mel=MMEL[ch];for(const [st,n,l] of mel)if(st===s)mVoice('triangle',mf(n-12),t,ST*l*0.95,0.06,1200,true)}}
 function mRng(s){return()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff}}
-function mBuild(T){if(T.mel)return;const R=mRng(T.seed),S=MSC[T.sc];const deg=d=>T.root+24+S[((d%7)+7)%7]+12*Math.floor(d/7);
+function mBuild(T){if(T.mel||T.orig)return;const R=mRng(T.seed),S=MSC[T.sc];const deg=d=>T.root+24+S[((d%7)+7)%7]+12*Math.floor(d/7);
  const RH=T.m==='menu'?[[[0,8],[8,8]],[[0,6],[6,2],[8,8]],[[0,12],[12,4]],[[0,4],[4,4],[8,8]]]:T.m==='war'?[[[0,4],[4,2],[6,2],[8,4],[12,4]],[[0,2],[2,2],[4,4],[8,2],[10,2],[12,4]],[[0,6],[6,2],[8,6],[14,2]],[[0,3],[3,1],[4,4],[8,3],[11,1],[12,4]]]:[[[0,4],[4,4],[8,6],[14,2]],[[0,6],[6,2],[8,4],[12,4]],[[0,2],[2,2],[4,4],[8,8]],[[0,4],[4,2],[6,2],[8,8]]];
  T.mel=[];let d=T.prog[0]+7;for(let b=0;b<8;b++){const ch=T.prog[b%4],rh=RH[(R()*RH.length)|0],bar=[];for(const [st,l] of rh){if(st===0||st===8){const opts=[ch,ch+2,ch+4].map(x=>x+7);d=opts.reduce((m,x)=>Math.abs(x-d)<Math.abs(m-d)?x:m,opts[0])}else d+=R()<0.5?(R()<0.5?1:-1):(R()<0.5?2:-2);d=Math.max(4,Math.min(13,d));bar.push([st,deg(d),l])}T.mel.push(bar)}
  T.chord=b=>{const c=T.prog[b%4];return [c,c+2,c+4].map(x=>T.root+12+S[x%7]+12*Math.floor(x/7))};T.bass=b=>T.root+S[T.prog[b%4]%7]}
-function mVoice(type,f,t,d,vol,cut,vib){const a=AC,o=a.createOscillator(),gg=a.createGain(),fl=a.createBiquadFilter();o.type=type;o.frequency.setValueAtTime(f,t);if(vib){const l=a.createOscillator(),lg=a.createGain();l.frequency.value=5.2;lg.gain.value=f*0.006;l.connect(lg);lg.connect(o.frequency);l.start(t);l.stop(t+d+0.1)}
- fl.type='lowpass';fl.frequency.value=cut;gg.gain.setValueAtTime(0.0001,t);gg.gain.exponentialRampToValueAtTime(vol,t+Math.min(0.08,d*0.3));gg.gain.setValueAtTime(vol,t+d*0.7);gg.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(fl);fl.connect(gg);gg.connect(MUSI.g);o.start(t);o.stop(t+d+0.05)}
+function mVoice(type,f,t,d,vol,cut,vib,dist){const a=AC,o=a.createOscillator(),gg=a.createGain(),fl=a.createBiquadFilter();o.type=type;o.frequency.setValueAtTime(f,t);if(vib){const l=a.createOscillator(),lg=a.createGain();l.frequency.value=5.2;lg.gain.value=f*0.006;l.connect(lg);lg.connect(o.frequency);l.start(t);l.stop(t+d+0.1)}
+ fl.type='lowpass';fl.frequency.value=cut;gg.gain.setValueAtTime(0.0001,t);gg.gain.exponentialRampToValueAtTime(vol,t+Math.min(0.08,d*0.3));gg.gain.setValueAtTime(vol,t+d*0.7);gg.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(fl);fl.connect(gg);gg.connect(dist&&MUSI.ws?MUSI.ws:MUSI.g);o.start(t);o.stop(t+d+0.05)}
 function mDrum(t,f,vol,dec){const a=AC,o=a.createOscillator(),gg=a.createGain();o.frequency.setValueAtTime(f*1.6,t);o.frequency.exponentialRampToValueAtTime(f,t+0.08);gg.gain.setValueAtTime(vol,t);gg.gain.exponentialRampToValueAtTime(0.0001,t+dec);o.connect(gg);gg.connect(MUSI.g);o.start(t);o.stop(t+dec+0.05)}
 let MNB=null;function mNoise(t,vol,fc,q,dur,type){const a=AC;if(!MNB){const len=a.sampleRate*0.3;MNB=a.createBuffer(1,len,a.sampleRate);const ch=MNB.getChannelData(0);for(let i=0;i<len;i++)ch[i]=Math.random()*2-1}const s=a.createBufferSource();s.buffer=MNB;const fl=a.createBiquadFilter();fl.type=type||'bandpass';fl.frequency.value=fc;fl.Q.value=q;const gg=a.createGain();gg.gain.setValueAtTime(vol,t);gg.gain.exponentialRampToValueAtTime(0.0001,t+dur);s.connect(fl);fl.connect(gg);gg.connect(MUSI.g);s.start(t);s.stop(t+dur+0.02)}
 const mSnare=(t,vol)=>mNoise(t,vol,1900,0.8,0.14);
 function musicMood(){if(typeof game==='undefined'||!game)return'menu';try{return enemiesOf(game.me).length?'war':'peace'}catch(e){return'peace'}}
-function pickTrack(m,not){const L=TRACKS.filter(t=>t.m===m&&t!==not);return L[(Math.random()*L.length)|0]||TRACKS[0]}
+function pickTrack(m,not){const A=TRACKS.filter(t=>t.m===m),L=A.filter(t=>t!==not);return L[(Math.random()*L.length)|0]||A[0]||TRACKS[0]}
 function musicSched(){if(!MUSI||!AC)return;const T=MUSI.T,ST=60/T.bpm/4,med=typeof ERA!=='undefined'&&ERA==='med';
  while(MUSI.next<AC.currentTime+0.35){const t=MUSI.next,s=MUSI.step%16,bar=Math.floor(MUSI.step/16),b=bar%16,cb=bar%4;
   if(s===0&&bar>0){const md=musicMood();if(md!==MUSI.mood||bar>=32){musicSwitch(md);return}}
-  const W=T.m==='war',M=T.m==='menu',chord=T.chord(cb),bass=T.bass(cb);
+  if(T.orig){origStep(t,s,bar,ST,med);MUSI.next+=ST;MUSI.step++;continue}
+  const W=T.m==='war',M=T.m==='menu',chord=T.chord(cb),bass=T.bass(cb),BR=T.dr==='brutal';
+  if(BR){if(s===0){for(const n of [bass+12,bass+19,bass+24])mVoice('sawtooth',mf(n),t,ST*3,0.05,1400,false,1);mNoise(t,0.09,6000,0.4,0.9,'highpass')}
+   if(s===8&&cb%2)for(const n of [bass+12,bass+19])mVoice('sawtooth',mf(n),t,ST*2,0.045,1400,false,1);
+   if(s%2===0||s%4===1)mDrum(t,46,s%4===0?0.4:0.26,0.18);if(s===4||s===12)mSnare(t,0.2);if(s%2===0)mNoise(t,0.04,9000,0.7,0.035,'highpass');
+   if(cb===3&&s>=10){mDrum(t,s%2?120:90,0.3,0.22)}
+   mVoice('sawtooth',mf(bass+(s%8===6?3:0)),t,ST*0.9,0.075,600,false,1);
+   if(b>=4){const mel=T.mel[(b-4)%8];for(const [st,n,l] of mel)if(st===s)mVoice(T.lead,mf(n),t,ST*l*0.95,0.05,2400,true,1)}
+   MUSI.next+=ST;MUSI.step++;continue}
   if(s===0){for(const n of chord)mVoice(T.pad,mf(n),t,ST*16,M?0.03:W?0.024:0.026,M?900:W?750:1000,false);mVoice('triangle',mf(bass),t,ST*(W?3.5:7),M?0.09:0.12,450)}
   if(s===8)mVoice('triangle',mf(bass+(W?0:7)),t,ST*(W?3.5:7),M?0.07:0.1,450);
   if(W&&(s===4||s===12))mVoice('triangle',mf(bass+(s===12?7:0)),t,ST*3.5,0.1,450);
@@ -3631,7 +3998,7 @@ function musicSched(){if(!MUSI||!AC)return;const T=MUSI.T,ST=60/T.bpm/4,med=type
   if(b>=4){const mel=T.mel[(b-4)%8];for(const [st,n,l] of mel)if(st===s){const oct=b>=12&&!M?-12:0;mVoice(med&&!M?'square':T.lead,mf(n+oct),t,ST*l*0.95,M?0.045:W?0.05:0.045,M?1800:W?1600:2000,true)}}
   MUSI.next+=ST;MUSI.step++}}
 function musicSwitch(md){const old=MUSI;if(!old)return;const T=pickTrack(md,old.T);clearInterval(old.iv);const g=old.g;try{g.gain.setTargetAtTime(0.0001,AC.currentTime,0.6)}catch(e){}setTimeout(()=>{try{g.disconnect()}catch(e){}},3000);MUSI=null;musicStart(T,md)}
-function musicStart(T,md){if(MUSI||!AC||AC.state!=='running')return;md=md||musicMood();T=T||pickTrack(md);mBuild(T);MUSI={T,mood:md,next:AC.currentTime+0.1,step:0,g:AC.createGain()};MUSI.g.gain.value=0.0001;MUSI.g.gain.exponentialRampToValueAtTime(1,AC.currentTime+1.2);MUSI.g.connect(MUG);MUSI.iv=setInterval(musicSched,90)}
+function musicStart(T,md){if(MUSI||!AC||AC.state!=='running')return;md=md||musicMood();T=T||pickTrack(md);mBuild(T);MUSI={T,mood:md,next:AC.currentTime+0.1,step:0,g:AC.createGain()};if(T.dr==='brutal'){const ws=AC.createWaveShaper(),cu=new Float32Array(1024);for(let i=0;i<1024;i++){const x=i/512-1;cu[i]=Math.tanh(x*4)}ws.curve=cu;const wg=AC.createGain();wg.gain.value=0.55;ws.connect(wg);wg.connect(MUSI.g);MUSI.ws=ws}MUSI.g.gain.value=0.0001;MUSI.g.gain.exponentialRampToValueAtTime(1,AC.currentTime+1.2);MUSI.g.connect(MUG);MUSI.iv=setInterval(musicSched,90)}
 function musicStop(){if(!MUSI)return;clearInterval(MUSI.iv);const g=MUSI.g;try{g.gain.setTargetAtTime(0.0001,AC.currentTime,0.3)}catch(e){}setTimeout(()=>{try{g.disconnect()}catch(e){}},1600);MUSI=null}
 setInterval(()=>{const on=SET.music&&AC&&AC.state==='running'&&!document.hidden;if(on&&!MUSI)musicStart();else if(!on&&MUSI)musicStop()},700);
 // ===== ANIMATED MAIN MENU (cached world map, slow tour through countries) =====
@@ -3681,7 +4048,7 @@ function dateStr(t){const G=(typeof game!=='undefined'&&game)||{};const d=new Da
 const DIFF=['Kolay','Normal','Zor','Çok Zor'];
 function showMenu(html){mode='menu';if(!game)setTimeout(startTour,30);else stopTour();if($('selBar'))$('selBar').style.display='none';closeNews();closeEco();$('modeRank').style.display='none';$('log').style.display='none';$('menu').style.display='flex';$('mp').innerHTML=html;hud.style.display='none';$('pick').style.display='none';$('setup').style.display='none';card.style.display='none';0}
 function hideMenu(){$('menu').style.display='none';0}
-function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.0.10</div><div class="sub">Strateji · Tur Tabanlı · 1300 – 2027</div>
+function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.0.11</div><div class="sub">Strateji · Tur Tabanlı · 1300 – 2027</div>
  ${!game&&LS.get(LKEY,null)&&saves().some(s=>s.id===LS.get(LKEY,null))?'<button class="mb" onclick="continueGame()">⏯ Kaldığın yerden devam et</button>':''}<button class="mb ${!game&&LS.get(LKEY,null)?'sec':''}" onclick="gameMenu()">▶ Oyun</button><button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button>
  <button class="mb sec" onclick="leadersMenu()">👑 Liderler</button><button class="mb sec" onclick="helpMenu()">📖 Nasıl Oynanır</button><button class="mb sec" onclick="aboutMenu()">ℹ Hakkında</button>${game?'<button class="mb sec" onclick="resume()">↩ Oyuna Dön</button>':''}`)}
 const cleanName=s=>String(s||'').replace(/[<>&"'`\\]/g,'').trim().slice(0,28);
@@ -3705,7 +4072,7 @@ function devCountry(){const ls=navigator.languages&&navigator.languages.length?n
  const by={tr:'Turkey',de:'Germany',fr:'France',it:'Italy',es:'Spain',ru:'Russia',ar:'Egypt',zh:'China',en:'United Kingdom'};const n=by[devLang()];const i=C.findIndex(c=>c.n===n);return i>=0?i:C.findIndex(c=>c.n==='Turkey')}
 function confirmDel(b){if(b.dataset.c){return true}b.dataset.c=1;b.textContent='Emin misin?';return false}
 function aboutMenu(){showMenu(`<h2>Hakkında</h2><div class="sub" style="opacity:.85">Atlas Dominion — Tugrion<br>Gerçek dünya il haritası üzerinde tur tabanlı strateji.<br><br>Sürüm 1.0<br>Bayraklar: flag-icons (MIT)<br>Nehir ve göl verisi: © OpenStreetMap katkıcıları (ODbL), geo-maps<br>Veriler: Dünya Bankası (nüfus 2025, GSYH son yıl), IISS (aktif asker)</div><button class="mb sec" onclick="mainMenu()">← Geri</button>`)}
-function scenMenu(){const card=(y,t,d)=>`<button class="scn" onclick="newGame('${y}')"><b>${y}</b><span>${t}</span><small>${d}</small></button>`;showMenu(`<h2>Başlangıç yılı</h2><div class="sub">Hangi yıldan başlamak istersin?</div><div class="scnL">${card('2027','Modern dünya','Gerçek ülkeler, ordular, ekonomi, teknoloji ve uzay. ABD–İsrail ile İran–Filistin, Rusya ile Ukrayna savaşta')}${card('1939','İkinci Dünya Savaşı','Almanya Polonya\'ya saldırdı. Mihver ve Müttefikler; uçaklar, tanklar, roketler')}${card('1919','Kurtuluş Savaşı','Mustafa Kemal Samsun\'a çıktı. Ankara Hükümeti işgale karşı: Yunan, Fransız ve İtalyan kuvvetleri, doğuda Ermenistan')}${card('1914','Birinci Dünya Savaşı','Temmuz Krizi: İttifak ve İtilaf Devletleri. Siperler, ilk tanklar ve çift kanatlı uçaklar')}${card('1400','Yıldırım ve Timur','Yıldırım Bayezid Anadolu ve Balkanlar\'ı birleştirdi. Doğuda Timur, güneyde Memlükler; Bizans yalnızca İstanbul\'da')}${card('1300','Beylikler dönemi','Osmanlı Beyliği kuruluyor. Süvari, okçu, mancınık; Anadolu beyliklere bölünmüş')}${card('1200','Selçuklu dönemi','Anadolu Selçuklu Sultanlığı ve Bizans. Haçlılar, Eyyubiler, Harezmşahlar; doğuda Moğollar yükseliyor')}</div><button class="mb sec" onclick="gameMenu()">← Geri</button>`)}
+function scenMenu(){const card=(y,t,d)=>`<button class="scn" onclick="newGame('${y}')"><b>${y}</b><span>${t}</span><small>${d}</small></button>`;showMenu(`<h2>Başlangıç yılı</h2><div class="sub">Hangi yıldan başlamak istersin?</div><div class="scnL">${card('2027','Modern dünya','Gerçek ülkeler, ordular, ekonomi, teknoloji ve uzay. ABD–İsrail ile İran–Filistin, Rusya ile Ukrayna savaşta')}${card('1939','İkinci Dünya Savaşı','Almanya Polonya\'ya saldırdı. Mihver ve Müttefikler; uçaklar, tanklar, roketler')}${card('1919','Kurtuluş Savaşı','Mustafa Kemal Samsun\'a çıktı. Ankara Hükümeti işgale karşı: Yunan, Fransız ve İtalyan kuvvetleri, doğuda Ermenistan')}${card('1914','Birinci Dünya Savaşı','Temmuz Krizi: İttifak ve İtilaf Devletleri. Siperler, ilk tanklar ve çift kanatlı uçaklar')}${card('1800','Napolyon çağı','Fransız Devrimi Avrupa\'yı sarstı. Osmanlı, Rusya, Avusturya, Prusya ve Britanya; Hindistan\'da Marathalar, Amerika\'da genç ABD')}${card('1650','Barut imparatorlukları','Osmanlı üç kıtada. Safeviler, Babürler, Rusya Çarlığı ve Lehistan; Avrupa\'da Habsburglar ve İsveç; Amerika\'da sömürgeler')}${card('1400','Yıldırım ve Timur','Yıldırım Bayezid Anadolu ve Balkanlar\'ı birleştirdi. Doğuda Timur, güneyde Memlükler; Bizans yalnızca İstanbul\'da')}${card('1350','Orhan Gazi dönemi','Osmanlı Rumeli\'ye geçmek üzere. İlhanlılar çöktü: Eretna, Karaman ve beylikler. Balkanlar\'da güçlü Sırp İmparatorluğu')}${card('1300','Beylikler dönemi','Osmanlı Beyliği kuruluyor. Süvari, okçu, mancınık; Anadolu beyliklere bölünmüş')}${card('1200','Selçuklu dönemi','Anadolu Selçuklu Sultanlığı ve Bizans. Haçlılar, Eyyubiler, Harezmşahlar; doğuda Moğollar yükseliyor')}</div><button class="mb sec" onclick="gameMenu()">← Geri</button>`)}
 function newGame(scn){scn=scn||'2027';hideMenu();mode='pick';game=null;armies=[];resetCountries();restoreModern();owner=P.map(p=>p.c);pop=BASEPOP.slice();SCN_NEWC=[];SCN_KEY={};if(isMed(scn))applyScenarioMed(scn);else if(SCNDEF[scn])applyScenarioWW(scn);else if(isModern(scn))apply2026();setEra(eraOf(scn));provNames(scn);buildBorders();selC=-1;sel=-1;paint();$('pick').style.display='block';hud.style.display='none';$('setup').style.display='none';
  pend={me:-1,diff:1,aggr:50,fog:60,nofog:false,scn};req()}
 function chooseCountry(c){if(C[c].tribal){toast('Bu topraklar yerli halklara ait, oynanamaz');return}pend.me=c;selC=c;paint();req();const nP=P.filter(p=>owner[P.indexOf(p)]===c).length;
