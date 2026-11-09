@@ -4099,16 +4099,17 @@ const isHum=c=>!!(game&&game.mpd&&game.mpd.humans&&game.mpd.humans.includes(c));
 const mpHumans=()=>(game&&game.mpd&&game.mpd.humans)||[];
 const MPSPEEDS=[[30,'Yavaş · 30 sn'],[15,'Normal · 15 sn'],[8,'Hızlı · 8 sn']];
 // ---------- transport: plain HTTPS (Supabase REST) — works where WebSockets are blocked ----------
-const MPREST='https://lhhwltdrmptjkjdkwgfq.supabase.co/rest/v1/';
+const MPBASES=['https://atlas-dominion-api.vercel.app/rest/v1/','https://lhhwltdrmptjkjdkwgfq.supabase.co/rest/v1/'];let MPREST=MPBASES[0];
 let MPCH=null,MPPOLL=null,MPLAST=0,MPSV=0,MPKEY='';
 async function mpHttp(path,opt){opt=opt||{};const r=await fetch(MPREST+path,{method:opt.method||'GET',headers:Object.assign({apikey:MPCFG.key,Authorization:'Bearer '+MPCFG.key,'Content-Type':'application/json'},opt.headers||{}),body:opt.body?JSON.stringify(opt.body):undefined,cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status+' '+(await r.text()).slice(0,120));const t=await r.text();return t?JSON.parse(t):null}
 function mpConnect(code,cb,tryN){tryN=tryN||1;mpClose();MP.status='connecting';
  if(window.MPTEST){MPCH={send:m=>window.MPTEST(JSON.stringify(m))};MP.status='ok';setTimeout(()=>cb&&cb(true),0);return}
  if(navigator.onLine===false){cb&&cb(false,'offline');return}
+ MPREST=MPBASES[(tryN-1)%MPBASES.length];
  mpHttp(`mp_msgs?room=eq.${code}&select=id&order=id.desc&limit=1`).then(r=>{MPLAST=r&&r[0]?r[0].id:0;MPSV=0;MP.status='ok';
    MPCH={send:m=>{const body=JSON.stringify(m);if(body.length>19000)return;mpHttp('mp_msgs',{method:'POST',headers:{Prefer:'return=minimal'},body:{room:code,sender:MP.pid,target:m.to||'',body}}).catch(e=>console.warn('mp send',e))}};
    MPPOLL=setInterval(mpPoll,900);cb&&cb(true)})
-  .catch(e=>{console.warn('mp connect',e);if(tryN<4){toast(`🔌 Tekrar deneniyor (${tryN+1}/4)…`);setTimeout(()=>mpConnect(code,cb,tryN+1),1500*tryN)}else{MP.status='err';cb&&cb(false,String(e.message||e))}})}
+  .catch(e=>{console.warn('mp connect',e);if(tryN<4){toast(`🔌 Tekrar deneniyor (${tryN+1}/4)…`);setTimeout(()=>mpConnect(code,cb,tryN+1),800*tryN)}else{MP.status='err';cb&&cb(false,String(e.message||e))}})}
 let MPBUSY=false,MPFAILS=0;
 async function mpPoll(){if(MPBUSY||!MP.on)return;MPBUSY=true;try{
   const r=await mpHttp(`mp_msgs?room=eq.${MP.code}&id=gt.${MPLAST}&select=id,sender,target,body&order=id.asc&limit=60`);
@@ -4262,7 +4263,7 @@ function dateStr(t){const G=(typeof game!=='undefined'&&game)||{};const d=new Da
 const DIFF=['Kolay','Normal','Zor','Çok Zor'];
 function showMenu(html){mode='menu';if(!game)setTimeout(startTour,30);else stopTour();if($('selBar'))$('selBar').style.display='none';closeNews();closeEco();$('modeRank').style.display='none';$('log').style.display='none';$('menu').style.display='flex';$('mp').innerHTML=html;hud.style.display='none';$('pick').style.display='none';$('setup').style.display='none';card.style.display='none';0}
 function hideMenu(){$('menu').style.display='none';0}
-function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.1.2</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
+function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.1.3</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
  ${!game&&LS.get(LKEY,null)&&saves().some(s=>s.id===LS.get(LKEY,null))?'<button class="mb" onclick="continueGame()">⏯ Kaldığın yerden devam et</button>':''}<button class="mb ${!game&&LS.get(LKEY,null)?'sec':''}" onclick="gameMenu()">▶ Oyun</button><button class="mb sec" onclick="mpMenu()">👥 Arkadaşlarla Oyna</button><button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button>
  <button class="mb sec" onclick="leadersMenu()">👑 Liderler</button><button class="mb sec" onclick="helpMenu()">📖 Nasıl Oynanır</button><button class="mb sec" onclick="aboutMenu()">ℹ Hakkında</button>${game?'<button class="mb sec" onclick="resume()">↩ Oyuna Dön</button>':''}`)}
 const cleanName=s=>String(s||'').replace(/[<>&"'`\\]/g,'').trim().slice(0,28);
