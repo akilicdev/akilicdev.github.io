@@ -240,6 +240,28 @@ html[data-dev=phone] #mp{width:min(360px,70vw)}html[data-dev=phone] #mp h1{font-
 html[data-dev=phone] #setup{width:min(400px,56vw)!important}html[data-dev=phone] #pick{padding:4px;font-size:13px}
 html[data-dev=phone] #log{display:none!important}
 #toast{font-size:13px}html[data-dev=phone] #toast{font-size:12px;padding:6px 10px}
+
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.fa .fg button{text-align:center;padding:7px 5px;font-size:12.5px;line-height:1.25}
+.fg button small{display:block;opacity:.72;font-size:10.5px;font-weight:400;margin-top:1px}
+.fg select{min-width:0}
+.sect{font-size:10.5px;letter-spacing:.7px;text-transform:uppercase;color:#c9a45c;margin:8px 0 1px;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0}.chip{font-style:normal;font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid rgba(201,164,92,.25)}
+.relh{display:flex;justify-content:space-between;font-size:13px}
+.rbar{display:inline-block;width:56px;height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;vertical-align:middle}.rbar i{display:block;height:100%}.rbar.wide{display:block;width:100%;margin:2px 0 4px}
+.drow{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(109,90,60,.35);font-size:13px}.drow b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rlist .drow{cursor:pointer}.rn{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15}.rn b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rn small{font-size:10.5px}.rleg{display:flex;flex-wrap:wrap;gap:4px 10px;padding:4px 10px 6px;font-size:11px}.rleg i{font-style:normal;display:flex;align-items:center;gap:4px}.rleg b{width:11px;height:11px;border-radius:2px;display:inline-block}.rtag{font-size:11px;width:62px;text-align:right}.rv{font-weight:700;width:34px;text-align:right;font-size:12px}
+.fa button.sm2,.drow button.sm2{width:auto!important;flex:0 0 auto;padding:4px 8px!important;font-size:11.5px!important;text-align:center}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:5px;margin:2px 0}.kv>div{background:rgba(255,255,255,.04);border:1px solid rgba(109,90,60,.35);border-radius:4px;padding:4px 6px}.kv small{display:block;font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.4px}.kv b{font-size:13px}
+.ln{display:flex;gap:5px}.ln select{flex:1;min-width:0}.ln button{width:auto!important;flex:0 0 auto;text-align:center!important}
+.itabs{margin:-2px 0 4px;display:grid!important;grid-template-columns:repeat(3,1fr)}.itabs button{flex:1 0 30%!important;font-size:10px!important;padding:6px 2px!important}
+.ucol{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px}.ucol input[type=color]{width:34px;height:26px;padding:0;border:1px solid #6b5a3e;background:none;border-radius:4px}
+.tph{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px}.tph button{width:auto!important;padding:4px 8px!important;font-size:11.5px!important}
+#spM{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:120}
+#spM .spm{width:min(520px,94vw);max-height:90vh;overflow:auto;background:#1d1812;border:1px solid #6b5a3e;border-radius:6px;padding:0 10px 8px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+#spM .np-h{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}.gal>div{cursor:pointer;font-size:11px;text-align:center}.gal img{width:100%;border-radius:3px;display:block}
+.ni.go{cursor:pointer}.ni.go:hover{background:rgba(201,164,92,.08)}
 </style></head><body>
 <canvas id="cv"></canvas><canvas id="fx"></canvas>
 <div id="menu"><div class="panel" id="mp"></div></div>
@@ -426,7 +448,7 @@ function armyPower(c){let s=0;for(const a of armies)if(a.o===c)s+=pow(a);for(con
 function armyTotal(c){let s=0;for(const a of armies)if(a.o===c)s+=a.n;for(const f of fleets)if(f.o===c)s+=f.n;return s}
 let dirty=false,events=[];
 function logEv(){}
-function news(cat,t,bad){game.news.unshift({cat,t,bad,turn:game.turn,read:false});game.news=game.news.slice(0,80);updNewsBtn()}
+function news(cat,t,bad){game.news.unshift({cat,t,bad,turn:game.turn,read:false,c:typeof newsCountry==='function'?newsCountry(t):-1});game.news=game.news.slice(0,80);updNewsBtn()}
 function updNewsBtn(){const n=game?game.news.filter(x=>!x.read).length:0;const b=$('newsBadge');if(b){b.textContent=n;b.style.display=n?'inline-block':'none'}}
 let hap=P.map(()=>70);
 function showLog(){$('log').style.display='none'}
@@ -489,7 +511,7 @@ function aiTurn(c){const en=enemiesOf(c);if(!en.length)return;
    const opts=[];for(const j of tg){const dj=depthOf(j);if(dj>3)continue;let dp=0;for(const d of armies)if(d.p===j&&atWar(c,d.o))dp+=pow(d)*1.25;const def=dp+militia(j);const sup=P[j].nb.filter(k=>owner[k]===c).length;const hz=HZ&&owner[j]===game.me?(HZ.has(j)?0.3:1.8):1;opts.push({j,def,sc:def*(1+0.35*dj)/(1+0.15*sup)*hz})}
    if(!opts.length)continue;opts.sort((x,y)=>x.sc-y.sc);const b0=opts[0];
    const garrison=(CORE[a.p]!==c||threat>0)?Math.max(300,Math.round(a.n*0.2)):0;const strike=a.n-garrison;if(strike<=0)continue;
-   const tk=tl(c,'tank')>=1;if(tk)a.tank=1;const pu=pow(a)/a.n;if(strike*pu<=b0.def*1.3+3){delete a.tank;continue}
+   const tk=tl(c,'tank')>=1;if(tk)a.tank=1;const pu=pow(a)/a.n;if(strike*pu<=b0.def*(C[c].n==='Israel'?1.05:1.3)+3){delete a.tank;continue}
    if(garrison>0&&!armies.some(b=>b!==a&&b.o===c&&b.p===a.p&&!b.path.length)){a.n=strike;armies.push({id:aid++,o:c,p:a.p,n:garrison,path:[],g:1})}
    const b1=opts[1];if(b1&&strike*pu/2>Math.max(b0.def,b1.def)*1.4){const half=Math.floor(a.n/2);a.n-=half;armies.push({id:aid++,o:c,p:a.p,n:half,path:[b1.j],tank:tk?1:undefined})}
    a.path=[b0.j];hit=true;continue}
@@ -518,7 +540,7 @@ function aiPeaceRecruit(){if(game.turn%5)return;for(let c=0;c<C.length;c++){if(c
  const weak=mx>my*1.3;const cap=MIL[c]*(weak?1.6:1);if(armyTotal(c)<cap)aiRecruit(c,incomeOf(c)*(weak?2.5:1.2))}}
 function rel2(a,b){const k=a<b?a+'-'+b:b+'-'+a;if(game.arel[k]===undefined)game.arel[k]=-5+((a*7919+b*104729)>>>0)%31;return k}
 function truce(a,b){const k=a<b?a+'-'+b:b+'-'+a;return (game.truce[k]||0)>game.turn}
-function startWar(a,b,force){if(atWar(a,b))return;if(b===game.me&&a!==game.me&&!force&&game.turn<75)return;game.wars.push([a,b,game.turn]);if(a===game.me||b===game.me)sfx('sword');const me=game.me;
+function startWar(a,b,force){if(atWar(a,b))return;if(b===game.me&&a!==game.me&&!force&&game.turn<75)return;game.wars.push([a,b,game.turn]);if(typeof addInf==='function')addInf(a,6);if(a===game.me||b===game.me)sfx('sword');const me=game.me;
  for(const x of [a,b])if(x!==me){const m=MULT[game.diff],en=x===a?b:a;for(const i of provsOf(x))if(P[i].nb.some(j=>owner[j]===en))recruit(i,recruitable(i)*0.5*m,x);if(owner[C[x].cap]===x)recruit(C[x].cap,recruitable(C[x].cap)*0.5*m,x)}
  if(a===me||b===me){const o=a===me?b:a;game.allies=game.allies.filter(x=>x!==o);game.rel[o]=Math.min(game.rel[o],-50);news('ulusal',a===me?`⚔ ${cname(b)} ülkesine savaş açıldı!`:`🔥 ${cname(a)} ülkemize savaş açtı!`,a!==me);
   if(a===me||b===me){const foe=a===me?b:a;for(const v of vassalsOf(me))if(v!==foe&&!atWar(v,foe)){game.wars.push([v,foe,game.turn])}}
@@ -551,7 +573,7 @@ function makePeace(a,b,type,gold){if(a===game.me||b===game.me)QO('peace','Yurtta
  const me=game.me;if(a===me||b===me){const o=a===me?b:a;game.rel[o]=-5;if(gold)game.gold+=gold;news('ulusal',`🕊 ${cname(o)} ile barış antlaşması imzalandı.`);toast(`🕊 ${cname(o)} ile barış!`)}else if(CNB[me].has(a)||CNB[me].has(b))news('ulusal',`🌍 ${cname(a)} ile ${cname(b)} barış yaptı.`)}
 function aiPeace(){for(const w of game.wars.slice()){const [a,b,st]=w;const len=game.turn-st;if(a===game.me||b===game.me){
   const o=a===game.me?b:a,ad=adv(game.me,o);if(len>=12&&!game.offer&&Math.random()<0.05){if(ad>0.25)game.offer={c:o,type:'keep',gold:Math.round(incomeOf(o)*3)};else if(ad<-0.35)game.offer={c:o,type:'keep',gold:0}}continue}
-  if(tk19Lock(a,b))continue;const ad=adv(a,b);if((len>20&&Math.abs(ad)>0.3&&Math.random()<0.1)||(len>45&&Math.random()<0.08))makePeace(a,b,Math.abs(ad)>0.15?'keep':'white')}}
+  if(tk19Lock(a,b))continue;if((C[a].n==='Israel'||C[b].n==='Israel')&&Math.random()<0.75)continue;const ad=adv(a,b);if((len>20&&Math.abs(ad)>0.3&&Math.random()<0.1)||(len>45&&Math.random()<0.08))makePeace(a,b,Math.abs(ad)>0.15?'keep':'white')}}
 function showOffer(){const o=game.offer;if(!o)return;const win=adv(game.me,o.c)>0;
  card.style.display='block';cb.innerHTML=`<h3>🕊 Barış teklifi</h3><div class="ab"><b>${cname(o.c)}</b> barış istiyor.<br>
  Şart: herkes işgal ettiği illeri korur${o.gold?` + sana <b>${fmt(o.gold)} 💰</b> tazminat`:''}.</div>
@@ -574,7 +596,7 @@ function endTurnNow(){if(!game||busy)return;busy=true;sfx('turn');dirty=false;ca
  if(fighters.size&&enemiesOf(game.me).length){const first=order.find(c=>c===game.me||atWar(c,game.me));game.firstMove=first}
  for(const c of order){if(c===game.me)moveAll(c);else{aiTurn(c);aiAir(c)}}seaQueue();moveFleets();navalBattles();aiWars();aiDiplomacy();aiPeace();aiPeaceRecruit();
  for(let i=0;i<N;i++){const cap=BASEPOP[i]*1.05;if(pop[i]<cap)pop[i]=Math.min(cap,pop[i]*1.001+1);const o=owner[i];const tgt=(CORE[i]===o?72:48)-Math.min(15,enemiesOf(o).length*6*(gov(o)==='dem'?1.5:1))-(unemp[i]-7)*0.8+govF(o,'hap')+(tl(o,'med')>=3?2:0)+(tl(o,'med')>=6?3:0)-((game.dmg[i]||0)>game.turn?6:0)+(o===game.me?(0.2-game.tax)*60-Math.max(0,(game.mob||2)-2)*4:0);hap[i]+=(tgt-hap[i])*0.03}
- game.dp=Math.min(50,game.dp+0.5+govF(game.me,'dp'));processEnvoys();unrestNews();buildTick();debtTick();coupTick();straitTick();projTick();spaceTick();stabTick();allyTick();aiColonize();vassalTick();missileTick();aiBuild();aiCyber();game.tp+=tpGain();if(game.turn%10===0)aiTreeTick();game.mp=Math.min(30,game.mp+Math.min(12,5+Math.floor(provsOf(game.me).length/40)));const anyDis=diseaseTick();investTick();
+ game.dp=Math.min(50,game.dp+0.5+govF(game.me,'dp'));processEnvoys();unrestNews();buildTick();debtTick();coupTick();straitTick();projTick();spaceTick();stabTick();allyTick();extTick();aiColonize();vassalTick();missileTick();aiBuild();aiCyber();game.tp+=tpGain();if(game.turn%10===0)aiTreeTick();game.mp=Math.min(30,game.mp+Math.min(12,5+Math.floor(provsOf(game.me).length/40)));const anyDis=diseaseTick();investTick();
  consolidate();calcEco();game.gold+=income();game.turn++;if(!isModern(game.scn)&&typeof scenTick==='function')scenTick();if(!owner.includes(game.me)){busy=false;gameOver();return}
  const cq=BLOG.filter(e=>e.now!==undefined);if(cq.length){VOWN=owner.slice();for(let k=cq.length-1;k>=0;k--)VOWN[cq[k].p]=cq[k].prev}
  if(dirty){buildBorders();paint()}else if(MAPMODE!=='pol')paint();refreshBar();updHud();req();autoSave();busy=false;refreshPanels();if(game.offer)showOffer();if(BLOG.length)playReplay()}
@@ -600,18 +622,19 @@ function newGameState(me){fleets=[];game.ext={qo:{},nav:{},sp:{r:0,q:[],n:0,ok:0
 let selP=-1;
 function pick(sx,sy){const w=s2w(sx,sy);const x=((Math.floor(w.x)%W)+W)%W,y=Math.floor(w.y);if(y<0||y>=H)return;const v=grid[y*W+x];
  if(mode==='pick'){if(v!==OCEAN)chooseCountry(owner[v]);return}
+ if(mode==='tpick'){tPick(v);return}
  if(mode==='move'){const wx=w.x,wy=w.y;
   if(selF){const f=fleets.find(x=>x.id===selF);if(!f){cancelMove();return}let t=null;
    if(v===OCEAN){const c=worldCell(wx,wy);if(c<0){toast('Bir deniz noktası seç');return}t={cell:c}}else{if(!PCELL[v].length){toast('⛔ Kıyı şehri seç');return}if(!canEnter(game.me,v)){toast('⛔ Sadece kendi topraklarına, müttefike veya savaştığın ülkeye çıkarma yapabilirsin');return}t={prov:v}}
-   if(game.mp<2){toast('🏃 Yetersiz hareket puanı');return}if(!orderFleet(f,t)){toast('⛔ Deniz yolu bulunamadı');return}game.mp-=2;mode='play';updHud();toast(t.prov!==undefined?`🚢 Filo ${P[v].n} kıyısına çıkarma için yola çıktı`:'🚢 Filo denizde hedefe ilerliyor');selectFleet(f.id);req();return}
+   if(game.mp<seaC()){toast('🏃 Yetersiz hareket puanı');return}if(!orderFleet(f,t)){toast('⛔ Deniz yolu bulunamadı');return}game.mp-=seaC();mode='play';updHud();toast(t.prov!==undefined?`🚢 Filo ${P[v].n} kıyısına çıkarma için yola çıktı`:'🚢 Filo denizde hedefe ilerliyor');selectFleet(f.id);req();return}
   const a=homeArmy(selP,game.me);if(!a){cancelMove();return}if(v===selP){cancelMove();return}if(tkBusy(a)){toast('🛡 Tank saldırısı yapan ordu bu tur hareket edemez');cancelMove();return}
   const n0=Math.min(a.n,Math.max(1,+($('mN')?.value||a.n)));const port=has(selP,B.PORT);
   if(v===OCEAN&&!port){const c=worldCell(wx,wy);if(c<0){toast('Bir deniz noktası seç');return}viaPort(a,n0,{cell:c});return}
   if(v===OCEAN){const c=worldCell(wx,wy);if(c<0){toast('Bir deniz noktası seç');return}
-   if(game.mp<2){toast('🏃 Yetersiz hareket puanı');return}const f=embark(a,n0,{cell:c});if(!f){toast('⛔ Deniz yolu bulunamadı');return}game.mp-=2;mode='play';updHud();toast(`🚢 ${kfmt(n0)} asker gemilere bindi`);selectFleet(f.id);req();return}
+   if(game.mp<seaC()){toast('🏃 Yetersiz hareket puanı');return}const f=embark(a,n0,{cell:c});if(!f){toast('⛔ Deniz yolu bulunamadı');return}game.mp-=seaC();mode='play';updHud();toast(`🚢 ${kfmt(n0)} asker gemilere bindi`);selectFleet(f.id);req();return}
   const pth=findPath(game.me,selP,v);if(pth&&typeof tkOrder==='function')tkOrder(v);
   if(!pth&&!port&&PCELL[v].length&&canEnter(game.me,v)){viaPort(a,n0,{prov:v});return}
-  if(!pth){if(port&&PCELL[v].length&&canEnter(game.me,v)){if(game.mp<2){toast('🏃 Yetersiz hareket puanı');return}const f=embark(a,n0,{prov:v});if(f){game.mp-=2;mode='play';updHud();toast(`🚢 Kara yolu yok: ${kfmt(n0)} asker gemiyle ${P[v].n} kıyısına gidiyor`);selectProv(selP);req();return}}
+  if(!pth){if(port&&PCELL[v].length&&canEnter(game.me,v)){if(game.mp<seaC()){toast('🏃 Yetersiz hareket puanı');return}const f=embark(a,n0,{prov:v});if(f){game.mp-=seaC();mode='play';updHud();toast(`🚢 Kara yolu yok: ${kfmt(n0)} asker gemiyle ${P[v].n} kıyısına gidiyor`);selectProv(selP);req();return}}
    const ow=owner[v];toast(friendly(game.me,ow)||atWar(game.me,ow)?'⛔ Oraya yol yok':'⛔ Sadece kendi topraklarına, müttefike, erişim iznin olan veya savaştığın ülkeye gidebilirsin');return}
   if(game.mp<1){toast('🏃 Yetersiz hareket puanı');return}game.mp-=1;
   let mv=a;if(n0<a.n){a.n-=n0;mv={id:aid++,o:a.o,p:a.p,n:n0,path:[]};armies.push(mv)}
@@ -662,7 +685,7 @@ function startMove(){const a=homeArmy(selP,game.me);if(!a)return;if(tkBusy(a)){t
  $('sub').innerHTML=`<div class="box mvbox"><div class="mvh">🎯 Hedef şehre dokun</div>
  <div class="row"><span>Gönderilecek</span><b id="mL">${fmt(n)}</b></div><input type="range" id="mS" min="1" max="${n}" value="${n}" oninput="mvSet(+this.value)" style="width:100%"><input type="hidden" id="mN" value="${n}">
  <div class="mvq">${B_(0.25,'¼')}${B_(0.5,'½')}${B_(1,'Hepsi')}</div>
- <div class="mvi">🏃 ${game.mp} puan · kara 1 · deniz 2${has(selP,B.PORT)?' · ⚓ denize dokunabilirsin':' · denize gönderirsen en yakın limana yürür'}</div>
+ <div class="mvi">🏃 ${game.mp} puan · kara 1 · deniz ${seaC()}${has(selP,B.PORT)?' · ⚓ denize dokunabilirsin':' · denize gönderirsen en yakın limana yürür'}</div>
  <div class="mvq"><button onclick="mmStart()">👥 Toplu hareket</button><button class="sec2" onclick="cancelMove()">İptal</button></div>
  ${armies.some(x=>x.p===selP&&x.o===game.me&&x.path.length)?`<button class="sec2" style="width:100%" onclick="stopArmy()">Yoldakileri durdur</button>`:''}</div>`}
 function mvSet(v){const m=$('mS');if(!m)return;v=Math.max(1,Math.min(+m.max,v|0));m.value=v;$('mN').value=v;$('mL').textContent=fmt(v)}
@@ -834,20 +857,20 @@ function spawnDisease(pandemic){const i=(Math.random()*N)|0;if(pop[i]<50000)retu
 function diseaseTick(){if(Math.random()<0.025)spawnDisease(false);if(Math.random()<0.0008)spawnDisease(true);
  const me=game.me;const nx=new Float32Array(inf);let any=0;
  for(let i=0;i<N;i++){const v=inf[i];if(v<=0.005){if(v>0){nx[i]=0;dis[i]=0}continue}any++;const ob=game.outb[dis[i]];const pd=ob&&ob.p;
-  const hos=has(i,B.HOSP);const d=pop[i]*v*0.00012*(hos?0.3:1)*(pd?1.8:1)*(tl(owner[i],'med')>=2?0.7:1)/(0.6+TECH[owner[i]]*0.2);pop[i]=Math.max(10,pop[i]-d);deaths[i]+=d;if(ob)ob.deaths+=d;
+  const hos=has(i,B.HOSP);const d=pop[i]*v*0.00012*(hos?0.3:1)*(pd?1.8:1)*(tl(owner[i],'med')>=2?0.7:1)/(0.6+TECH[owner[i]]*0.2)*cureF(owner[i],'d',i);pop[i]=Math.max(10,pop[i]-d);deaths[i]+=d;if(ob)ob.deaths+=d;
   if(ob&&owner[i]===me&&!ob.hit){ob.hit=true;if(ob.home!==me)news('yerel',`🦠 ${ob.name} salgını ülkemize ulaştı: ${P[i].n}`,true)}
-  const sp=(pd?0.22:0.1)*v;for(const j of P[i].nb){if(inf[j]>=v*0.6)continue;if(Math.random()<sp*(has(j,B.HOSP)?0.35:1)*(tl(owner[j],'med')>=1?0.75:1)*(tl(owner[j],'med')>=5&&owner[j]!==owner[i]?0.5:1)){nx[j]=Math.max(nx[j],v*0.75);dis[j]=dis[i]}}
+  const sp=(pd?0.22:0.1)*v;for(const j of P[i].nb){if(inf[j]>=v*0.6)continue;if(Math.random()<sp*(has(j,B.HOSP)?0.35:1)*(tl(owner[j],'med')>=1?0.75:1)*(tl(owner[j],'med')>=5&&owner[j]!==owner[i]?0.5:1)*cureF(owner[j],'s',j,dis[i])*(owner[i]===game.me?cureF(owner[i],'s',i):1)){nx[j]=Math.max(nx[j],v*0.75);dis[j]=dis[i]}}
   if(pd&&has(i,B.PORT)&&Math.random()<0.03){const j=(Math.random()*N)|0;if(has(j,B.PORT)&&inf[j]<0.1){nx[j]=0.4;dis[j]=dis[i]}}
-  nx[i]=v-(0.012*(hos?2.5:1)*(1+TECH[owner[i]]*0.1))}
+  nx[i]=v-(0.012*(hos?2.5:1)*(1+TECH[owner[i]]*0.1)*cureF(owner[i],'r',i,dis[i]))}
  inf=nx;
  for(const id in game.outb){const o=game.outb[id];if(!o.on)continue;let live=false;for(let i=0;i<N;i++)if(dis[i]==id&&inf[i]>0.005){live=true;break}
   if(!live){o.on=false;if(o.hit||o.p)news(o.p?'ulusal':'yerel',`🦠 ${o.name} salgını sona erdi. Toplam ölü: ${fmt(o.deaths)}`)}}
  return any}
 // ---- tax / investment / upkeep ----
-function grossOf(c){return (c===game.me&&game.ext&&game.ext.prest?1+Math.min(0.3,game.ext.prest*0.05):1)*ECO[c]*0.25*(c===game.me?game.tax:0.2)*GS*(isMed(game.scn)?(c===game.me?5:1.25):SCNDEF[game.scn]?(c===game.me?2:1.3):1)}
+function grossOf(c){return grossAdj(c,(c===game.me&&game.ext&&game.ext.prest?1+Math.min(0.3,game.ext.prest*0.05):1)*ecoAdjF(c)*0.25*(c===game.me?game.tax:0.2)*GS*(isMed(game.scn)?(c===game.me?5:1.25):SCNDEF[game.scn]?(c===game.me?2:1.3):1))}
 function invTotal(){return game.inv.e+game.inv.p+game.inv.t}
 function upkeep(){return armyTotal(game.me)*UPKEEP*(SCNDEF[game.scn]?0.3:1)}
-function netIncome(){const g=grossOf(game.me);return g-g*invTotal()-upkeep()+(game.vasInc||0)+straitIncome()}
+function netIncome(){const g=grossOf(game.me);return g-g*invTotal()-upkeep()+(game.vasInc||0)+straitIncome()+resIncome(game.me)}
 function investTick(){const me=game.me,ie=game.inv.e,ip=game.inv.p,it=game.inv.t;let libs=0,cnt=0;
  for(let i=0;i<N;i++){const o=owner[i];const mine=o===me;const e=mine?ie:0.1,pp=mine?ip:0.1;cnt+=mine;const U=lv(i,B.UNI),Ho=lv(i,B.HOUSE),L=lv(i,B.LIB);
   if(e>=0.1){ecoP[i]*=1+(mine?0.0012:0.0006)*Math.min(4,e/0.1)*(1+U*0.3)*(mine?govF(me,'eco'):1);unemp[i]=Math.max(2,unemp[i]-0.04*Math.min(4,e/0.1)*(1+U*0.4))}
@@ -889,9 +912,9 @@ function villageAid(){const X=game.ext||(game.ext={});if((X.vil||0)>game.turn)re
  news('ulusal',`🌾 ${k} kırsal ile tohum, traktör ve sulama desteği verildi.`);toast('🌾 Köylere destek verildi');QO('koy','Köylü milletin efendisidir.');updHud();ecoUI()}
 function setTax(v){game.tax=v/100;const over=game.tax>TAXMAX;$('txV').textContent='%'+Math.round(v);$('txV').style.color=over?'#e0604a':'';$('txH').innerHTML=over?'⚠ Vergi sınırı (%30) aşıldı! Halk hızla mutsuz olur.':'Yüksek vergi geliri artırır ama halkı mutsuz eder.';$('txH').style.color=over?'#e0604a':'#cdbb92';ecoRef()}
 function setInv(k,v){game.inv[k]=v/100;$('i'+k+'V').textContent='%'+Math.round(v);ecoRef()}
-function ecoRef(){const me=game.me,g=grossOf(me),inv=g*invTotal(),up=upkeep(),net=g-inv-up;let un=0,ig=0,n=0;for(let i=0;i<N;i++)if(owner[i]===me){un+=unemp[i];ig+=ign[i];n++}n=Math.max(1,n);
+function ecoRef(){const me=game.me,g=grossOf(me),inv=g*invTotal(),up=upkeep(),net=g-inv-up+resIncome(me);let un=0,ig=0,n=0;for(let i=0;i<N;i++)if(owner[i]===me){un+=unemp[i];ig+=ign[i];n++}n=Math.max(1,n);
  $('ecoSum').innerHTML=`<div class="row"><span>Brüt vergi geliri / tur</span><b>${fmt(g)} 💰</b></div><div class="row"><span>Yatırım gideri</span><b>-${fmt(inv)} 💰</b></div>
- <div class="row"><span>🪖 Asker gideri (${fmt(armyTotal(me))} asker)</span><b>-${fmt(up)} 💰</b></div>${game.vasInc?`<div class="row"><span>👑 Vasal vergisi</span><b>+${fmt(game.vasInc)} 💰</b></div>`:''}${game.scn==='1919'?`<div class="row"><span>🛡 Kasa alt sınırı</span><b>${fmt(treasuryFloor())} 💰</b></div>`:''}${straitIncome()?`<div class="row"><span>⚓ Boğaz geliri</span><b>+${fmt(straitIncome())} 💰</b></div>`:''}<div class="row"><span>Net gelir / tur</span><b style="color:${net<0?'#e0604a':'#9fc48a'}">${net<0?'':'+'}${fmt(net+straitIncome())} 💰</b></div>
+ <div class="row"><span>🪖 Asker gideri (${fmt(armyTotal(me))} asker)</span><b>-${fmt(up)} 💰</b></div>${game.vasInc?`<div class="row"><span>👑 Vasal vergisi</span><b>+${fmt(game.vasInc)} 💰</b></div>`:''}${game.scn==='1919'?`<div class="row"><span>🛡 Kasa alt sınırı</span><b>${fmt(treasuryFloor())} 💰</b></div>`:''}${resIncome(me)?`<div class="row"><span>⛏ Kaynak üretimi</span><b>+${fmt(resIncome(me))} 💰</b></div>`:''}${straitIncome()?`<div class="row"><span>⚓ Boğaz geliri</span><b>+${fmt(straitIncome())} 💰</b></div>`:''}<div class="row"><span>Net gelir / tur</span><b style="color:${net<0?'#e0604a':'#9fc48a'}">${net<0?'':'+'}${fmt(net+straitIncome())} 💰</b></div>
  <div class="row"><span>🔬 Teknoloji seviyesi</span><b>${TECH[me].toFixed(2)}</b></div><div class="row"><span>👷 Ortalama işsizlik</span><b>%${(un/n).toFixed(1)}</b></div><div class="row"><span>📖 Ortalama cehalet</span><b>%${(ig/n).toFixed(1)}</b></div>`;updHud()}
 function openEco(){if(!game)return;closeSide();$('ecoP').style.display='block';ecoUI()}
 function closeEco(){$('ecoP').style.display='none'}
@@ -907,6 +930,7 @@ function metric(kind){calcEco();const v=C.map(()=>0);if(kind==='army'){for(let c
  else if(kind==='stab'){const n=C.map(()=>0);for(let i=0;i<N;i++){v[owner[i]]+=stabOf(i);n[owner[i]]++}for(let c=0;c<C.length;c++)v[c]=n[c]?v[c]/n[c]:0}
  else if(kind==='pop')for(let i=0;i<N;i++)v[owner[i]]+=pop[i];
  else if(kind==='dis')for(let i=0;i<N;i++)v[owner[i]]+=deaths[i];
+ else if(kind==='res')for(let i=0;i<N;i++)v[owner[i]]+=provResVal(i);
  else if(kind==='land')for(let i=0;i<N;i++)v[owner[i]]+=P[i].px;
  return v}
 function prestige(){const land=metric('land'),pw=C.map((c,i)=>armyPower(i)),v=C.map(()=>0);const ml=Math.max(...land),mp=Math.max(...pw);for(let c=0;c<C.length;c++)v[c]=(land[c]/ml*60+pw[c]/mp*40);return v}
@@ -915,17 +939,18 @@ function rankList(v,fmtv,n){const ids=C.map((c,i)=>i).filter(i=>owner.includes(i
  if(myR>=n)h+=`<div class="rk me"><span>${myR+1}.</span>${fimg(me,12)}<b>${cname(me)}</b><em>${fmtv(v[me])}</em></div>`;return h}
 const MFMT={stab:x=>'%'+Math.round(x),army:x=>kfmt(x)+' asker',hap:x=>'%'+Math.round(x),eco:x=>fmt(x)+' mlr $',tech:x=>x.toFixed(2),pop:x=>kfmt(x),dis:x=>kfmt(x)+' ölü'};
 function showModeRank(){const p=$('modeRank');if(MAPMODE==='pol'||!game){p.style.display='none';return}p.style.display='block';const nm=MODES[MAPMODE].trim();
- let body;if(rankView==='mine'){const [f,fm]=CITYM[MAPMODE];const L=provsOf(game.me).sort((a,b)=>f(b)-f(a));body=L.slice(0,60).map((i,r)=>`<div class="rk" onclick="cam={x:P[${i}].x,y:P[${i}].y,z:Math.max(cam.z,6)};req()"><span>${r+1}.</span><b>${P[i].n}</b><em>${fm(f(i))}</em></div>`).join('')}
- else body=rankList(metric(MAPMODE),MFMT[MAPMODE],15);
- p.innerHTML=`<div class="rh">${nm}</div><div class="tabs sm"><button class="${rankView==='world'?'on':''}" onclick="rankView='world';showModeRank()">Dünya</button><button class="${rankView==='mine'?'on':''}" onclick="rankView='mine';showModeRank()">Şehirlerim</button></div><div class="rkl">${body}</div>`}
+ let body;if(rankView==='mine'){const [f,fm]=CITYM[MAPMODE];const L=provsOf(game.me).sort((a,b)=>f(b)-f(a));body=L.map((i,r)=>`<div class="rk" onclick="cam={x:P[${i}].x,y:P[${i}].y,z:Math.max(cam.z,6)};req()"><span>${r+1}.</span><b>${P[i].n}</b><em>${fm(f(i))}</em></div>`).join('')}
+ else body=rankList(metric(MAPMODE),MFMT[MAPMODE],999);
+ p.innerHTML=`<div class="rh">${nm}</div>${MAPMODE==='res'?resLegend():''}<div class="tabs sm"><button class="${rankView==='world'?'on':''}" onclick="rankView='world';showModeRank()">Dünya</button><button class="${rankView==='mine'?'on':''}" onclick="rankView='mine';showModeRank()">Şehirlerim</button></div><div class="rkl">${body}</div>`}
 let rankTab='total';
 function openRank(t){if(!game)return;if(t)rankTab=t;closeSide();const p=$('rankP');p.style.display='block';
  const eco=metric('eco'),tech=metric('tech'),popv=metric('pop'),pre=prestige();const mx=a=>Math.max(...a)||1;
  const tot=C.map((c,i)=>eco[i]/mx(eco)*30+tech[i]/mx(tech)*20*Math.min(1,Math.pow(eco[i]/500,0.35))+popv[i]/mx(popv)*20+pre[i]/mx(pre)*30);
  const T={total:['🏆 Genel',tot,x=>x.toFixed(1)+' puan'],eco:['💹 Ekonomi',eco,MFMT.eco],tech:['🔬 Teknoloji',tech,MFMT.tech],pop:['👥 Nüfus',popv,MFMT.pop],pre:['👑 Prestij',pre,x=>x.toFixed(1)]};
  p.innerHTML=`<div class="np-h"><b>🏆 Dünya Sıralaması</b><button class="x2" onclick="closeSide()">✕</button></div><div class="tabs">${Object.entries(T).map(([k,v])=>`<button class="${k===rankTab?'on':''}" onclick="openRank('${k}')">${v[0]}</button>`).join('')}</div>
- <div class="rkl">${rankList(T[rankTab][1],T[rankTab][2],30)}</div><div class="hint" style="padding:6px 12px;color:#cdbb92">Prestij: toprak büyüklüğü ve askeri güç. Genel: ekonomi %30, teknoloji %20, nüfus %20, prestij %30.</div>`}
+ <div class="rkl">${rankList(T[rankTab][1],T[rankTab][2],999)}</div><div class="hint" style="padding:6px 12px;color:#cdbb92">Prestij: toprak büyüklüğü ve askeri güç. Genel: ekonomi %30, teknoloji %20, nüfus %20, prestij %30.</div>`}
 function modeColor(v){const m=MAPMODE;
+ if(m==='res'){const k=RK[v],c=RES[k].col;if(!resAvail(k))return[70,68,62];const x=Math.min(1,0.72+RQ[v]/12);return[c[0]*x|0,c[1]*x|0,c[2]*x|0]}
  if(m==='army'){const o=owner[v],me=game?game.me:-1,n=AMAP?AMAP[v]:0,x=n>0?Math.min(1,(Math.log10(n)-2.5)/3.5):0;if(o===me)return n>0?[60+40*x|0,110+110*x|0,70+20*x|0]:[64,82,64];if(game&&atWar(me,o))return n>0?[130+110*x|0,60-20*x|0,50]:[96,66,58];if(game&&friendly(me,o))return n>0?[70,100+60*x|0,140+90*x|0]:[64,72,86];return n>0?[110+90*x|0,104+80*x|0,86+40*x|0]:[72,70,64]}
  if(m==='form')return histColor(v);
  if(m==='hap'){const x=Math.max(0,Math.min(1,hap[v]/90));return[200-130*x|0,70+110*x|0,60]}
@@ -961,9 +986,9 @@ function giftUI(c){const g=Math.round(grossOf(game.me));$('sub').innerHTML=`<div
 function doGift(c){const n=Math.floor(+$('gN').value||0);if(n<=0||n>game.gold){toast('💰 Geçersiz miktar');return}game.gold-=n;const d=Math.min(25,Math.round(n/Math.max(1,grossOf(c))*6));game.rel[c]=Math.min(100,(game.rel[c]|0)+d);toast(`💰 ${fmt(n)} altın gönderildi · ilişki +${d}`);updHud();refreshBar()}
 function tradeUI(c){const mine=provsOf(game.me).filter(i=>P[i].nb.some(j=>owner[j]===c)||true).sort((a,b)=>provValue(b)-provValue(a));const theirs=provsOf(c).filter(i=>i!==C[c].cap).sort((a,b)=>P[a].n.localeCompare(P[b].n));
  $('sub').innerHTML=`<div class="box"><b>⚖ ${cname(c)} ile ticaret</b>
- <div style="margin-top:6px">🏙 Şehir satın al:</div><select id="tB" style="width:100%" onchange="tPrice()">${theirs.map(i=>`<option value="${i}">${P[i].n} — değer ${kfmt(provValue(i))}</option>`).join('')}</select>
+ <div class="tph"><span>🏙 Şehir satın al:</span><button class="sec2" onclick="tPickStart(${c},'b')">🗺 Haritadan seç</button></div><select id="tB" style="width:100%" onchange="tPrice()">${theirs.map(i=>`<option value="${i}">${P[i].n} — değer ${kfmt(provValue(i))}</option>`).join('')}</select>
  <div style="display:flex;gap:6px;margin-top:4px"><input type="number" id="tO" style="flex:1"><button onclick="buyCity(${c})">Teklif et</button></div>
- <div style="margin-top:8px">🏙 Şehir sat:</div><select id="tS" style="width:100%">${provsOf(game.me).filter(i=>i!==C[game.me].cap).sort((a,b)=>P[a].n.localeCompare(P[b].n)).map(i=>`<option value="${i}">${P[i].n} — değer ${kfmt(provValue(i))}</option>`).join('')}</select>
+ <div class="tph"><span>🏙 Şehir sat:</span><button class="sec2" onclick="tPickStart(${c},'s')">🗺 Haritadan seç</button></div><select id="tS" style="width:100%">${provsOf(game.me).filter(i=>i!==C[game.me].cap).sort((a,b)=>P[a].n.localeCompare(P[b].n)).map(i=>`<option value="${i}">${P[i].n} — değer ${kfmt(provValue(i))}</option>`).join('')}</select>
  <button style="margin-top:4px" onclick="sellCity(${c})">Satışa çıkar</button>
  <div class="tdiv"></div><div>💸 Tazminat iste</div><div class="hint">Senden çok zayıfsa ve seninle savaşmak istemiyorsa altın öder. Reddederse ilişki bozulur.</div><button onclick="askTribute(${c})">Tazminat iste · ${kfmt(tributeAmt(c))} 💰 · 2 DP</button>
  <div class="tdiv"></div><div>👑 Vasallaştırma teklifi</div><div class="hint">Senden çok zayıf bir ülke altın karşılığında vasalın olabilir.</div><button onclick="buyVassal(${c})" ${game.vas&&game.vas[c]===game.me?'disabled':''}>Vasal ol teklifi · ${kfmt(vassalPrice(c))} 💰</button>
@@ -1020,7 +1045,7 @@ function doAir(t){const v=selP,cost=2500*lv(v,B.AIR);mode='play';if(!atWar(game.
  if(game.gold<cost){toast('💰 Yetersiz altın');return}if(game.mp<1){toast('🏃 Yetersiz hareket puanı');return}game.gold-=cost;game.mp-=1;BLOG=[];airStrike(v,t,game.me);updHud();refreshBar();playReplay()}
 // ---- naval battles ----
 function navalBattles(){for(let i=0;i<fleets.length;i++)for(let j=i+1;j<fleets.length;j++){const a=fleets[i],b=fleets[j];if(!a||!b||!atWar(a.o,b.o))continue;const qa=cellXY(a.cell),qb=cellXY(b.cell);let dx=Math.abs(qa.x-qb.x);dx=Math.min(dx,W-dx);if(dx*dx+(qa.y-qb.y)**2>14*14)continue;
- const pa=pow(a),pb=pow(b);const win=pa>=pb?a:b,lose=win===a?b:a,ratio=Math.min(pa,pb)/Math.max(pa,pb);win.n=Math.max(1,Math.round(win.n*(1-0.6*ratio)));fleets=fleets.filter(f=>f!==lose);
+ const pa=pow(a)*navMul(a.o),pb=pow(b)*navMul(b.o);const win=pa>=pb?a:b,lose=win===a?b:a,ratio=Math.min(pa,pb)/Math.max(pa,pb);win.n=Math.max(1,Math.round(win.n*(1-0.6*ratio)));fleets=fleets.filter(f=>f!==lose);
  if(a.o===game.me||b.o===game.me){const near=P.reduce((m,p,k)=>{let d=Math.abs(p.x-qa.x);d=Math.min(d,W-d);d=d*d+(p.y-qa.y)**2;return d<m[0]?[d,k]:m},[1e18,0])[1];bev(near,`🚢 Deniz savaşı: ${cname(win.o)} filosu ${cname(lose.o)} filosunu batırdı (${kfmt(lose.n)} asker)`,win.o===game.me,win.o)}j=fleets.length}}
 function fleetVisible(f){const me=game.me;if(game.nofog||f.o===me||friendly(me,f.o))return true;const q=cellXY(f.cell);const war=atWar(me,f.o);
  if(war)for(const g of fleets)if(g.o===me){const r=cellXY(g.cell);let dx=Math.abs(q.x-r.x);dx=Math.min(dx,W-dx);if(dx*dx+(q.y-r.y)**2<60*60)return true}
@@ -1304,7 +1329,7 @@ const infMul=c=>{const L=tl(c,'inf');return 1+(L>=1?0.05:0)+(L>=2?0.05:0)+(L>=4?
 const tankMul=c=>{const L=tl(c,'tank');return L?1.35+(L>=2?0.25:0)+(L>=3?0.25:0)+(L>=4?0.4:0)+(L>=6?0.4:0):1};
 const cybAtk=c=>30+TECH[c]*6+(tl(c,'cyb')>=2?20:0)+(tl(c,'cyb')>=4?30:0)+(tl(c,'cyb')>=6?40:0);
 const cybDef=c=>30+TECH[c]*6+(tl(c,'cyb')>=1?20:0)+(tl(c,'cyb')>=3?30:0)+(tl(c,'cyb')>=5?30:0);
-function tpGain(){const me=game.me;let libs=0;for(let i=0;i<N;i++)if(owner[i]===me)libs+=lv(i,B.LIB);return Math.round((grossOf(me)*game.inv.t/900+libs*0.2+(isModern(game.scn)?0.3:0.6))*10)/10}
+function tpGain(){const me=game.me;let libs=0;for(let i=0;i<N;i++)if(owner[i]===me)libs+=lv(i,B.LIB);return Math.round((spBonusTP()+grossOf(me)*game.inv.t/900+libs*0.2+(isModern(game.scn)?0.3:0.6))*10)/10}
 let treeTab='inf';
 function techUI(t){if(!game)return;if(t)treeTab=t;const noSpc=treeTab==='spc'&&game.scn!=='2027';closeSide();const p=$('techP');p.style.display='block';const me=game.me,cur=tl(me,treeTab),T=TREE[treeTab];
  p.innerHTML=`<div class="np-h"><b>Teknoloji</b><span class="tp">${ico('tech')} ${game.tp.toFixed(1)} puan <small>(+${tpGain()}/tur)</small></span><button class="x2" onclick="closeSide()">✕</button></div>
@@ -1400,8 +1425,8 @@ function refreshPanels(){if(!game)return;const vis=id=>$(id)&&$(id).style.displa
  showModeRank();selUI();if(MAPMODE!=='pol')paint();req()}
 
 // ===== space program (2027 only) =====
-const tcost=(k,i)=>Math.round(TCOST[i]*(k==='spc'?1.8:1));
-const rocketCost=()=>Math.round(Math.max(120000,grossOf(game.me)*14));
+const tcost=(k,i)=>Math.round(TCOST[i]*(k==='spc'?1.6:1));
+const rocketCost=()=>Math.round(Math.max(150000,grossOf(game.me)*16));
 const ROCKET_T=8;
 function spX(){const X=game.ext||(game.ext={});return X.sp||(X.sp={r:0,q:[],n:0,ok:0})}
 function spaceCenter(c){return provsOf(c).find(i=>has(i,B.SPACE))}
@@ -1585,6 +1610,276 @@ function cnameL(i){const c=C[i];if(!c)return '?';if(c.hist){return c.hist[LANG]|
  if(c.L)return c.L[li()]||c.n;return DISPLAY[c.n]||c.n}
 // UI dictionary: [tr, en, ar, zh, it, es, de, fr, ru]
 const DICT=[
+['İlişkiler','Relations','العلاقات','关系','Relazioni','Relaciones','Beziehungen','Relations','Отношения'],
+['Üretim','Production','الإنتاج','生产','Produzione','Producción','Produktion','Production','Производство'],
+['Birlik','Union','الاتحاد','联盟','Unione','Unión','Union','Union','Союз'],
+['Yönetim şekli','Form of government','نظام الحكم','政体','Forma di governo','Forma de gobierno','Regierungsform','Régime','Форма правления'],
+['Değiştir','Change','تغيير','更改','Cambia','Cambiar','Ändern','Changer','Изменить'],
+['Taşı','Move','نقل','迁移','Sposta','Trasladar','Verlegen','Déplacer','Перенести'],
+['Dengeli yönetim. Özel bonus veya ceza yok.','Balanced government. No special bonus or penalty.','حكم متوازن. لا مكافأة ولا عقوبة خاصة.','平衡的政体，无特殊加成或惩罚。','Governo equilibrato. Nessun bonus o malus.','Gobierno equilibrado. Sin bonificación ni penalización.','Ausgewogene Regierung. Kein Bonus oder Malus.','Gouvernement équilibré. Aucun bonus ni malus.','Сбалансированное правление. Без бонусов и штрафов.'],
+['ittifakı 150 tur uzatır','extends the alliance by 150 turns','يمدد التحالف 150 دورًا','将同盟延长150回合','estende l\'alleanza di 150 turni','amplía la alianza 150 turnos','verlängert das Bündnis um 150 Runden','prolonge l\'alliance de 150 tours','продлевает союз на 150 ходов'],
+['ittifakı bozar','breaks the alliance','ينهي التحالف','破坏同盟','rompe l\'alleanza','rompe la alianza','bricht das Bündnis','rompt l\'alliance','разрывает союз'],
+['İyi ilişki','Good relations','علاقات جيدة','良好关系','Buone relazioni','Buenas relaciones','Gute Beziehungen','Bonnes relations','Хорошие отношения'],
+['Kötü ilişki','Bad relations','علاقات سيئة','恶劣关系','Cattive relazioni','Malas relaciones','Schlechte Beziehungen','Mauvaises relations','Плохие отношения'],
+['Saldırganlık','Aggression','العدوانية','侵略性','Aggressività','Agresividad','Aggression','Agressivité','Агрессивность'],
+['İyi','Good','جيدة','良好','Buone','Buenas','Gut','Bonnes','Хорошие'],
+['Kötü','Bad','سيئة','恶劣','Cattive','Malas','Schlecht','Mauvaises','Плохие'],
+['Komşular','Neighbours','الجيران','邻国','Vicini','Vecinos','Nachbarn','Voisins','Соседи'],
+['Çok iyi','Very good','جيدة جدًا','非常好','Ottime','Muy buenas','Sehr gut','Très bonnes','Очень хорошие'],
+['Nötr','Neutral','محايدة','中立','Neutrali','Neutrales','Neutral','Neutres','Нейтральные'],
+['Düşmanca','Hostile','عدائية','敌对','Ostili','Hostiles','Feindlich','Hostiles','Враждебные'],
+['Tümü','All','الكل','全部','Tutti','Todos','Alle','Tous','Все'],
+['Saldırganlık puanı savaş açtıkça ve şehir aldıkça artar, barışta azalır. 50\'yi geçerse komşular koalisyon kurup sana savaş açabilir.','Aggression rises when you declare wars and take cities, and falls in peace. Above 50, neighbours may form a coalition and declare war on you.','ترتفع العدوانية عند إعلان الحروب والاستيلاء على المدن وتنخفض في السلم. فوق 50 قد يشكل الجيران تحالفًا ويعلنون الحرب عليك.','宣战和攻占城市会提高侵略性，和平时会下降。超过50时，邻国可能组成联盟向你宣战。','L\'aggressività sale dichiarando guerre e conquistando città, e cala in pace. Oltre 50 i vicini possono formare una coalizione e dichiararti guerra.','La agresividad sube al declarar guerras y tomar ciudades, y baja en paz. Por encima de 50, los vecinos pueden formar una coalición y declararte la guerra.','Aggression steigt durch Kriegserklärungen und Eroberungen und sinkt im Frieden. Über 50 können Nachbarn eine Koalition bilden und dir den Krieg erklären.','L\'agressivité augmente quand tu déclares des guerres et prends des villes, et baisse en paix. Au-delà de 50, les voisins peuvent former une coalition contre toi.','Агрессивность растёт при объявлении войн и захвате городов и снижается в мире. Выше 50 соседи могут создать коалицию и объявить тебе войну.'],
+['Şehirlerin doğal kaynak üretir. Gelir dünya fiyatına göre değişir. Madencilik teknolojisi, çiftlikler ve Kaynak haritasındaki yatırım üretimi artırır.','Your cities produce natural resources. Income depends on world prices. Mining technology, farms and investment on the Resources map increase output.','تنتج مدنك موارد طبيعية. يعتمد الدخل على الأسعار العالمية. تزيد تقنية التعدين والمزارع والاستثمار في خريطة الموارد من الإنتاج.','你的城市出产自然资源。收入取决于世界价格。采矿科技、农场和资源地图上的投资可提高产量。','Le tue città producono risorse naturali. Il reddito dipende dai prezzi mondiali. Tecnologia mineraria, fattorie e investimenti sulla mappa Risorse aumentano la produzione.','Tus ciudades producen recursos naturales. Los ingresos dependen de los precios mundiales. La tecnología minera, las granjas y la inversión en el mapa de Recursos aumentan la producción.','Deine Städte fördern Rohstoffe. Das Einkommen hängt von den Weltmarktpreisen ab. Bergbautechnik, Farmen und Investitionen auf der Rohstoffkarte steigern die Förderung.','Tes villes produisent des ressources naturelles. Le revenu dépend des prix mondiaux. La technologie minière, les fermes et l\'investissement sur la carte des Ressources augmentent la production.','Твои города добывают природные ресурсы. Доход зависит от мировых цен. Горная технология, фермы и инвестиции на карте ресурсов повышают добычу.'],
+['Altın','Gold','الذهب','黄金','Oro','Oro','Gold','Or','Золото'],
+['Petrol','Oil','النفط','石油','Petrolio','Petróleo','Öl','Pétrole','Нефть'],
+['Elmas','Diamonds','الألماس','钻石','Diamanti','Diamantes','Diamanten','Diamants','Алмазы'],
+['Bor','Boron','البورون','硼','Boro','Boro','Bor','Bore','Бор'],
+['Tahıl','Grain','الحبوب','谷物','Cereali','Cereales','Getreide','Céréales','Зерно'],
+['Gıda','Food','الغذاء','食品','Cibo','Alimentos','Nahrung','Nourriture','Продовольствие'],
+['Kaynak haritasını aç','Open the Resources map','افتح خريطة الموارد','打开资源地图','Apri la mappa Risorse','Abrir el mapa de Recursos','Rohstoffkarte öffnen','Ouvrir la carte des Ressources','Открыть карту ресурсов'],
+['Toplam kaynak geliri','Total resource income','إجمالي دخل الموارد','资源总收入','Reddito totale da risorse','Ingresos totales por recursos','Gesamte Rohstoffeinnahmen','Revenu total des ressources','Общий доход от ресурсов'],
+['Henüz değeri yok','No value yet','لا قيمة له بعد','尚无价值','Ancora senza valore','Aún sin valor','Noch ohne Wert','Pas encore de valeur','Пока без ценности'],
+['Kaynak üretimi','Resource production','إنتاج الموارد','资源生产','Produzione di risorse','Producción de recursos','Rohstoffförderung','Production de ressources','Добыча ресурсов'],
+['Kaynaklar','Resources','الموارد','资源','Risorse','Recursos','Rohstoffe','Ressources','Ресурсы'],
+['Ülkende şu an salgın yok.','There is no epidemic in your country right now.','لا يوجد وباء في بلدك حاليًا.','你的国家目前没有疫情。','Al momento non ci sono epidemie nel tuo paese.','Ahora no hay ninguna epidemia en tu país.','In deinem Land gibt es derzeit keine Seuche.','Aucune épidémie dans ton pays pour l\'instant.','Сейчас в твоей стране нет эпидемий.'],
+['Tedavi yöntemleri','Treatments','طرق العلاج','治疗方法','Cure','Tratamientos','Behandlungen','Traitements','Методы лечения'],
+['Karantina','Quarantine','الحجر الصحي','隔离','Quarantena','Cuarentena','Quarantäne','Quarantaine','Карантин'],
+['İlaç dağıtımı','Medicine distribution','توزيع الأدوية','分发药品','Distribuzione di medicine','Reparto de medicinas','Medikamentenausgabe','Distribution de médicaments','Раздача лекарств'],
+['Sahra hastaneleri','Field hospitals','مستشفيات ميدانية','野战医院','Ospedali da campo','Hospitales de campaña','Feldlazarette','Hôpitaux de campagne','Полевые госпитали'],
+['Antibiyotikler gerekli','Antibiotics required','يتطلب المضادات الحيوية','需要抗生素','Servono gli antibiotici','Se necesitan antibióticos','Antibiotika erforderlich','Antibiotiques requis','Нужны антибиотики'],
+['Hastalık haritası','Disease map','خريطة الأمراض','疾病地图','Mappa delle malattie','Mapa de enfermedades','Seuchenkarte','Carte des maladies','Карта болезней'],
+['Şehir şehir tedavi','Treat city by city','علاج مدينة تلو الأخرى','逐城治疗','Cura città per città','Tratar ciudad por ciudad','Stadt für Stadt behandeln','Soigner ville par ville','Лечение по городам'],
+['Karantina yayılmayı %65 azaltır ama halk biraz mutsuz olur. İlaç ölümleri yarıya indirir. Hastaneler iyileşmeyi hızlandırır. Aşı, o hastalığa karşı kalıcı bağışıklık sağlar.','Quarantine cuts spread by 65% but makes people a little unhappy. Medicine halves deaths. Hospitals speed up recovery. A vaccine gives lasting immunity to that disease.','الحجر يقلل الانتشار 65% لكنه يزعج الشعب قليلًا. الأدوية تخفض الوفيات إلى النصف. المستشفيات تسرّع الشفاء. اللقاح يمنح مناعة دائمة ضد ذلك المرض.','隔离可减少65%传播，但民众会略感不满。药品使死亡减半。医院加快康复。疫苗带来对该疾病的持久免疫。','La quarantena riduce il contagio del 65% ma scontenta un po\' la popolazione. Le medicine dimezzano i morti. Gli ospedali accelerano la guarigione. Il vaccino dà immunità duratura a quella malattia.','La cuarentena reduce el contagio un 65% pero enfada un poco al pueblo. Las medicinas reducen las muertes a la mitad. Los hospitales aceleran la curación. La vacuna da inmunidad duradera contra esa enfermedad.','Quarantäne senkt die Ausbreitung um 65 %, macht das Volk aber etwas unzufrieden. Medikamente halbieren die Todesfälle. Lazarette beschleunigen die Genesung. Ein Impfstoff schützt dauerhaft vor dieser Krankheit.','La quarantaine réduit la propagation de 65 % mais mécontente un peu le peuple. Les médicaments divisent les morts par deux. Les hôpitaux accélèrent la guérison. Un vaccin donne une immunité durable contre cette maladie.','Карантин снижает распространение на 65%, но немного огорчает народ. Лекарства вдвое снижают смертность. Госпитали ускоряют выздоровление. Вакцина даёт стойкий иммунитет к этой болезни.'],
+['Aşı geliştir','Develop vaccine','طوّر لقاحًا','研发疫苗','Sviluppa vaccino','Desarrollar vacuna','Impfstoff entwickeln','Développer un vaccin','Разработать вакцину'],
+['Aşı kampanyası','Vaccination campaign','حملة تطعيم','疫苗接种运动','Campagna vaccinale','Campaña de vacunación','Impfkampagne','Campagne de vaccination','Кампания вакцинации'],
+['Aşılandı','Vaccinated','تم التطعيم','已接种','Vaccinati','Vacunados','Geimpft','Vaccinés','Вакцинировано'],
+['Aşı','Vaccine','اللقاح','疫苗','Vaccino','Vacuna','Impfstoff','Vaccin','Вакцина'],
+['Bir birlik kur: üyeler müttefikin olur, ittifak süresi dolmaz ve her üye gelirine %2 katkı sağlar. Davet için ilişkinin +50 veya üstü olması gerekir.','Found a union: members become your allies, alliances never expire and each member adds 2% to your income. Inviting needs relations of +50 or more.','أسس اتحادًا: يصبح الأعضاء حلفاءك ولا تنتهي التحالفات ويضيف كل عضو 2% إلى دخلك. تتطلب الدعوة علاقات +50 أو أكثر.','建立联盟：成员成为你的盟友，同盟永不过期，每个成员使收入增加2%。邀请需要关系达到+50或以上。','Fonda un\'unione: i membri diventano alleati, le alleanze non scadono e ogni membro aggiunge il 2% al reddito. Per invitare servono relazioni di +50 o più.','Funda una unión: los miembros se vuelven aliados, las alianzas no caducan y cada miembro suma un 2% a tus ingresos. Para invitar hacen falta relaciones de +50 o más.','Gründe eine Union: Mitglieder werden Verbündete, Bündnisse laufen nie ab und jedes Mitglied bringt 2 % Einkommen. Einladungen erfordern Beziehungen ab +50.','Fonde une union : les membres deviennent tes alliés, les alliances n\'expirent pas et chaque membre ajoute 2 % à ton revenu. Inviter exige des relations de +50 ou plus.','Создай союз: участники становятся союзниками, союзы не истекают, каждый участник даёт +2% к доходу. Для приглашения нужны отношения от +50.'],
+['Birlik adı','Union name','اسم الاتحاد','联盟名称','Nome dell\'unione','Nombre de la unión','Name der Union','Nom de l\'union','Название союза'],
+['Bayrak','Flag','العلم','旗帜','Bandiera','Bandera','Flagge','Drapeau','Флаг'],
+['Üç yatay şerit','Three horizontal stripes','ثلاثة خطوط أفقية','三条横条','Tre strisce orizzontali','Tres franjas horizontales','Drei waagerechte Streifen','Trois bandes horizontales','Три горизонтальные полосы'],
+['Üç dikey şerit','Three vertical stripes','ثلاثة خطوط عمودية','三条竖条','Tre strisce verticali','Tres franjas verticales','Drei senkrechte Streifen','Trois bandes verticales','Три вертикальные полосы'],
+['İki yatay şerit','Two horizontal stripes','خطان أفقيان','两条横条','Due strisce orizzontali','Dos franjas horizontales','Zwei waagerechte Streifen','Deux bandes horizontales','Две горизонтальные полосы'],
+['İskandinav haçı','Nordic cross','صليب إسكندنافي','北欧十字','Croce nordica','Cruz nórdica','Nordisches Kreuz','Croix nordique','Скандинавский крест'],
+['Çapraz bölünmüş','Diagonal split','مقسوم قطريًا','斜分','Diviso in diagonale','Dividida en diagonal','Diagonal geteilt','Coupé en diagonale','Диагональное деление'],
+['Düz','Plain','سادة','纯色','Tinta unita','Liso','Einfarbig','Uni','Однотонный'],
+['Yok','None','لا شيء','无','Nessuno','Ninguno','Keins','Aucun','Нет'],
+['Yıldız','Star','نجمة','星','Stella','Estrella','Stern','Étoile','Звезда'],
+['Hilal ve yıldız','Crescent and star','هلال ونجمة','新月与星','Mezzaluna e stella','Media luna y estrella','Halbmond und Stern','Croissant et étoile','Полумесяц и звезда'],
+['Daire','Circle','دائرة','圆形','Cerchio','Círculo','Kreis','Cercle','Круг'],
+['Yıldız halkası','Ring of stars','حلقة نجوم','星环','Anello di stelle','Anillo de estrellas','Sternenkranz','Cercle d\'étoiles','Кольцо звёзд'],
+['Güneş','Sun','شمس','太阳','Sole','Sol','Sonne','Soleil','Солнце'],
+['Renkler','Colours','الألوان','颜色','Colori','Colores','Farben','Couleurs','Цвета'],
+['Sembol','Symbol','الرمز','图案','Simbolo','Símbolo','Symbol','Symbole','Символ'],
+['Birliği kur','Found the union','أسس الاتحاد','建立联盟','Fonda l\'unione','Fundar la unión','Union gründen','Fonder l\'union','Основать союз'],
+['üye','members','أعضاء','成员','membri','miembros','Mitglieder','membres','участников'],
+['turdur kurulu','turns since founding','دورًا منذ التأسيس','回合前建立','turni dalla fondazione','turnos desde su fundación','Runden seit Gründung','tours depuis la fondation','ходов с основания'],
+['gelir','income','الدخل','收入','reddito','ingresos','Einkommen','revenu','доход'],
+['Üyeler','Members','الأعضاء','成员','Membri','Miembros','Mitglieder','Membres','Участники'],
+['Çıkar','Remove','إزالة','移除','Rimuovi','Expulsar','Entfernen','Retirer','Исключить'],
+['Davet edilebilir (ilişki +50)','Can be invited (relations +50)','يمكن دعوتها (علاقات +50)','可邀请（关系+50）','Invitabili (relazioni +50)','Invitables (relaciones +50)','Einladbar (Beziehung +50)','Invitables (relations +50)','Можно пригласить (отношения +50)'],
+['Davet','Invite','دعوة','邀请','Invita','Invitar','Einladen','Inviter','Пригласить'],
+['Bayrak ve ad','Flag and name','العلم والاسم','旗帜和名称','Bandiera e nome','Bandera y nombre','Flagge und Name','Drapeau et nom','Флаг и название'],
+['Birliği dağıt','Dissolve union','حل الاتحاد','解散联盟','Sciogli l\'unione','Disolver la unión','Union auflösen','Dissoudre l\'union','Распустить союз'],
+['Henüz üye yok. Aşağıdan davet et.','No members yet. Invite below.','لا أعضاء بعد. ادعُ من الأسفل.','还没有成员，请在下方邀请。','Ancora nessun membro. Invita qui sotto.','Aún no hay miembros. Invita abajo.','Noch keine Mitglieder. Lade unten ein.','Pas encore de membres. Invite ci-dessous.','Пока нет участников. Пригласи ниже.'],
+['İlişkin +50 olan ülke yok. Elçi ve hediye ile ilişkileri geliştir.','No country has +50 relations with you. Improve relations with envoys and gifts.','لا توجد دولة علاقتك بها +50. حسّن العلاقات بالمبعوثين والهدايا.','没有关系达到+50的国家。用使节和礼物改善关系。','Nessun paese ha relazioni +50 con te. Migliorale con inviati e doni.','Ningún país tiene relaciones +50 contigo. Mejóralas con enviados y regalos.','Kein Land hat +50 Beziehung zu dir. Verbessere sie mit Gesandten und Geschenken.','Aucun pays n\'a +50 de relations avec toi. Améliore-les avec des émissaires et des dons.','Нет стран с отношениями +50. Улучшай их послами и подарками.'],
+['Kaydet','Save','حفظ','保存','Salva','Guardar','Speichern','Enregistrer','Сохранить'],
+['Kaydedildi','Saved','تم الحفظ','已保存','Salvato','Guardado','Gespeichert','Enregistré','Сохранено'],
+['Bir ad yaz','Enter a name','اكتب اسمًا','输入名称','Scrivi un nome','Escribe un nombre','Gib einen Namen ein','Saisis un nom','Введи название'],
+['Önce birliğe bir ad ver','Give the union a name first','أعطِ الاتحاد اسمًا أولًا','请先为联盟命名','Prima dai un nome all\'unione','Primero ponle nombre a la unión','Gib der Union zuerst einen Namen','Donne d\'abord un nom à l\'union','Сначала дай союзу название'],
+['İlişki ≤ -10 olmalı','Relations must be ≤ -10','يجب أن تكون العلاقات ≤ -10','关系需≤ -10','Relazioni ≤ -10 richieste','Relaciones ≤ -10 necesarias','Beziehung muss ≤ -10 sein','Relations ≤ -10 requises','Нужны отношения ≤ -10'],
+['İlişki +50 olmalı','Relations must be +50','يجب أن تكون العلاقات +50','关系需达到+50','Relazioni +50 richieste','Relaciones +50 necesarias','Beziehung muss +50 sein','Relations +50 requises','Нужны отношения +50'],
+['İlişki +10 olmalı','Relations must be +10','يجب أن تكون العلاقات +10','关系需达到+10','Relazioni +10 richieste','Relaciones +10 necesarias','Beziehung muss +10 sein','Relations +10 requises','Нужны отношения +10'],
+['İttifak iste','Request alliance','اطلب تحالفًا','请求结盟','Chiedi alleanza','Pedir alianza','Bündnis anfragen','Demander une alliance','Предложить союз'],
+['Erişim iste','Request access','اطلب حق المرور','请求通行','Chiedi accesso','Pedir acceso','Zugang anfragen','Demander l\'accès','Запросить проход'],
+['Erişim ver','Grant access','امنح حق المرور','给予通行','Concedi accesso','Dar acceso','Zugang gewähren','Accorder l\'accès','Дать проход'],
+['Erişimi geri al','Revoke access','اسحب حق المرور','收回通行','Revoca accesso','Retirar acceso','Zugang entziehen','Retirer l\'accès','Отозвать проход'],
+['Erişim var','Access granted','لديك حق المرور','已有通行权','Accesso ottenuto','Acceso concedido','Zugang vorhanden','Accès obtenu','Проход есть'],
+['Birliğe davet','Invite to union','ادعُ إلى الاتحاد','邀请加入联盟','Invita nell\'unione','Invitar a la unión','In die Union einladen','Inviter dans l\'union','Пригласить в союз'],
+['Haritada göster','Show on map','أظهر على الخريطة','在地图上显示','Mostra sulla mappa','Mostrar en el mapa','Auf der Karte zeigen','Voir sur la carte','Показать на карте'],
+['Savaşta','At war','في حرب','交战中','In guerra','En guerra','Im Krieg','En guerre','В войне'],
+['Müttefik çağır','Call allies','استدعِ الحلفاء','号召盟友','Chiama alleati','Llamar aliados','Verbündete rufen','Appeler les alliés','Призвать союзников'],
+['Pakt var','Pact in place','يوجد اتفاق','已有条约','Patto in vigore','Pacto vigente','Pakt besteht','Pacte en vigueur','Есть пакт'],
+['Saldırgan','Aggressive','عدواني','好战','Aggressivo','Agresivo','Aggressiv','Agressif','Агрессор'],
+['Birlik üyesi','Union member','عضو في الاتحاد','联盟成员','Membro dell\'unione','Miembro de la unión','Unionsmitglied','Membre de l\'union','Член союза'],
+['Müttefik','Ally','حليف','盟友','Alleato','Aliado','Verbündeter','Allié','Союзник'],
+['Ticaret','Trade','التجارة','贸易','Commercio','Comercio','Handel','Commerce','Торговля'],
+['Savaş','War','الحرب','战争','Guerra','Guerra','Krieg','Guerre','Война'],
+['Vasal','Vassal','تابع','附庸','Vassallo','Vasallo','Vasall','Vassal','Вассал'],
+['İlhak et','Annex','ضمّ','吞并','Annetti','Anexionar','Annektieren','Annexer','Аннексировать'],
+['ile ticaret','trade with','التجارة مع','的贸易','commercio con','comercio con','Handel mit','commerce avec','торговля с'],
+['Şehir satın al:','Buy a city:','شراء مدينة:','购买城市：','Compra una città:','Comprar una ciudad:','Stadt kaufen:','Acheter une ville :','Купить город:'],
+['Şehir sat:','Sell a city:','بيع مدينة:','出售城市：','Vendi una città:','Vender una ciudad:','Stadt verkaufen:','Vendre une ville :','Продать город:'],
+['Haritadan seç','Pick on map','اختر من الخريطة','在地图上选择','Scegli sulla mappa','Elegir en el mapa','Auf der Karte wählen','Choisir sur la carte','Выбрать на карте'],
+['değer','value','القيمة','价值','valore','valor','Wert','valeur','стоимость'],
+['Satışa çıkar','Put up for sale','اعرض للبيع','挂牌出售','Metti in vendita','Poner a la venta','Zum Verkauf anbieten','Mettre en vente','Выставить на продажу'],
+['Şehir değerinin altındaki teklifleri kabul etmezler. Başkent satılamaz.','They reject offers below the city\'s value. The capital cannot be sold.','يرفضون العروض الأقل من قيمة المدينة. لا يمكن بيع العاصمة.','他们不接受低于城市价值的报价。首都不能出售。','Rifiutano offerte sotto il valore della città. La capitale non si vende.','Rechazan ofertas por debajo del valor de la ciudad. La capital no se puede vender.','Angebote unter dem Stadtwert werden abgelehnt. Die Hauptstadt ist unverkäuflich.','Ils refusent les offres inférieures à la valeur de la ville. La capitale ne peut pas être vendue.','Предложения ниже стоимости города отклоняются. Столицу продать нельзя.'],
+['ülkesinden almak istediğin şehre dokun',': tap the city you want to buy',': المس المدينة التي تريد شراءها','：点击你想购买的城市',': tocca la città che vuoi comprare',': toca la ciudad que quieres comprar',': tippe auf die Stadt, die du kaufen willst',': touche la ville que tu veux acheter',': нажми на город, который хочешь купить'],
+['Satmak istediğin kendi şehrine dokun','Tap your own city that you want to sell','المس مدينتك التي تريد بيعها','点击你要出售的本国城市','Tocca la tua città da vendere','Toca tu ciudad que quieres vender','Tippe auf deine Stadt, die du verkaufen willst','Touche ta ville à vendre','Нажми на свой город для продажи'],
+['seçildi','selected','تم اختيارها','已选择','selezionata','seleccionada','ausgewählt','sélectionnée','выбран'],
+['Başkent satılmaz','The capital is not for sale','العاصمة ليست للبيع','首都不出售','La capitale non è in vendita','La capital no está en venta','Die Hauptstadt ist unverkäuflich','La capitale n\'est pas à vendre','Столица не продаётся'],
+['Başkent satılamaz','The capital cannot be sold','لا يمكن بيع العاصمة','首都不能出售','La capitale non si può vendere','La capital no se puede vender','Die Hauptstadt kann nicht verkauft werden','La capitale ne peut pas être vendue','Столицу продать нельзя'],
+['Sadece kendi şehirlerin','Only your own cities','مدنك فقط','只能选择本国城市','Solo le tue città','Solo tus ciudades','Nur deine eigenen Städte','Seulement tes villes','Только свои города'],
+['Bir şehre dokun','Tap a city','المس مدينة','点击一座城市','Tocca una città','Toca una ciudad','Tippe auf eine Stadt','Touche une ville','Нажми на город'],
+['Roket üretimi ve test fırlatması açılır.','Unlocks rocket production and test launches.','يفتح إنتاج الصواريخ وإطلاقات الاختبار.','解锁火箭生产和试射。','Sblocca produzione di razzi e lanci di prova.','Desbloquea la producción de cohetes y lanzamientos de prueba.','Schaltet Raketenbau und Teststarts frei.','Débloque la production de fusées et les tirs d\'essai.','Открывает производство ракет и пробные пуски.'],
+['Uydu Teknolojisi','Satellite Technology','تقنية الأقمار الصناعية','卫星技术','Tecnologia satellitare','Tecnología de satélites','Satellitentechnik','Technologie des satellites','Спутниковые технологии'],
+['Uydu fırlatılır: her uydu gelir +%1,5 ve teknoloji puanı verir (en fazla 8).','Launch satellites: each gives +1.5% income and tech points (max 8).','إطلاق أقمار صناعية: كل قمر يمنح +1.5% دخلًا ونقاط تقنية (حتى 8).','发射卫星：每颗卫星收入+1.5%并提供科技点（最多8颗）。','Lancia satelliti: ognuno dà +1,5% di reddito e punti tecnologia (max 8).','Lanza satélites: cada uno da +1,5% de ingresos y puntos de tecnología (máx. 8).','Satelliten starten: jeder bringt +1,5 % Einkommen und Technologiepunkte (max. 8).','Lance des satellites : chacun donne +1,5 % de revenu et des points de technologie (max 8).','Запуск спутников: каждый даёт +1,5% дохода и очки технологий (до 8).'],
+['Teleskop fırlatılır: galaksi, bulutsu ve ötegezegen keşifleri yapılır.','Launch telescopes to discover galaxies, nebulae and exoplanets.','إطلاق تلسكوبات لاكتشاف المجرات والسدم والكواكب الخارجية.','发射望远镜，发现星系、星云和系外行星。','Lancia telescopi per scoprire galassie, nebulose ed esopianeti.','Lanza telescopios para descubrir galaxias, nebulosas y exoplanetas.','Teleskope starten und Galaxien, Nebel und Exoplaneten entdecken.','Lance des télescopes pour découvrir galaxies, nébuleuses et exoplanètes.','Запуск телескопов для открытия галактик, туманностей и экзопланет.'],
+['Ay\'a iniş ve Ay\'dan numune getirme görevi.','Moon landing and lunar sample-return mission.','الهبوط على القمر ومهمة إعادة عينات منه.','登月及月球采样返回任务。','Allunaggio e missione di ritorno di campioni lunari.','Alunizaje y misión de retorno de muestras lunares.','Mondlandung und Mission zur Rückführung von Mondproben.','Alunissage et mission de retour d\'échantillons lunaires.','Посадка на Луну и миссия по доставке лунного грунта.'],
+['Derin Uzay Sondaları','Deep Space Probes','مسابير الفضاء العميق','深空探测器','Sonde per lo spazio profondo','Sondas de espacio profundo','Tiefraumsonden','Sondes spatiales lointaines','Зонды дальнего космоса'],
+['Mars, Jüpiter, Satürn ve Neptün\'e sonda gönderilir.','Send probes to Mars, Jupiter, Saturn and Neptune.','إرسال مسابير إلى المريخ والمشتري وزحل ونبتون.','向火星、木星、土星和海王星发射探测器。','Invia sonde su Marte, Giove, Saturno e Nettuno.','Envía sondas a Marte, Júpiter, Saturno y Neptuno.','Sonden zu Mars, Jupiter, Saturn und Neptun senden.','Envoie des sondes vers Mars, Jupiter, Saturne et Neptune.','Отправка зондов к Марсу, Юпитеру, Сатурну и Нептуну.'],
+['Uzay İstasyonu','Space Station','محطة الفضاء','空间站','Stazione spaziale','Estación espacial','Raumstation','Station spatiale','Космическая станция'],
+['Yörüngeye istasyon modülleri kurulur: her modül teknoloji puanı verir.','Build station modules in orbit: each gives tech points.','بناء وحدات محطة في المدار: كل وحدة تمنح نقاط تقنية.','在轨道上建造空间站舱段：每个舱段提供科技点。','Costruisci moduli in orbita: ognuno dà punti tecnologia.','Construye módulos en órbita: cada uno da puntos de tecnología.','Stationsmodule im Orbit bauen: jedes bringt Technologiepunkte.','Construis des modules en orbite : chacun donne des points de technologie.','Строительство модулей на орбите: каждый даёт очки технологий.'],
+['Uydu','Satellites','الأقمار','卫星','Satelliti','Satélites','Satelliten','Satellites','Спутники'],
+['Teleskop','Telescope','التلسكوب','望远镜','Telescopio','Telescopio','Teleskop','Télescope','Телескоп'],
+['İstasyon','Station','المحطة','空间站','Stazione','Estación','Station','Station','Станция'],
+['Keşif','Discoveries','الاكتشافات','发现','Scoperte','Descubrimientos','Entdeckungen','Découvertes','Открытия'],
+['Roket üret','Build rocket','اصنع صاروخًا','制造火箭','Costruisci razzo','Fabricar cohete','Rakete bauen','Construire une fusée','Построить ракету'],
+['Test fırlatması','Test launch','إطلاق تجريبي','试射','Lancio di prova','Lanzamiento de prueba','Teststart','Tir d\'essai','Пробный пуск'],
+['Görevler (her görev 1 roket kullanır)','Missions (each uses 1 rocket)','المهام (كل مهمة تستخدم صاروخًا واحدًا)','任务（每次消耗1枚火箭）','Missioni (ognuna usa 1 razzo)','Misiones (cada una usa 1 cohete)','Missionen (jede braucht 1 Rakete)','Missions (chacune utilise 1 fusée)','Миссии (каждая тратит 1 ракету)'],
+['Uydu fırlat','Launch satellite','أطلق قمرًا صناعيًا','发射卫星','Lancia satellite','Lanzar satélite','Satellit starten','Lancer un satellite','Запустить спутник'],
+['Ücretsiz','Free','مجاني','免费','Gratis','Gratis','Kostenlos','Gratuit','Бесплатно'],
+['Uzay teleskobu fırlat','Launch space telescope','أطلق تلسكوبًا فضائيًا','发射太空望远镜','Lancia telescopio spaziale','Lanzar telescopio espacial','Weltraumteleskop starten','Lancer un télescope spatial','Запустить космический телескоп'],
+['Ay\'dan numune getir','Lunar sample return','إعادة عينات من القمر','月球采样返回','Riporta campioni lunari','Traer muestras lunares','Mondproben holen','Rapporter des échantillons lunaires','Доставить лунный грунт'],
+['Uzay sondası gönder','Send space probe','أرسل مسبارًا فضائيًا','发射太空探测器','Invia sonda spaziale','Enviar sonda espacial','Raumsonde senden','Envoyer une sonde','Отправить зонд'],
+['İstasyon modülü','Station module','وحدة المحطة','空间站舱段','Modulo della stazione','Módulo de la estación','Stationsmodul','Module de station','Модуль станции'],
+['Gökyüzü gözlemi','Sky observation','رصد السماء','天空观测','Osservazione del cielo','Observación del cielo','Himmelsbeobachtung','Observation du ciel','Наблюдение неба'],
+['Keşif arşivi','Discovery archive','أرشيف الاكتشافات','发现档案','Archivio delle scoperte','Archivo de descubrimientos','Entdeckungsarchiv','Archive des découvertes','Архив открытий'],
+['Sonda hedefi seç','Choose probe target','اختر هدف المسبار','选择探测目标','Scegli la destinazione della sonda','Elige el destino de la sonda','Sondenziel wählen','Choisir la cible de la sonde','Выбери цель зонда'],
+['Jüpiter','Jupiter','المشتري','木星','Giove','Júpiter','Jupiter','Jupiter','Юпитер'],
+['Satürn','Saturn','زحل','土星','Saturno','Saturno','Saturn','Saturne','Сатурн'],
+['Neptün','Neptune','نبتون','海王星','Nettuno','Neptuno','Neptun','Neptune','Нептун'],
+['Mars','Mars','المريخ','火星','Marte','Marte','Mars','Mars','Марс'],
+['Teleskop gerekli','Telescope required','يتطلب تلسكوبًا','需要望远镜','Serve un telescopio','Se necesita telescopio','Teleskop nötig','Télescope requis','Нужен телескоп'],
+['Yoldaki görevler','Missions under way','مهام في الطريق','进行中的任务','Missioni in corso','Misiones en curso','Laufende Missionen','Missions en cours','Миссии в пути'],
+['Ay numune görevi','Lunar sample mission','مهمة عينات القمر','月球采样任务','Missione campioni lunari','Misión de muestras lunares','Mondprobenmission','Mission d\'échantillons lunaires','Миссия за лунным грунтом'],
+['sondası','probe','مسبار','探测器','sonda','sonda','Sonde','sonde','зонд'],
+['Dolu','Full','ممتلئ','已满','Completo','Completo','Voll','Complet','Заполнено'],
+['tekrar','again','مرة أخرى','再次','di nuovo','otra vez','erneut','à nouveau','повторно'],
+['ilk','first','الأول','首次','primo','primero','erstmals','premier','впервые'],
+['Maliyet','Cost','التكلفة','费用','Costo','Coste','Kosten','Coût','Стоимость'],
+['roket','rocket','صاروخ','火箭','razzo','cohete','Rakete','fusée','ракета'],
+['Uzay Ajansı araştırması gerekli.','Space Agency research required.','يتطلب بحث وكالة الفضاء.','需要研究航天局。','Serve la ricerca Agenzia spaziale.','Se necesita investigar Agencia espacial.','Forschung Raumfahrtagentur nötig.','Recherche Agence spatiale requise.','Нужно исследование «Космическое агентство».'],
+['Önce başkentinde veya en değerli şehrinde Roket Kalkış Merkezi inşa et.','First build a Rocket Launch Centre in your capital or most valuable city.','ابنِ أولًا مركز إطلاق صواريخ في عاصمتك أو أغلى مدنك.','先在首都或最有价值的城市建造火箭发射中心。','Prima costruisci un centro di lancio nella capitale o nella città più preziosa.','Primero construye un centro de lanzamiento en tu capital o tu ciudad más valiosa.','Baue zuerst ein Raketenstartzentrum in der Hauptstadt oder wertvollsten Stadt.','Construis d\'abord un centre de lancement dans ta capitale ou ta ville la plus riche.','Сначала построй стартовый центр в столице или самом ценном городе.'],
+['Milyarlarca yıldızdan oluşan uzak bir sarmal gökada.','A distant spiral galaxy made of billions of stars.','مجرة حلزونية بعيدة من مليارات النجوم.','一个由数十亿颗恒星组成的遥远旋涡星系。','Una lontana galassia a spirale di miliardi di stelle.','Una lejana galaxia espiral de miles de millones de estrellas.','Eine ferne Spiralgalaxie aus Milliarden Sternen.','Une lointaine galaxie spirale de milliards d\'étoiles.','Далёкая спиральная галактика из миллиардов звёзд.'],
+['Yeni yıldızların doğduğu dev bir gaz ve toz bulutu.','A giant cloud of gas and dust where new stars are born.','سحابة عملاقة من الغاز والغبار تولد فيها نجوم جديدة.','一个孕育新恒星的巨大气体尘埃云。','Un\'enorme nube di gas e polvere dove nascono nuove stelle.','Una nube gigante de gas y polvo donde nacen estrellas.','Eine riesige Gas- und Staubwolke, in der neue Sterne entstehen.','Un immense nuage de gaz et de poussière où naissent de nouvelles étoiles.','Гигантское облако газа и пыли, где рождаются звёзды.'],
+['Başka bir yıldızın çevresinde dolanan, daha önce bilinmeyen bir gezegen.','A previously unknown planet orbiting another star.','كوكب غير معروف سابقًا يدور حول نجم آخر.','一颗围绕其他恒星运行、此前未知的行星。','Un pianeta finora sconosciuto in orbita attorno a un\'altra stella.','Un planeta desconocido que orbita otra estrella.','Ein bisher unbekannter Planet um einen anderen Stern.','Une planète inconnue en orbite autour d\'une autre étoile.','Ранее неизвестная планета у другой звезды.'],
+['sarmal gökadası','spiral galaxy','مجرة حلزونية','旋涡星系','galassia a spirale','galaxia espiral','Spiralgalaxie','galaxie spirale','спиральная галактика'],
+['bulutsusu','nebula','سديم','星云','nebulosa','nebulosa','Nebel','nébuleuse','туманность'],
+['ötegezegeni','exoplanet','كوكب خارجي','系外行星','esopianeta','exoplaneta','Exoplanet','exoplanète','экзопланета'],
+['Ay numunesi','Lunar sample','عينة قمرية','月球样本','Campione lunare','Muestra lunar','Mondprobe','Échantillon lunaire','Лунный образец'],
+['Ay yüzeyinden toplanan kaya ve toz örnekleri laboratuvarlarda inceleniyor.','Rock and dust from the lunar surface are being studied in labs.','تُدرس عينات الصخور والغبار من سطح القمر في المختبرات.','从月面采集的岩石和尘土正在实验室中研究。','Rocce e polveri lunari sono studiate nei laboratori.','Se estudian en laboratorios rocas y polvo de la superficie lunar.','Gestein und Staub vom Mond werden in Laboren untersucht.','Roches et poussières lunaires sont étudiées en laboratoire.','Камни и пыль с Луны изучаются в лабораториях.'],
+['sondamızdan gelen yakın çekim görüntü.','— close-up image from our probe.','— صورة قريبة من مسبارنا.','——来自我们探测器的近景图像。','— immagine ravvicinata dalla nostra sonda.','— imagen de cerca de nuestra sonda.','— Nahaufnahme unserer Sonde.','— image rapprochée de notre sonde.','— снимок крупным планом с нашего зонда.'],
+['sondası görüntüsü','probe image','صورة المسبار','探测器图像','immagine della sonda','imagen de la sonda','Sondenbild','image de la sonde','снимок зонда'],
+['Modern savaş gemileri','Modern warships','سفن حربية حديثة','现代战舰','Navi da guerra moderne','Buques de guerra modernos','Moderne Kriegsschiffe','Navires de guerre modernes','Современные военные корабли'],
+['Hızlı çıkarma gemileri','Fast landing ships','سفن إنزال سريعة','快速登陆舰','Navi da sbarco veloci','Buques de desembarco rápidos','Schnelle Landungsschiffe','Navires de débarquement rapides','Быстрые десантные корабли'],
+['Denizaltı filosu','Submarine fleet','أسطول غواصات','潜艇舰队','Flotta sottomarina','Flota submarina','U-Boot-Flotte','Flotte sous-marine','Подводный флот'],
+['Deniz ticaret filosu','Merchant fleet','أسطول تجاري','商船队','Flotta mercantile','Flota mercante','Handelsflotte','Flotte marchande','Торговый флот'],
+['Uçak gemisi','Aircraft carrier','حاملة طائرات','航空母舰','Portaerei','Portaaviones','Flugzeugträger','Porte-avions','Авианосец'],
+['İnsansız deniz araçları','Unmanned naval vessels','سفن بحرية مسيّرة','无人舰艇','Navi senza equipaggio','Buques no tripulados','Unbemannte Schiffe','Navires sans équipage','Безэкипажные корабли'],
+['Filo gücü +%15','Fleet strength +15%','قوة الأسطول +15%','舰队力量+15%','Forza della flotta +15%','Fuerza de la flota +15%','Flottenstärke +15 %','Force de la flotte +15 %','Сила флота +15%'],
+['Filo gücü +%20','Fleet strength +20%','قوة الأسطول +20%','舰队力量+20%','Forza della flotta +20%','Fuerza de la flota +20%','Flottenstärke +20 %','Force de la flotte +20 %','Сила флота +20%'],
+['Filo gücü +%25','Fleet strength +25%','قوة الأسطول +25%','舰队力量+25%','Forza della flotta +25%','Fuerza de la flota +25%','Flottenstärke +25 %','Force de la flotte +25 %','Сила флота +25%'],
+['Filo gücü +%30','Fleet strength +30%','قوة الأسطول +30%','舰队力量+30%','Forza della flotta +30%','Fuerza de la flota +30%','Flottenstärke +30 %','Force de la flotte +30 %','Сила флота +30%'],
+['Denizden çıkarma 1 hareket puanı','Sea landings cost 1 movement point','الإنزال البحري يكلف نقطة حركة واحدة','海上登陆只需1行动点','Sbarchi dal mare: 1 punto movimento','Desembarcos por mar: 1 punto de movimiento','Seelandungen kosten 1 Bewegungspunkt','Débarquements : 1 point de mouvement','Морской десант стоит 1 очко хода'],
+['Kaynak geliri +%5','Resource income +5%','دخل الموارد +5%','资源收入+5%','Reddito da risorse +5%','Ingresos por recursos +5%','Rohstoffeinnahmen +5 %','Revenu des ressources +5 %','Доход от ресурсов +5%'],
+['Jeolojik araştırma','Geological survey','المسح الجيولوجي','地质勘探','Ricerca geologica','Prospección geológica','Geologische Erkundung','Prospection géologique','Геологоразведка'],
+['Ağır iş makineleri','Heavy machinery','الآلات الثقيلة','重型机械','Macchinari pesanti','Maquinaria pesada','Schwere Maschinen','Engins lourds','Тяжёлая техника'],
+['Derin madencilik','Deep mining','التعدين العميق','深层采矿','Estrazione profonda','Minería profunda','Tiefbau','Exploitation profonde','Глубокая добыча'],
+['Otomatik madenler','Automated mines','مناجم مؤتمتة','自动化矿山','Miniere automatizzate','Minas automatizadas','Automatisierte Minen','Mines automatisées','Автоматические шахты'],
+['Nadir toprak elementleri','Rare earth elements','العناصر الأرضية النادرة','稀土元素','Terre rare','Tierras raras','Seltene Erden','Terres rares','Редкоземельные элементы'],
+['Akıllı madencilik','Smart mining','التعدين الذكي','智能采矿','Estrazione intelligente','Minería inteligente','Intelligenter Bergbau','Exploitation intelligente','Умная добыча'],
+['Maden üretimi +%15','Mining output +15%','إنتاج المناجم +15%','矿产+15%','Produzione mineraria +15%','Producción minera +15%','Bergbauertrag +15 %','Production minière +15 %','Добыча +15%'],
+['Maden üretimi +%20','Mining output +20%','إنتاج المناجم +20%','矿产+20%','Produzione mineraria +20%','Producción minera +20%','Bergbauertrag +20 %','Production minière +20 %','Добыча +20%'],
+['Maden üretimi +%30','Mining output +30%','إنتاج المناجم +30%','矿产+30%','Produzione mineraria +30%','Producción minera +30%','Bergbauertrag +30 %','Production minière +30 %','Добыча +30%'],
+['Montaj hatları','Assembly lines','خطوط التجميع','装配线','Catene di montaggio','Líneas de montaje','Fließbänder','Chaînes de montage','Сборочные линии'],
+['Ağır sanayi','Heavy industry','الصناعة الثقيلة','重工业','Industria pesante','Industria pesada','Schwerindustrie','Industrie lourde','Тяжёлая промышленность'],
+['Otomasyon','Automation','الأتمتة','自动化','Automazione','Automatización','Automatisierung','Automatisation','Автоматизация'],
+['Robotik fabrikalar','Robotic factories','مصانع آلية','机器人工厂','Fabbriche robotiche','Fábricas robóticas','Roboterfabriken','Usines robotisées','Роботизированные заводы'],
+['Yarı iletken üretimi','Semiconductor production','إنتاج أشباه الموصلات','半导体生产','Produzione di semiconduttori','Producción de semiconductores','Halbleiterproduktion','Production de semi-conducteurs','Производство полупроводников'],
+['Yapay zekâ ile üretim','AI-driven manufacturing','التصنيع بالذكاء الاصطناعي','人工智能制造','Produzione con IA','Fabricación con IA','KI-gestützte Fertigung','Production par IA','Производство с ИИ'],
+['Gelir +%3, ekonomi büyümesi ve kaynak değeri +%5','Income +3%, economic growth and resource value +5%','الدخل +3%، النمو الاقتصادي وقيمة الموارد +5%','收入+3%，经济增长与资源价值+5%','Reddito +3%, crescita economica e valore risorse +5%','Ingresos +3%, crecimiento y valor de recursos +5%','Einkommen +3 %, Wachstum und Rohstoffwert +5 %','Revenu +3 %, croissance et valeur des ressources +5 %','Доход +3%, рост экономики и ценность ресурсов +5%'],
+['Donanma','Navy','البحرية','海军','Marina','Armada','Marine','Marine','Флот'],
+['Madencilik','Mining','التعدين','采矿','Estrazione','Minería','Bergbau','Mines','Горное дело'],
+['Sanayi','Industry','الصناعة','工业','Industria','Industria','Industrie','Industrie','Промышленность'],
+['Kadırga filosu','Galley fleet','أسطول القوادس','桨帆船舰队','Flotta di galee','Flota de galeras','Galeerenflotte','Flotte de galères','Флот галер'],
+['Hızlı çıkarma kayıkları','Fast landing boats','قوارب إنزال سريعة','快速登陆艇','Barche da sbarco veloci','Botes de desembarco rápidos','Schnelle Landungsboote','Barques de débarquement rapides','Быстрые десантные лодки'],
+['Kalyon','Galleon','غليون','盖伦帆船','Galeone','Galeón','Galeone','Galion','Галеон'],
+['Deniz ticaret yolları','Sea trade routes','طرق التجارة البحرية','海上贸易路线','Rotte commerciali marittime','Rutas comerciales marítimas','Seehandelsrouten','Routes commerciales maritimes','Морские торговые пути'],
+['Ağır savaş gemisi','Heavy warship','سفينة حربية ثقيلة','重型战舰','Nave da guerra pesante','Buque de guerra pesado','Schweres Kriegsschiff','Navire de guerre lourd','Тяжёлый военный корабль'],
+['Pusula ve haritacılık','Compass and cartography','البوصلة ورسم الخرائط','罗盘与制图','Bussola e cartografia','Brújula y cartografía','Kompass und Kartografie','Boussole et cartographie','Компас и картография'],
+['Maden ocakları','Mine shafts','مناجم','矿井','Pozzi minerari','Pozos mineros','Bergwerke','Puits de mine','Шахты'],
+['Demir aletler','Iron tools','أدوات حديدية','铁制工具','Attrezzi di ferro','Herramientas de hierro','Eisenwerkzeuge','Outils en fer','Железные орудия'],
+['Su çarklı pompalar','Water-wheel pumps','مضخات بعجلات مائية','水车泵','Pompe a ruota idraulica','Bombas de rueda hidráulica','Wasserradpumpen','Pompes à roue hydraulique','Водяные насосы'],
+['Barutla kazı','Blasting with gunpowder','الحفر بالبارود','火药爆破开采','Scavo con polvere da sparo','Excavación con pólvora','Sprengen mit Schießpulver','Creusement à la poudre','Подрыв порохом'],
+['Derin kuyular','Deep shafts','آبار عميقة','深井','Pozzi profondi','Pozos profundos','Tiefe Schächte','Puits profonds','Глубокие шахты'],
+['Maden loncaları','Miners\' guilds','نقابات المعدّنين','矿工行会','Corporazioni dei minatori','Gremios mineros','Bergmannsgilden','Guildes de mineurs','Горняцкие гильдии'],
+['Zanaat atölyeleri','Craft workshops','ورش الحرف','手工作坊','Botteghe artigiane','Talleres artesanos','Handwerksbetriebe','Ateliers d\'artisans','Ремесленные мастерские'],
+['Loncalar','Guilds','النقابات','行会','Corporazioni','Gremios','Zünfte','Guildes','Гильдии'],
+['Su değirmenleri','Water mills','طواحين مائية','水磨','Mulini ad acqua','Molinos de agua','Wassermühlen','Moulins à eau','Водяные мельницы'],
+['Dokuma tezgâhları','Looms','أنوال النسيج','织布机','Telai','Telares','Webstühle','Métiers à tisser','Ткацкие станки'],
+['Matbaa','Printing press','المطبعة','印刷机','Stampa a caratteri mobili','Imprenta','Buchdruck','Imprimerie','Книгопечатание'],
+['Manifaktür','Manufactory','المانيفاكتورة','手工工场','Manifattura','Manufactura','Manufaktur','Manufacture','Мануфактура'],
+['Zırhlı kruvazör','Armoured cruiser','طراد مدرع','装甲巡洋舰','Incrociatore corazzato','Crucero acorazado','Panzerkreuzer','Croiseur cuirassé','Броненосный крейсер'],
+['Çıkarma gemileri','Landing ships','سفن إنزال','登陆舰','Navi da sbarco','Buques de desembarco','Landungsschiffe','Navires de débarquement','Десантные корабли'],
+['Denizaltı','Submarine','غواصة','潜艇','Sottomarino','Submarino','U-Boot','Sous-marin','Подводная лодка'],
+['Radar ve sonar','Radar and sonar','الرادار والسونار','雷达与声呐','Radar e sonar','Radar y sonar','Radar und Sonar','Radar et sonar','Радар и сонар'],
+['Buharlı kazı','Steam excavation','الحفر البخاري','蒸汽挖掘','Scavo a vapore','Excavación a vapor','Dampfbagger','Excavation à vapeur','Паровая выемка'],
+['Dinamit','Dynamite','الديناميت','炸药','Dinamite','Dinamita','Dynamit','Dynamite','Динамит'],
+['Elektrikli madenler','Electric mines','مناجم كهربائية','电气化矿山','Miniere elettriche','Minas eléctricas','Elektrische Bergwerke','Mines électriques','Электрифицированные шахты'],
+['Mekanize madencilik','Mechanised mining','التعدين الآلي','机械化采矿','Estrazione meccanizzata','Minería mecanizada','Mechanisierter Bergbau','Exploitation mécanisée','Механизированная добыча'],
+['Seri üretim','Mass production','الإنتاج الضخم','大规模生产','Produzione in serie','Producción en serie','Serienproduktion','Production de masse','Серийное производство'],
+['Elektrifikasyon','Electrification','الكهربة','电气化','Elettrificazione','Electrificación','Elektrifizierung','Électrification','Электрификация'],
+['Savaş sanayii','War industry','الصناعة الحربية','军事工业','Industria bellica','Industria bélica','Kriegsindustrie','Industrie de guerre','Военная промышленность'],
+['Maden ve tarım yatırımı','Mining and farming investment','استثمار في التعدين والزراعة','采矿与农业投资','Investimento in miniere e agricoltura','Inversión minera y agrícola','Bergbau- und Agrarinvestition','Investissement minier et agricole','Инвестиции в добычу и сельское хозяйство'],
+['Kaynak üretimi +%25 (en fazla 4 kez)','Resource output +25% (up to 4 times)','إنتاج الموارد +25% (حتى 4 مرات)','资源产量+25%（最多4次）','Produzione risorse +25% (max 4 volte)','Producción de recursos +25% (hasta 4 veces)','Rohstoffförderung +25 % (bis zu 4-mal)','Production de ressources +25 % (4 fois max)','Добыча ресурсов +25% (до 4 раз)'],
+['Tedavi kampanyası','Treatment campaign','حملة علاج','治疗行动','Campagna di cura','Campaña de tratamiento','Behandlungskampagne','Campagne de soins','Кампания лечения'],
+['Salgın -%25, mutluluk +2','Infection -25%, happiness +2','العدوى -25%، السعادة +2','感染-25%，幸福度+2','Contagio -25%, felicità +2','Contagio -25%, felicidad +2','Infektion -25 %, Zufriedenheit +2','Infection -25 %, bonheur +2','Заражение -25%, счастье +2'],
+['orduya yetiyor · en yakınlar seçildi','armies affordable · nearest ones selected','جيوش ممكنة · تم اختيار الأقرب','支军队可移动·已选最近的','eserciti consentiti · scelti i più vicini','ejércitos posibles · elegidos los más cercanos','Armeen möglich · nächste ausgewählt','armées possibles · les plus proches choisies','армий хватает · выбраны ближайшие'],
+['Puanın','Your points cover','نقاطك تكفي','你的点数够','I punti bastano per','Tus puntos alcanzan para','Punkte reichen für','Tes points suffisent pour','Очков хватает на'],
+['Bu haberde bir ülke yok','This news is not about a country','هذا الخبر لا يتعلق بدولة','这条新闻没有涉及国家','Questa notizia non riguarda un paese','Esta noticia no trata de un país','Diese Meldung betrifft kein Land','Cette nouvelle ne concerne aucun pays','В этой новости нет страны'],
+['Dünya piyasasında','On the world market,','في السوق العالمية،','在世界市场上，','Sul mercato mondiale,','En el mercado mundial,','Auf dem Weltmarkt:','Sur le marché mondial,','На мировом рынке'],
+['fiyatı yükseldi','price rose','ارتفع السعر','价格上涨','prezzo in salita','precio en alza','Preis gestiegen','prix en hausse','цена выросла'],
+['fiyatı düştü','price fell','انخفض السعر','价格下跌','prezzo in calo','precio a la baja','Preis gefallen','prix en baisse','цена упала'],
+['Dünya ülkeleri saldırganlığımızdan rahatsız. İlişkiler kötüleşiyor.','The world is troubled by our aggression. Relations are worsening.','دول العالم منزعجة من عدوانيتنا. العلاقات تسوء.','世界各国对我们的侵略感到不安，关系正在恶化。','Il mondo è turbato dalla nostra aggressività. Le relazioni peggiorano.','El mundo está inquieto por nuestra agresividad. Las relaciones empeoran.','Die Welt ist über unsere Aggression beunruhigt. Die Beziehungen verschlechtern sich.','Le monde s\'inquiète de notre agressivité. Les relations se dégradent.','Мир обеспокоен нашей агрессией. Отношения ухудшаются.'],
+['Saldırganlığımız sınırı aştı! Komşu ülkeler bize karşı koalisyon kurabilir.','Our aggression has crossed the line! Neighbours may form a coalition against us.','تجاوزت عدوانيتنا الحد! قد يشكل الجيران تحالفًا ضدنا.','我们的侵略已越界！邻国可能结成反对我们的联盟。','La nostra aggressività ha superato il limite! I vicini possono coalizzarsi contro di noi.','¡Nuestra agresividad ha cruzado el límite! Los vecinos pueden formar una coalición contra nosotros.','Unsere Aggression ist zu weit gegangen! Nachbarn könnten eine Koalition gegen uns bilden.','Notre agressivité a dépassé les bornes ! Les voisins peuvent former une coalition contre nous.','Наша агрессия перешла черту! Соседи могут создать коалицию против нас.'],
+['ülkesinin saldırganlığına karşı koalisyon kuruldu',': a coalition has formed against its aggression',': تشكل تحالف ضد عدوانيتها','：已结成反对其侵略的联盟',': si è formata una coalizione contro la sua aggressività',': se ha formado una coalición contra su agresividad',': Gegen ihre Aggression hat sich eine Koalition gebildet',': une coalition s\'est formée contre son agressivité',': против её агрессии создана коалиция'],
+['Koalisyona katılmak istersen','If you want to join the coalition, declare war on','إذا أردت الانضمام إلى التحالف فأعلن الحرب على','如果想加入联盟，可向','Se vuoi unirti alla coalizione, dichiara guerra a','Si quieres unirte a la coalición, declara la guerra a','Wenn du der Koalition beitreten willst, erkläre den Krieg an','Pour rejoindre la coalition, déclare la guerre à','Чтобы присоединиться к коалиции, объяви войну стране'],
+['ülkesine Dış İşleri\'nden savaş açabilirsin.','from Foreign Affairs.','من الشؤون الخارجية.','在外交中宣战。','da Affari esteri.','desde Asuntos exteriores.','über Außenpolitik.','depuis les Affaires étrangères.','через Внешние дела.'],
+['Ülke genelinde karantina ilan edildi.','A nationwide quarantine has been declared.','أُعلن حجر صحي على مستوى البلاد.','已宣布全国隔离。','È stata dichiarata la quarantena nazionale.','Se ha declarado cuarentena nacional.','Landesweite Quarantäne ausgerufen.','Une quarantaine nationale a été décrétée.','Объявлен общенациональный карантин.'],
+['Ülke genelinde ücretsiz ilaç dağıtımı başladı.','Free medicine distribution has begun nationwide.','بدأ توزيع الأدوية المجانية في كل البلاد.','全国免费药品发放已开始。','È iniziata la distribuzione gratuita di medicine in tutto il paese.','Comenzó el reparto gratuito de medicinas en todo el país.','Landesweite kostenlose Medikamentenausgabe begonnen.','La distribution gratuite de médicaments a commencé dans tout le pays.','По всей стране началась бесплатная раздача лекарств.'],
+['Salgın bölgelerine sahra hastaneleri kuruldu.','Field hospitals have been set up in outbreak areas.','أقيمت مستشفيات ميدانية في مناطق الوباء.','疫区已建立野战医院。','Allestiti ospedali da campo nelle zone dell\'epidemia.','Se han instalado hospitales de campaña en las zonas del brote.','In Seuchengebieten wurden Feldlazarette errichtet.','Des hôpitaux de campagne ont été installés dans les zones touchées.','В очагах эпидемии развернуты полевые госпитали.'],
+['için aşı çalışması başladı.',': vaccine research has begun.',': بدأ العمل على اللقاح.','：疫苗研发已开始。',': è iniziata la ricerca del vaccino.',': ha comenzado la investigación de la vacuna.',': Impfstoffforschung begonnen.',': la recherche d\'un vaccin a commencé.',': начата разработка вакцины.'],
+['aşı kampanyası tamamlandı. Halk bağışık hale geliyor.','vaccination campaign completed. People are becoming immune.','اكتملت حملة التطعيم. يكتسب الشعب المناعة.','疫苗接种完成，民众正在获得免疫。','campagna vaccinale completata. La popolazione diventa immune.','campaña de vacunación completada. La población se vuelve inmune.','Impfkampagne abgeschlossen. Die Bevölkerung wird immun.','campagne de vaccination terminée. La population s\'immunise.','кампания вакцинации завершена. Народ получает иммунитет.'],
+['aşısı hazır! İçişleri › Salgın bölümünden kampanyayı başlat.','vaccine is ready! Start the campaign in Interior › Epidemic.','اللقاح جاهز! ابدأ الحملة من الشؤون الداخلية › الوباء.','疫苗已就绪！在内政›疫情中开始接种。','vaccino pronto! Avvia la campagna in Interni › Epidemia.','¡vacuna lista! Inicia la campaña en Interior › Epidemia.','Impfstoff bereit! Starte die Kampagne unter Inneres › Seuche.','vaccin prêt ! Lance la campagne dans Intérieur › Épidémie.','вакцина готова! Начни кампанию во Внутренних делах › Эпидемия.'],
+['Salgın','Epidemic','الوباء','疫情','Epidemia','Epidemia','Seuche','Épidémie','Эпидемия'],
+['kuruldu! Artık müttefik ülkeleri birliğe davet edebilirsin.','has been founded! You can now invite friendly countries.','تأسس! يمكنك الآن دعوة الدول الصديقة.','已成立！现在可以邀请友好国家加入。','è stata fondata! Ora puoi invitare i paesi amici.','¡ha sido fundada! Ya puedes invitar a países amigos.','wurde gegründet! Du kannst jetzt befreundete Länder einladen.','a été fondée ! Tu peux maintenant inviter des pays amis.','основан! Теперь можно приглашать дружественные страны.'],
+['birliğine katıldı!','joined the union!','انضمت إلى الاتحاد!','加入了联盟！','è entrata nell\'unione!','¡se unió a la unión!','ist der Union beigetreten!','a rejoint l\'union !','вступила в союз!'],
+['birliğe katıldı','joined the union','انضمت إلى الاتحاد','加入了联盟','è entrata nell\'unione','se unió a la unión','ist beigetreten','a rejoint l\'union','вступила в союз'],
+['daveti reddetti','declined the invitation','رفضت الدعوة','拒绝了邀请','ha rifiutato l\'invito','rechazó la invitación','lehnte die Einladung ab','a décliné l\'invitation','отклонила приглашение'],
+['birlikten çıkarıldı.','was removed from the union.','أُخرجت من الاتحاد.','被移出联盟。','è stata esclusa dall\'unione.','fue expulsada de la unión.','wurde aus der Union entfernt.','a été exclue de l\'union.','исключена из союза.'],
+['dağıtıldı.','has been dissolved.','تم حله.','已解散。','è stata sciolta.','ha sido disuelta.','wurde aufgelöst.','a été dissoute.','распущен.'],
+['ilişkiler bozulduğu için birlikten ayrıldı.','left the union because relations worsened.','غادرت الاتحاد بسبب تدهور العلاقات.','因关系恶化退出了联盟。','ha lasciato l\'unione per il peggioramento delle relazioni.','abandonó la unión por el deterioro de las relaciones.','verließ die Union wegen schlechterer Beziehungen.','a quitté l\'union à cause de relations dégradées.','вышла из союза из-за ухудшения отношений.'],
+['ile ittifakın bitmesine 10 tur kaldı. İçişleri › Diplomasi\'den yenileyebilirsin.',': alliance ends in 10 turns. Renew it in Interior › Diplomacy.',': ينتهي التحالف بعد 10 أدوار. جدده من الشؤون الداخلية › الدبلوماسية.','：同盟将在10回合后结束，可在内政›外交中续约。',': l\'alleanza scade tra 10 turni. Rinnovala in Interni › Diplomazia.',': la alianza termina en 10 turnos. Renuévala en Interior › Diplomacia.',': Bündnis endet in 10 Runden. Erneuere es unter Inneres › Diplomatie.',': l\'alliance prend fin dans 10 tours. Renouvelle-la dans Intérieur › Diplomatie.',': союз закончится через 10 ходов. Продли его во Внутренних делах › Дипломатия.'],
+['tur uzatıldı.','turns.','دورًا.','回合。','turni.','turnos.','Runden verlängert.','tours.','ходов.'],
+['ile ittifak','alliance with','التحالف مع','与其同盟','alleanza con','alianza con','Bündnis mit','alliance avec','союз с'],
+['Uydumuz yörüngeye yerleşti! Toplam uydu:','Our satellite reached orbit! Total satellites:','وصل قمرنا الصناعي إلى المدار! إجمالي الأقمار:','我们的卫星已入轨！卫星总数：','Il nostro satellite è in orbita! Satelliti totali:','¡Nuestro satélite está en órbita! Satélites totales:','Unser Satellit ist im Orbit! Satelliten gesamt:','Notre satellite est en orbite ! Total des satellites :','Наш спутник на орбите! Всего спутников:'],
+['Gelir ve teknoloji arttı.','Income and technology increased.','زاد الدخل والتقنية.','收入和科技提升。','Reddito e tecnologia aumentati.','Aumentaron los ingresos y la tecnología.','Einkommen und Technologie gestiegen.','Revenu et technologie en hausse.','Доход и технологии выросли.'],
+['Uzay teleskobumuz yörüngede! Artık gökyüzü gözlemleri yapabilirsin.','Our space telescope is in orbit! You can now make sky observations.','تلسكوبنا الفضائي في المدار! يمكنك الآن رصد السماء.','我们的太空望远镜已入轨！现在可以进行天空观测。','Il nostro telescopio spaziale è in orbita! Ora puoi osservare il cielo.','¡Nuestro telescopio espacial está en órbita! Ya puedes observar el cielo.','Unser Weltraumteleskop ist im Orbit! Jetzt kannst du den Himmel beobachten.','Notre télescope spatial est en orbite ! Tu peux observer le ciel.','Наш космический телескоп на орбите! Теперь можно наблюдать небо.'],
+['Uzay istasyonumuz tamamlandı! Prestij +5.','Our space station is complete! Prestige +5.','اكتملت محطتنا الفضائية! الهيبة +5.','我们的空间站建成了！声望+5。','La nostra stazione spaziale è completa! Prestigio +5.','¡Nuestra estación espacial está completa! Prestigio +5.','Unsere Raumstation ist fertig! Prestige +5.','Notre station spatiale est achevée ! Prestige +5.','Наша космическая станция завершена! Престиж +5.'],
+['İstasyon modülü','Station module','وحدة المحطة','空间站舱段','Modulo della stazione','Módulo de la estación','Stationsmodul','Module de station','Модуль станции'],
+['yörüngeye eklendi.','added to orbit.','أضيفت إلى المدار.','已加入轨道。','aggiunto in orbita.','añadido a la órbita.','im Orbit hinzugefügt.','ajouté en orbite.','добавлен на орбиту.'],
+['Ay numune görevi yola çıktı. 6 tur sonra Dünya\'ya dönecek.','The lunar sample mission has launched. It returns to Earth in 6 turns.','انطلقت مهمة عينات القمر. ستعود إلى الأرض بعد 6 أدوار.','月球采样任务已出发，6回合后返回地球。','La missione campioni lunari è partita. Tornerà sulla Terra tra 6 turni.','La misión de muestras lunares ha despegado. Volverá a la Tierra en 6 turnos.','Die Mondprobenmission ist gestartet. Rückkehr in 6 Runden.','La mission d\'échantillons lunaires est partie. Retour sur Terre dans 6 tours.','Миссия за лунным грунтом стартовала. Вернётся через 6 ходов.'],
+['sondamız fırlatıldı. Varış:','probe launched. Arrival:','أُطلق مسبارنا. الوصول:','探测器已发射。抵达：','sonda lanciata. Arrivo:','sonda lanzada. Llegada:','Sonde gestartet. Ankunft:','sonde lancée. Arrivée :','зонд запущен. Прибытие:'],
+['görevi fırlatmada başarısız oldu. Roket kaybedildi.','mission failed at launch. The rocket was lost.','فشلت المهمة عند الإطلاق. فُقد الصاروخ.','任务发射失败，火箭损失。','missione fallita al lancio. Razzo perso.','misión fallida en el lanzamiento. Cohete perdido.','Mission beim Start gescheitert. Rakete verloren.','mission échouée au lancement. Fusée perdue.','миссия провалилась при пуске. Ракета потеряна.'],
+['Teleskobumuz yeni bir keşif yaptı:','Our telescope made a new discovery:','حقق تلسكوبنا اكتشافًا جديدًا:','我们的望远镜有了新发现：','Il nostro telescopio ha fatto una nuova scoperta:','Nuestro telescopio hizo un nuevo descubrimiento:','Unser Teleskop hat etwas Neues entdeckt:','Notre télescope a fait une nouvelle découverte :','Наш телескоп совершил новое открытие:'],
+['Teknoloji puanı +2.','Tech points +2.','نقاط التقنية +2.','科技点+2。','Punti tecnologia +2.','Puntos de tecnología +2.','Technologiepunkte +2.','Points de technologie +2.','Очки технологий +2.'],
+['Ay\'dan getirilen numuneler Dünya\'ya ulaştı! Prestij +3, teknoloji puanı +12.','Lunar samples have reached Earth! Prestige +3, tech points +12.','وصلت عينات القمر إلى الأرض! الهيبة +3، نقاط التقنية +12.','月球样本已抵达地球！声望+3，科技点+12。','I campioni lunari sono arrivati sulla Terra! Prestigio +3, punti tecnologia +12.','¡Las muestras lunares llegaron a la Tierra! Prestigio +3, puntos de tecnología +12.','Mondproben auf der Erde! Prestige +3, Technologiepunkte +12.','Les échantillons lunaires sont sur Terre ! Prestige +3, points de technologie +12.','Лунный грунт доставлен! Престиж +3, очки технологий +12.'],
+['ulaştı ve ilk görüntüleri gönderdi! Prestij','and sent its first images! Prestige','وأرسل صوره الأولى! الهيبة','并传回首批图像！声望','e ha inviato le prime immagini! Prestigio','y envió sus primeras imágenes! Prestigio','und sendete erste Bilder! Prestige','et a envoyé ses premières images ! Prestige','и прислал первые снимки! Престиж'],
+['Sondamız','Our probe reached','وصل مسبارنا إلى','我们的探测器抵达','La nostra sonda ha raggiunto','Nuestra sonda llegó a','Unsere Sonde erreichte','Notre sonde a atteint','Наш зонд достиг'],
+['roketi uzaya ulaştı! Prestij +1.','rocket reached space! Prestige +1.','وصل الصاروخ إلى الفضاء! الهيبة +1.','火箭进入太空！声望+1。','razzo nello spazio! Prestigio +1.','¡cohete en el espacio! Prestigio +1.','Rakete im All! Prestige +1.','fusée dans l\'espace ! Prestige +1.','ракета вышла в космос! Престиж +1.'],
+['Roket fırlatma sırasında infilak etti.','The rocket exploded during launch.','انفجر الصاروخ أثناء الإطلاق.','火箭在发射时爆炸。','Il razzo è esploso al lancio.','El cohete explotó durante el lanzamiento.','Die Rakete explodierte beim Start.','La fusée a explosé au décollage.','Ракета взорвалась при пуске.'],
 ['Ordun burada','Your army is here','جيشك هنا','你的军队在此','Il tuo esercito è qui','Tu ejército está aquí','Deine Armee ist hier','Ton armée est ici','Твоя армия здесь'],
 ['Savaş durumu','War status','حالة الحرب','战争状态','Stato di guerra','Estado de guerra','Kriegsstatus','État de guerre','Военное положение'],
 ['Barışta','At peace','في سلام','和平','In pace','En paz','Im Frieden','En paix','В мире'],
@@ -2877,10 +3172,288 @@ function leaderView(k){const L=LDR[k],en=LANG!=='tr';showMenu(`<h2><span class="
  <div class="ldD"><b style="color:#e3c98e">Başarıları</b><ul>${(en?L[8]:L[7]).map(x=>`<li>${x}</li>`).join('')}</ul><b style="color:#e3c98e">Sözleri</b>${L[9].map(q=>`<div class="ldq">“${en?q[1]:q[0]}”${q[2]?`<small>${q[2]==='atfedilen'?'(atfedilen söz)':'('+q[2]+')'}</small>`:''}</div>`).join('')}</div>
  <button class="mb sec" onclick="leadersMenu()">← Liderler</button>`)}
 
+// ===== EXTENSIONS v1.0.9: resources, cures, unions, infamy, space missions, new tech =====
+const XT=()=>game.ext||(game.ext={});
+const hsh=(i,s)=>{let h=(i*2654435761+s*97531)>>>0;h^=h>>>15;h=Math.imul(h,2246822519)>>>0;h^=h>>>13;return (h%100000)/100000};
+// ---------- resources ----------
+const RES={pet:{n:'Petrol',ic:'🛢',p:65,col:[52,48,46]},alt:{n:'Altın',ic:'🥇',p:95,col:[245,165,20]},elm:{n:'Elmas',ic:'💎',p:125,col:[110,210,232]},bor:{n:'Bor',ic:'🧪',p:75,col:[196,160,226]},tah:{n:'Tahıl',ic:'🌾',p:18,col:[236,220,160]},gid:{n:'Gıda',ic:'🍎',p:11,col:[104,164,78]}};
+const RLIST={elm:{Botswana:.5,'DR Congo':.25,Russia:.04,'South Africa':.12,Angola:.25,Namibia:.35,'Sierra Leone':.4,Lesotho:.4,Zimbabwe:.1,'Central African Rep.':.3,Liberia:.2,Guinea:.1,Tanzania:.06,Canada:.03,Australia:.03},
+ pet:{'Saudi Arabia':.8,Kuwait:.9,Iraq:.6,Iran:.45,'United Arab Emirates':.8,Qatar:.9,Oman:.6,Bahrain:.7,Libya:.6,Algeria:.4,Nigeria:.35,Angola:.35,Venezuela:.45,Russia:.25,Kazakhstan:.3,Azerbaijan:.5,Turkmenistan:.4,Norway:.3,'United States':.15,Canada:.15,Brunei:.9,Gabon:.4,'Equatorial Guinea':.6,Congo:.3,'S. Sudan':.4,Sudan:.15,Ecuador:.25,Mexico:.15,Brazil:.08,Syria:.15,Yemen:.15,Egypt:.1,Malaysia:.12,Indonesia:.08,China:.05,Colombia:.12,Chad:.2,'Trinidad and Tobago':.6,'United Kingdom':.06},
+ alt:{'South Africa':.3,Australia:.2,Russia:.1,Peru:.25,Ghana:.35,China:.06,Canada:.1,'United States':.06,Mali:.3,'Burkina Faso':.3,Tanzania:.2,Sudan:.2,Uzbekistan:.3,Kyrgyzstan:.3,'Papua New Guinea':.3,Indonesia:.06,Mexico:.1,Brazil:.05,Guyana:.4,Suriname:.4,Zimbabwe:.2,Mongolia:.15,Kazakhstan:.08,Chile:.1,Colombia:.08,Philippines:.08,"Côte d'Ivoire":.15,Guinea:.2},
+ bor:{Argentina:.06,Chile:.08,Bolivia:.1,Peru:.04,Russia:.01,Kazakhstan:.02,China:.01,'United States':.01},
+ tah:{Ukraine:.6,Russia:.3,Kazakhstan:.4,'United States':.35,Canada:.35,Argentina:.45,Australia:.3,France:.4,Germany:.3,Poland:.35,Romania:.4,Hungary:.45,India:.35,China:.3,Pakistan:.3,Brazil:.25,Turkey:.15,Bulgaria:.35,Serbia:.35,Egypt:.2,Iran:.15,Uzbekistan:.2,Morocco:.15,Syria:.2,Spain:.2,Italy:.15,'United Kingdom':.15,Czechia:.3,Slovakia:.3,Lithuania:.3,Latvia:.25,Belarus:.3,Moldova:.4,Uruguay:.3,Paraguay:.3,Ethiopia:.15,Mexico:.15,Bangladesh:.2,Thailand:.2,Vietnam:.2,Myanmar:.15}};
+const RTR={bor:['Eskişehir','Kütahya','Balıkesir','Bursa'],pet:['Batman','Siirt','Şırnak','Adıyaman'],alt:['Uşak','Erzincan','Gümüşhane','İzmir'],tah:['Konya','Şanlıurfa','Yozgat','Sivas','Edirne','Tekirdağ','Kırşehir','Aksaray','Karaman','Kırklareli','Ankara']};
+const RK=new Array(N),RQ=new Float32Array(N);
+(function(){for(let i=0;i<N;i++){const cn=D.countries[P[i].c]?D.countries[P[i].c].n:'';let k='gid';
+  if(cn==='Turkey'){for(const t in RTR)if(RTR[t].includes(P[i].n))k=t}
+  else for(const t of ['elm','pet','alt','bor','tah']){const s=RLIST[t][cn];if(s&&hsh(i,t.charCodeAt(0)+t.charCodeAt(1)*7)<s){k=t;break}}
+  RK[i]=k;RQ[i]=(1+2*hsh(i,11))*(0.6+Math.sqrt(P[i].px||1)/8)*(k==='gid'||k==='tah'?Math.min(1.6,0.5+Math.log10(Math.max(10,P[i].pop||1e5))/6):1)}})();
+function resAvail(k){if(ERA==='med')return k!=='pet'&&k!=='bor';if(ERA==='ww1'||ERA==='ww2')return true;return true}
+function rPrice(k){const X=XT(),rp=(X.rp&&X.rp[k])||1;return RES[k].p*rp*(ERA==='med'&&(k==='pet'||k==='bor')?0:(ERA==='ww1'||ERA==='ww2')&&k==='bor'?0.3:1)}
+const minMul=c=>[1,1.15,1.3,1.5,1.7,1.9,2.2][tl(c,'min')]||1;
+function provRes(i){const o=owner[i];const k=RK[i];let q=RQ[i]*(k==='gid'||k==='tah'?1+0.15*lv(i,B.FARM):minMul(o));q*=1+0.25*((XT().rinv||{})[i]||0);q*=0.5+0.5*stabOf(i)/100;if((game.dmg[i]||0)>game.turn)q*=0.7;if(atWar(o,CORE[i])&&CORE[i]!==o)q*=0.6;return q}
+function rK(){const X=XT();if(X.rK)return X.rK;calcEco();let sv=0;for(let i=0;i<N;i++)sv+=RQ[i]*rPrice(RK[i]);const me=game.me,base=grossOf(me)/Math.max(0.05,game.tax)*0.2/Math.max(1,ECO[me]);let se=0;for(let c=0;c<C.length;c++)se+=ECO[c];X.rK=Math.max(1e-6,0.13*base*se/Math.max(1,sv));return X.rK}
+const provResVal=i=>provRes(i)*rPrice(RK[i])*rK()*(1+0.05*tl(owner[i],'ind'));
+let RIC={t:-1,v:0};function resIncome(c){if(!game)return 0;if(c===game.me&&RIC.t===game.turn&&RIC.g===game.gold)return RIC.v;let v=0;for(let i=0;i<N;i++)if(owner[i]===c)v+=provResVal(i);if(c===game.me)RIC={t:game.turn,g:game.gold,v};return v}
+function resTotals(c){const T={};for(const k in RES)T[k]={q:0,v:0,n:0};for(let i=0;i<N;i++)if(owner[i]===c){const k=RK[i];T[k].q+=provRes(i);T[k].v+=provResVal(i);T[k].n++}return T}
+function resTick(){const X=XT();X.rp=X.rp||{};const oilW=['Saudi Arabia','Iran','Iraq','Russia','Kuwait','United Arab Emirates','Venezuela','Libya'].map(n=>C.findIndex(c=>c.n===n)).filter(c=>c>=0&&owner.includes(c)&&enemiesOf(c).length).length;
+ for(const k in RES){const tgt=k==='pet'?Math.min(1.5,1+0.08*oilW):1;let p=X.rp[k]||1;p+=(tgt-p)*0.05+(Math.random()-0.5)*0.06;X.rp[k]=Math.max(0.6,Math.min(1.6,p))}
+ if(game.turn%30===0){const ks=Object.keys(RES).filter(resAvail);const k=ks[(Math.random()*ks.length)|0];const p=X.rp[k];if(p>1.25)news('ulusal',`📈 Dünya piyasasında ${RES[k].n} fiyatı yükseldi (%${Math.round(p*100)}).`);else if(p<0.8)news('ulusal',`📉 Dünya piyasasında ${RES[k].n} fiyatı düştü (%${Math.round(p*100)}).`)}}
+function resLegend(){return `<div class="rleg">${Object.keys(RES).map(k=>`<i><b style="background:rgb(${RES[k].col.map(x=>Math.min(255,x*0.95|0)).join(',')})"></b>${RES[k].n}</i>`).join('')}</div>`}
+function resUI(){const me=game.me,T=resTotals(me),X=XT();let tot=0;let h=inTabs('res')+`<div class="box fa"><div class="hint" style="color:#cdbb92">Şehirlerin doğal kaynak üretir. Gelir dünya fiyatına göre değişir. Madencilik teknolojisi, çiftlikler ve Kaynak haritasındaki yatırım üretimi artırır.</div>`;
+ for(const k in RES){const t=T[k];if(!t.n)continue;tot+=t.v;const p=(X.rp&&X.rp[k])||1;h+=`<div class="row"><span>${RES[k].ic} ${RES[k].n} <small style="opacity:.7">· ${t.n} <span>şehir</span></small></span><b>${resAvail(k)?`${kfmt(t.q)} <small style="color:${p>=1?'#9fc48a':'#e0806a'}">${p>=1?'▲':'▼'}%${Math.round(p*100)}</small> · +${fmt(t.v)} 💰`:'<small>Henüz değeri yok</small>'}</b></div>`}
+ h+=`<div class="row"><span><b>Toplam kaynak geliri</b></span><b style="color:#9fc48a">+${fmt(tot)} 💰/<span>tur</span></b></div><button onclick="closeSide();setMode&&setMode('res')">🗺 Kaynak haritasını aç</button></div>`;$('sub').innerHTML=h}
+// ---------- economy balance ----------
+function ecoBal(){const X=XT();if(!X.e0||X.e0.length!==N){X.e0=Array.from(ecoP,x=>Math.round(x*10)/10)}const me=game.me,ind=tl(me,'ind');
+ for(let i=0;i<N;i++){const cap=Math.max(0.05,X.e0[i])*1.8;if(owner[i]===me&&ind)ecoP[i]*=1+0.00025*ind;if(ecoP[i]>cap)ecoP[i]=cap+(ecoP[i]-cap)*0.96}}
+function grossAdj(c,g){if(!game||c!==game.me)return g;const X=XT();return g*(1+0.03*tl(c,'ind')+0.015*Math.min(8,(X.sp&&X.sp.sat)||0)+(X.uni&&X.uni.m?0.02*Math.min(8,X.uni.m.filter(x=>owner.includes(x)).length):0))}
+function ecoAdjF(c){const e=ECO[c];if(!game||c!==game.me||!game.ext)return e;const X=game.ext;if(!X.E0){X.E0=Math.max(1,e);return e}return e>X.E0?X.E0*Math.pow(e/X.E0,0.65):e}
+// ---------- epidemics & cures ----------
+function CU(){const X=XT();return X.cure||(X.cure={q:0,m:0,h:0,v:{},imm:{}})}
+function cureF(o,kind,i,id){if(!game||o!==game.me)return 1;const c=CU(),T=game.turn;let f=1;
+ if(kind==='s'){if(c.q>T)f*=0.35;if(id!==undefined&&c.imm[id])f*=0.1}
+ if(kind==='d'){if(c.m>T)f*=0.5;if(c.h>T)f*=0.6}
+ if(kind==='r'){if(c.m>T)f*=1.4;if(c.h>T)f*=1.8;if(id!==undefined&&c.imm[id])f*=3}
+ return f}
+function myOutbreaks(){const me=game.me,M={};for(let i=0;i<N;i++)if(owner[i]===me&&inf[i]>0.005){const id=dis[i];(M[id]||(M[id]={n:0,s:0})).n++;M[id].s+=inf[i]}return M}
+function vacTurns(){const L=tl(game.me,'med');return L>=4?4:L>=1?6:8}
+function cureUI(){const me=game.me,c=CU(),T=game.turn,M=myOutbreaks(),g=grossOf(me),ids=Object.keys(M);
+ const cm=Math.round(Math.max(5000,g*1.5)),ch=Math.round(Math.max(8000,g*2.5)),cv=Math.round(Math.max(10000,g*3)),cc=Math.round(Math.max(6000,g*2));
+ let h=inTabs('dis')+`<div class="box fa">`;
+ h+=ids.length?ids.map(id=>{const o=game.outb[id]||{name:'Hastalık',deaths:0},v=c.v[id];const st=c.imm[id]?'<b style="color:#9fc48a">Aşılandı</b>':v?(v>T?`🧪 <span>Aşı</span> ${v-T} <span>tur</span>`:`<button class="b-green" onclick="vacCamp(${id})">💉 Aşı kampanyası · ${kfmt(cc)}💰</button>`):`<button onclick="vacStart(${id})">🧪 Aşı geliştir · ${kfmt(cv)}💰 · ${vacTurns()} <span>tur</span></button>`;
+  return `<div class="row"><span>🦠 ${o.name} · ${M[id].n} <span>şehir</span></span><b>☠ ${kfmt(o.deaths)}</b></div>${st}`}).join(''):'<div class="hint" style="color:#9fc48a">Ülkende şu an salgın yok.</div>';
+ h+=`<div class="sect">Tedavi yöntemleri</div><div class="fg">
+ <button onclick="cureAct('q')" ${c.q>T?'disabled':''}>🚧 <span>Karantina</span><small>${c.q>T?(c.q-T)+' tur':'3📜 · 10 tur'}</small></button>
+ <button onclick="cureAct('m')" ${c.m>T?'disabled':''}>💊 <span>İlaç dağıtımı</span><small>${c.m>T?(c.m-T)+' tur':kfmt(cm)+'💰 · 8 tur'}</small></button>
+ <button onclick="cureAct('h')" ${c.h>T||tl(me,'med')<2?'disabled':''}>🏥 <span>Sahra hastaneleri</span><small>${c.h>T?(c.h-T)+' tur':tl(me,'med')<2?'Antibiyotikler gerekli':kfmt(ch)+'💰 · 10 tur'}</small></button>
+ <button onclick="closeSide();setMode&&setMode('dis')">🗺 <span>Hastalık haritası</span><small>Şehir şehir tedavi</small></button></div>
+ <div class="hint" style="color:#cdbb92">Karantina yayılmayı %65 azaltır ama halk biraz mutsuz olur. İlaç ölümleri yarıya indirir. Hastaneler iyileşmeyi hızlandırır. Aşı, o hastalığa karşı kalıcı bağışıklık sağlar.</div></div>`;$('sub').innerHTML=h}
+function cureAct(k){const c=CU(),g=grossOf(game.me),T=game.turn;if(k==='q'){if(!useDP(3))return;c.q=T+10;news('yerel','🚧 Ülke genelinde karantina ilan edildi.')}
+ else{const cost=Math.round(k==='m'?Math.max(5000,g*1.5):Math.max(8000,g*2.5));if(game.gold<cost){toast('💰 Yetersiz altın');return}game.gold-=cost;if(k==='m'){c.m=T+8;news('yerel','💊 Ülke genelinde ücretsiz ilaç dağıtımı başladı.')}else{c.h=T+10;news('yerel','🏥 Salgın bölgelerine sahra hastaneleri kuruldu.')}}
+ updHud();cureUI()}
+function vacStart(id){const c=CU(),cost=Math.round(Math.max(10000,grossOf(game.me)*3));if(game.gold<cost){toast('💰 Yetersiz altın');return}game.gold-=cost;c.v[id]=game.turn+vacTurns();news('yerel',`🧪 ${(game.outb[id]||{}).name||'Salgın'} için aşı çalışması başladı.`);updHud();cureUI()}
+function vacCamp(id){const c=CU(),cost=Math.round(Math.max(6000,grossOf(game.me)*2));if(game.gold<cost){toast('💰 Yetersiz altın');return}game.gold-=cost;c.imm[id]=1;for(let i=0;i<N;i++)if(owner[i]===game.me&&dis[i]==id){inf[i]*=0.25;hap[i]=Math.min(100,hap[i]+3)}news('yerel',`💉 ${(game.outb[id]||{}).name||'Salgın'} aşı kampanyası tamamlandı. Halk bağışık hale geliyor.`);updHud();paint();cureUI()}
+function cureTick(){const c=CU(),T=game.turn;if(c.q>T)for(let i=0;i<N;i++)if(owner[i]===game.me&&inf[i]>0.005)hap[i]=Math.max(0,hap[i]-0.4);for(const id in c.v)if(c.v[id]===T)news('yerel',`🧪 ${(game.outb[id]||{}).name||'Salgın'} aşısı hazır! İçişleri › Salgın bölümünden kampanyayı başlat.`)}
+// ---------- infamy & coalitions ----------
+let LASTOWN=null,COALW=false;
+function IX(){const X=XT();return X.inf||(X.inf={})}
+function addInf(c,d){if(!game||game.turn<=1||COALW||d<=0)return;const I=IX();const ISR=C.findIndex(x=>x.n==='Israel');if(c===ISR)d*=0.7;const old=I[c]||0;I[c]=old+d;const me=game.me;
+ if(c===me){for(let k=0;k<C.length;k++)if(k!==me&&owner.includes(k)&&!game.allies.includes(k))game.rel[k]=Math.max(-100,(game.rel[k]|0)-d*(CNEAR[me].has(k)?0.8:0.25));
+  if(old<30&&I[c]>=30)news('ulusal','⚠ Dünya ülkeleri saldırganlığımızdan rahatsız. İlişkiler kötüleşiyor.',true);
+  if(old<50&&I[c]>=50)news('ulusal','🚨 Saldırganlığımız sınırı aştı! Komşu ülkeler bize karşı koalisyon kurabilir.',true)}
+ else for(const k of CNEAR[c])if(k!==me&&k!==c){const key=rel2(c,k);game.arel[key]-=d*0.6}}
+function infTick(){const I=IX(),T=game.turn;if(!LASTOWN||LASTOWN.length!==N){LASTOWN=owner.slice();return}const gain={};for(let i=0;i<N;i++){const o=owner[i],p=LASTOWN[i];if(o!==p&&CORE[i]!==o&&!C[p]?.tribal)gain[o]=(gain[o]||0)+1}LASTOWN=owner.slice();
+ for(const c in gain)addInf(+c,Math.min(6,gain[c]*0.5));
+ for(const c in I){I[c]=Math.max(0,I[c]-(enemiesOf(+c).length?0.25:0.45));if(I[c]<0.5)delete I[c]}
+ const X=XT();X.coal=X.coal||{};for(const k in I){const c=+k;if(I[c]<50||(X.coal[c]||-99)>T-40||!owner.includes(c))continue;const me=game.me;if(c===me&&T<75)continue;
+  const mem=[...CNEAR[c]].filter(m=>m!==c&&owner.includes(m)&&!C[m].tribal&&!atWar(m,c)&&!truce(m,c)&&game.vas[m]!==c&&!(c===me&&(game.allies.includes(m)||game.vas[m]===me))&&m!==me&&!scnProtected(m,c));
+  X.coal[c]=T;const join=mem.filter(m=>Math.random()<0.55+Math.min(0.3,(I[c]-50)/100));if(join.length<2)continue;
+  COALW=true;for(const m of join)startWar(m,c,true);COALW=false;I[c]*=0.6;
+  news('ulusal',`⚔ ${cname(c)} ülkesinin saldırganlığına karşı koalisyon kuruldu: ${join.map(cname).join(', ')}`,c===me);
+  if(c!==me&&CNEAR[me].has(c)&&!atWar(me,c))news('ulusal',`🤝 Koalisyona katılmak istersen ${cname(c)} ülkesine Dış İşleri'nden savaş açabilirsin.`)}}
+const infOf=c=>Math.round((IX()[c]||0));
+// ---------- Israel: aggressive bot ----------
+function isrTick(){const I=C.findIndex(x=>x.n==='Israel');if(I<0||I===game.me||!owner.includes(I)||C[I].tribal||game.turn<4)return;
+ if(enemiesOf(I).length)aiRecruit(I,incomeOf(I)*1.3*MULT[game.diff]);
+ if(enemiesOf(I).length>=3||Math.random()>0.12)return;const HOST=['Iran','Lebanon','Syria','Gaza Strip','West Bank','Palestine','Yemen','Iraq','Jordan','Egypt','Saudi Arabia'];
+ const cand=[...CNEAR[I],...HOST.map(n=>C.findIndex(c=>c.n===n))].filter((b,j,a)=>b>=0&&a.indexOf(b)===j&&b!==I&&owner.includes(b)&&!C[b].tribal&&!atWar(I,b)&&!truce(I,b)&&!scnProtected(I,b)&&(b!==game.me||(game.turn>=75&&(game.rel[I]|0)<=-10)));
+ if(!cand.length)return;cand.sort((a,b)=>(HOST.includes(C[b].n)?1:0)-(HOST.includes(C[a].n)?1:0)||armyPower(a)-armyPower(b));const t=cand[0];if(armyPower(I)<armyPower(t)*0.5&&Math.random()<0.7)return;startWar(I,t)}
+// ---------- union (birlik) ----------
+const UPAT={tri_h:'Üç yatay şerit',tri_v:'Üç dikey şerit',bi_h:'İki yatay şerit',cross:'İskandinav haçı',diag:'Çapraz bölünmüş',plain:'Düz'},USYM={none:'Yok',star:'Yıldız',crescent:'Hilal ve yıldız',circle:'Daire',stars:'Yıldız halkası',sun:'Güneş'};
+function uniFlag(f,h){f=f||{p:'tri_h',c:['#1f4e9a','#ffffff','#c8102e'],s:'star',sc:'#f2c230'};const c=f.c;let b='';
+ if(f.p==='tri_h')b=`<rect width="30" height="20" fill="${c[0]}"/><rect y="6.67" width="30" height="6.67" fill="${c[1]}"/><rect y="13.33" width="30" height="6.67" fill="${c[2]}"/>`;
+ else if(f.p==='tri_v')b=`<rect width="30" height="20" fill="${c[0]}"/><rect x="10" width="10" height="20" fill="${c[1]}"/><rect x="20" width="10" height="20" fill="${c[2]}"/>`;
+ else if(f.p==='bi_h')b=`<rect width="30" height="20" fill="${c[0]}"/><rect y="10" width="30" height="10" fill="${c[1]}"/>`;
+ else if(f.p==='cross')b=`<rect width="30" height="20" fill="${c[0]}"/><rect x="8" width="5" height="20" fill="${c[1]}"/><rect y="7.5" width="30" height="5" fill="${c[1]}"/><rect x="9.5" width="2" height="20" fill="${c[2]}"/><rect y="9" width="30" height="2" fill="${c[2]}"/>`;
+ else if(f.p==='diag')b=`<rect width="30" height="20" fill="${c[0]}"/><path d="M30 0V20H0z" fill="${c[1]}"/>`;
+ else b=`<rect width="30" height="20" fill="${c[0]}"/>`;
+ const S=f.sc,cx=f.p==='cross'?10.5:15,cy=10;const star=(x,y,r)=>{let d='';for(let k=0;k<10;k++){const a=-Math.PI/2+k*Math.PI/5,rr=k%2?r*0.42:r;d+=(k?'L':'M')+(x+rr*Math.cos(a)).toFixed(2)+' '+(y+rr*Math.sin(a)).toFixed(2)}return `<path d="${d}z" fill="${S}"/>`};
+ let s='';if(f.s==='star')s=star(cx,cy,4.2);else if(f.s==='circle')s=`<circle cx="${cx}" cy="${cy}" r="4" fill="${S}"/>`;else if(f.s==='crescent')s=`<circle cx="${cx-1.5}" cy="${cy}" r="4.2" fill="${S}"/><circle cx="${cx-0.3}" cy="${cy}" r="3.4" fill="${f.p==='plain'||f.p==='diag'?c[0]:c[1]}"/>${star(cx+3,cy,1.6)}`;
+ else if(f.s==='stars'){for(let k=0;k<10;k++){const a=k*Math.PI/5;s+=star(cx+5*Math.cos(a),cy+5*Math.sin(a),1.1)}}else if(f.s==='sun'){s=`<circle cx="${cx}" cy="${cy}" r="2.6" fill="${S}"/>`;for(let k=0;k<12;k++){const a=k*Math.PI/6;s+=`<line x1="${(cx+3.4*Math.cos(a)).toFixed(2)}" y1="${(cy+3.4*Math.sin(a)).toFixed(2)}" x2="${(cx+5*Math.cos(a)).toFixed(2)}" y2="${(cy+5*Math.sin(a)).toFixed(2)}" stroke="${S}" stroke-width=".9"/>`}}
+ return `<svg viewBox="0 0 30 20" style="height:${h}px;vertical-align:middle;border:1px solid rgba(255,255,255,.25);border-radius:2px">${b}${s}</svg>`}
+const escH=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const UNI=()=>XT().uni||null;const uniMem=c=>{const u=UNI();return !!(u&&u.m.includes(c))};
+let UDR=null;
+function uniUI(){const me=game.me,u=UNI();let h=inTabs('uni')+'<div class="box fa">';
+ if(!u){const f=UDR||(UDR={n:'',f:{p:'tri_h',c:['#1f4e9a','#ffffff','#c8102e'],s:'star',sc:'#f2c230'}});const cost=Math.round(Math.max(15000,grossOf(me)*3));
+  h+=`<div class="hint" style="color:#cdbb92">Bir birlik kur: üyeler müttefikin olur, ittifak süresi dolmaz ve her üye gelirine %2 katkı sağlar. Davet için ilişkinin +50 veya üstü olması gerekir.</div>
+  <div class="ngh">Birlik adı</div><input id="uN" maxlength="30" value="${escH(f.n)}" placeholder="Örn. Anadolu Birliği" oninput="UDR.n=this.value" style="padding:6px;border-radius:6px;border:1px solid #6b5a3e;background:#1a150f;color:#efe6d2">
+  <div class="ngh">Bayrak</div><div id="uFP" style="text-align:center;margin:4px 0">${uniFlag(f.f,54)}</div>
+  <div class="fg"><select onchange="UDR.f.p=this.value;uFP()">${Object.entries(UPAT).map(([k,v])=>`<option value="${k}" ${k===f.f.p?'selected':''}>${v}</option>`).join('')}</select><select onchange="UDR.f.s=this.value;uFP()">${Object.entries(USYM).map(([k,v])=>`<option value="${k}" ${k===f.f.s?'selected':''}>${v}</option>`).join('')}</select></div>
+  <div class="ucol"><span>Renkler</span>${[0,1,2].map(k=>`<input type="color" value="${f.f.c[k]}" oninput="UDR.f.c[${k}]=this.value;uFP()">`).join('')}<span>Sembol</span><input type="color" value="${f.f.sc}" oninput="UDR.f.sc=this.value;uFP()"></div>
+  <button class="b-green" onclick="uniFound()">🏛 Birliği kur · ${kfmt(cost)}💰 · 5📜</button>`}
+ else{const M=u.m.filter(x=>owner.includes(x));const el=C.map((c,i)=>i).filter(i=>i!==me&&owner.includes(i)&&!C[i].tribal&&!u.m.includes(i)&&(game.rel[i]|0)>=50&&!atWar(me,i)).sort((a,b)=>(game.rel[b]|0)-(game.rel[a]|0));
+  h+=`<div style="display:flex;align-items:center;gap:8px">${uniFlag(u.f,30)}<div><b style="font-size:15px">${escH(u.n)}</b><br><small style="color:#bfae88">${M.length+1} <span>üye</span> · ${game.turn-u.t} <span>turdur kurulu</span> · <span>gelir</span> +%${2*Math.min(8,M.length)}</small></div></div>
+  <div class="sect">Üyeler</div>${M.length?M.map(c=>`<div class="drow">${fimg(c,14)} <b>${cname(c)}</b><span class="rv" style="color:${relCol(game.rel[c]|0)}">${game.rel[c]|0}</span><button class="sm2" onclick="uniKick(${c})">Çıkar</button></div>`).join(''):'<div class="hint">Henüz üye yok. Aşağıdan davet et.</div>'}
+  <div class="sect">Davet edilebilir (ilişki +50)</div>${el.length?el.slice(0,40).map(c=>`<div class="drow">${fimg(c,14)} <b>${cname(c)}</b><span class="rv" style="color:${relCol(game.rel[c]|0)}">${game.rel[c]|0}</span><button class="sm2" onclick="uniInvite(${c})">Davet · 2📜</button></div>`).join(''):'<div class="hint">İlişkin +50 olan ülke yok. Elçi ve hediye ile ilişkileri geliştir.</div>'}
+  <div class="fg" style="margin-top:6px"><button onclick="UDR={n:UNI().n,f:JSON.parse(JSON.stringify(UNI().f))};uniEdit()">🎨 Bayrak ve ad</button><button class="b-red" onclick="uniDissolve()">Birliği dağıt</button></div>`}
+ $('sub').innerHTML=h+'</div>'}
+function uFP(){const e=$('uFP');if(e)e.innerHTML=uniFlag(UDR.f,54)}
+function uniEdit(){const u=UNI();if(!u)return uniUI();if(!UDR)UDR={n:u.n,f:JSON.parse(JSON.stringify(u.f))};$('sub').innerHTML=inTabs('uni')+`<div class="box fa"><div class="ngh">Birlik adı</div><input id="uN" maxlength="30" value="${escH(UDR.n)}" oninput="UDR.n=this.value" style="padding:6px;border-radius:6px;border:1px solid #6b5a3e;background:#1a150f;color:#efe6d2">
+ <div id="uFP" style="text-align:center;margin:4px 0">${uniFlag(UDR.f,54)}</div><div class="fg"><select onchange="UDR.f.p=this.value;uFP()">${Object.entries(UPAT).map(([k,v])=>`<option value="${k}" ${k===UDR.f.p?'selected':''}>${v}</option>`).join('')}</select><select onchange="UDR.f.s=this.value;uFP()">${Object.entries(USYM).map(([k,v])=>`<option value="${k}" ${k===UDR.f.s?'selected':''}>${v}</option>`).join('')}</select></div>
+ <div class="ucol"><span>Renkler</span>${[0,1,2].map(k=>`<input type="color" value="${UDR.f.c[k]}" oninput="UDR.f.c[${k}]=this.value;uFP()">`).join('')}<span>Sembol</span><input type="color" value="${UDR.f.sc}" oninput="UDR.f.sc=this.value;uFP()"></div>
+ <div class="fg"><button class="b-green" onclick="const n=(UDR.n||'').trim();if(!n){toast('Bir ad yaz');return}UNI().n=n.slice(0,30);UNI().f=UDR.f;toast('✔ Kaydedildi');uniUI()">✔ Kaydet</button><button class="sec2" onclick="uniUI()">Geri</button></div></div>`}
+function uniFound(){const n=(UDR&&UDR.n||'').trim();if(!n){toast('Önce birliğe bir ad ver');return}const cost=Math.round(Math.max(15000,grossOf(game.me)*3));if(game.gold<cost){toast('💰 Yetersiz altın');return}if(!useDP(5))return;game.gold-=cost;
+ XT().uni={n:n.slice(0,30),f:UDR.f,m:[],t:game.turn};UDR=null;news('ulusal',`🏛 ${n.slice(0,30)} kuruldu! Artık müttefik ülkeleri birliğe davet edebilirsin.`);updHud();uniUI()}
+function uniInvite(c){const u=UNI();if(!u)return;const r=game.rel[c]|0;if(r<50){toast('İlişki +50 olmalı');return}if(!useDP(2))return;
+ if(Math.random()<Math.min(0.95,0.5+(r-50)/80)){u.m.push(c);if(!game.allies.includes(c))game.allies.push(c);game.rel[c]=Math.min(100,r+5);news('ulusal',`🏛 ${cname(c)}, ${u.n} birliğine katıldı!`);toast(`🏛 ${cname(c)} birliğe katıldı`)}
+ else{game.rel[c]=r-4;toast(`✋ ${cname(c)} daveti reddetti`)}uniUI()}
+function uniKick(c){const u=UNI();if(!u)return;u.m=u.m.filter(x=>x!==c);game.rel[c]=Math.max(-100,(game.rel[c]|0)-15);news('ulusal',`🏛 ${cname(c)} birlikten çıkarıldı.`,true);uniUI()}
+function uniDissolve(){const u=UNI();if(!u)return;for(const c of u.m)game.rel[c]=Math.max(-100,(game.rel[c]|0)-10);news('ulusal',`🏛 ${u.n} dağıtıldı.`,true);delete XT().uni;uniUI()}
+function uniTick(){const u=UNI();if(!u)return;u.m=u.m.filter(c=>owner.includes(c));for(const c of u.m.slice()){if(!game.allies.includes(c)&&!atWar(game.me,c))game.allies.push(c);if(atWar(game.me,c)){u.m=u.m.filter(x=>x!==c);continue}game.rel[c]=Math.min(100,(game.rel[c]|0)+0.3);
+  if((game.rel[c]|0)<25){u.m=u.m.filter(x=>x!==c);news('ulusal',`🏛 ${cname(c)} ilişkiler bozulduğu için birlikten ayrıldı.`,true)}}}
+// ---------- tabs / relations helpers ----------
+let INTAB='gov';
+const relCol=r=>r>=60?'#7fd08a':r>=20?'#a9c97e':r>-10?'#d9c06a':r>-50?'#e0906a':'#e0605a';
+const relTxt=r=>r>=60?'Çok iyi':r>=20?'İyi':r>-10?'Nötr':r>-50?'Kötü':'Düşmanca';
+function inTabs(cur){INTAB=cur;const T=[['gov','🏛 Yönetim'],['dip','🤝 Diplomasi'],['rel','🌍 İlişkiler'],['res','⛏ Üretim'],['dis','🦠 Salgın'],['uni','🏳 Birlik']];
+ return `<div class="tabs sm itabs">${T.map(([k,n])=>`<button class="${k===cur?'on':''}" onclick="interiorUI('${k}')">${n}</button>`).join('')}</div>`}
+function interiorUI(t){if(t)INTAB=t;DIPO=0;const k=INTAB;if(k==='dip')return diploUI();if(k==='rel')return relUI();if(k==='res')return resUI();if(k==='dis')return cureUI();if(k==='uni')return uniUI();govUI()}
+function govUI(){const me=game.me,st=stabilityAll()[me],g=gov(me);const risk=Math.max(0,40-st)/40*5*govF(me,'coup');const caps=provsOf(me).sort((a,b)=>pop[b]-pop[a]).slice(0,40);const gcd=(game.govCd||0)-game.turn,fcd=(game.festCd||0)-game.turn;const L=typeof leaderOf==='function'?leaderOf(me):null;
+ $('sub').innerHTML=inTabs('gov')+`<div class="box fa"><div class="kv"><div><small>Yönetim</small><b>${GOV[g].n}</b></div><div><small>İstikrar</small><b style="color:${st<45?'#e0806a':'#9fc48a'}">%${Math.round(st)}</b></div><div><small>Darbe riski</small><b>%${risk.toFixed(1)}</b></div>${L?`<div><small>${L[2]}</small><b>${L[1]}</b></div>`:''}</div>
+ <div class="sect">Yönetim şekli · 25K💰 · 10📜</div><div class="ln"><select id="govS" onchange="govD.textContent=GOV[this.value].d">${Object.entries(GOV).map(([k,v])=>`<option value="${k}" ${k===g?'selected':''}>${v.n}</option>`).join('')}</select><button onclick="changeGov()" ${gcd>0?'disabled':''}>${gcd>0?gcd+' tur':'Değiştir'}</button></div><div id="govD" class="hint" style="color:#cdbb92">${GOV[g].d}</div>
+ <div class="sect">Başkent · ${P[C[me].cap].n}</div><div class="ln"><select id="capS">${caps.filter(i=>i!==C[me].cap).map(i=>`<option value="${i}">${P[i].n} — ${kfmt(30000+provValue(i)*0.2)}💰</option>`).join('')}</select><button onclick="moveCap()">Taşı</button></div>
+ <div class="sect">Seferberlik</div><select id="mobS" onchange="game.mob=+this.value;toast('Seferberlik %'+this.value)">${[1,2,3,5].map(x=>`<option value="${x}" ${x===(game.mob||2)?'selected':''}>%${x}${x>2?' (halk mutsuz olur)':''}</option>`).join('')}</select>
+ <div class="fg" style="margin-top:6px"><button class="b-green" onclick="festival()" ${fcd>0?'disabled':''}>🎉 <span>Ulusal bayram</span><small>${fcd>0?fcd+' tur':kfmt(Math.max(5000,grossOf(me)*2))+'💰'}</small></button><button onclick="propaganda()">📣 <span>Propaganda</span><small>5📜 · 10 tur</small></button></div>
+ ${histAvail().length?`<div class="sect">Tarihi devletler</div>${histAvail().map(k=>{const pr=histProgress(k);return `<button onclick="histUI('${k}')"><img class="fl" src="${histFlag(HIST[k].fl)}" style="height:12px"> ${HIST[k].n} (${HIST[k].y}) · %${Math.round(pr.own/pr.tot*100)}</button>`}).join('')}`:''}</div>`}
+let RELF='all';
+function relUI(f){if(f)RELF=f;const me=game.me;let L=C.map((c,i)=>i).filter(i=>i!==me&&owner.includes(i)&&!C[i].tribal);
+ if(RELF==='good')L=L.filter(i=>(game.rel[i]|0)>=20);else if(RELF==='bad')L=L.filter(i=>(game.rel[i]|0)<=-10);else if(RELF==='near')L=L.filter(i=>CNEAR[me].has(i));
+ L.sort((a,b)=>(game.rel[b]|0)-(game.rel[a]|0));const cnt=k=>C.map((c,i)=>i).filter(i=>i!==me&&owner.includes(i)&&!C[i].tribal&&(k==='good'?(game.rel[i]|0)>=20:(game.rel[i]|0)<=-10)).length;
+ $('sub').innerHTML=inTabs('rel')+`<div class="box fa"><div class="kv"><div><small>İyi ilişki</small><b style="color:#9fc48a">${cnt('good')}</b></div><div><small>Kötü ilişki</small><b style="color:#e0806a">${cnt('bad')}</b></div><div><small>Saldırganlık</small><b style="color:${infOf(me)>=50?'#e0605a':infOf(me)>=30?'#e0906a':'#9fc48a'}">${infOf(me)}/50</b></div></div>
+ <div class="tabs sm">${[['all','Tümü'],['good','İyi'],['bad','Kötü'],['near','Komşular']].map(([k,n])=>`<button class="${k===RELF?'on':''}" onclick="relUI('${k}')">${n}</button>`).join('')}</div>
+ <div class="rlist">${L.map(c=>{const r=game.rel[c]|0;return `<div class="drow" onclick="selectCountry(${c})">${fimg(c,14)} <span class="rn"><b>${cname(c)}</b><small style="color:${relCol(r)}">${relTxt(r)}</small></span><span class="rbar"><i style="width:${(r+100)/2}%;background:${relCol(r)}"></i></span><span class="rv" style="color:${relCol(r)}">${r>0?'+':''}${r}</span></div>`}).join('')||'<div class="hint">Liste boş</div>'}</div>
+ <div class="hint" style="color:#cdbb92">Saldırganlık puanı savaş açtıkça ve şehir aldıkça artar, barışta azalır. 50'yi geçerse komşular koalisyon kurup sana savaş açabilir.</div></div>`}
+// ---------- diplomacy overview (overrides) ----------
+const ALLY_LEN2=150;
+function allyInfo(c){const e=XT();e.ally=e.ally||{};if(!e.ally[c])e.ally[c]={t:game.turn,exp:game.turn+ALLY_LEN2};return e.ally[c]}
+function allyTick(){const e=game.ext;if(!e)return;e.ally=e.ally||{};for(const k in e.ally)if(!game.allies.includes(+k))delete e.ally[k];
+ for(const c of game.allies.slice()){const a=allyInfo(c),left=a.exp-game.turn;if(!owner.includes(c)){game.allies=game.allies.filter(x=>x!==c);delete e.ally[c];continue}if(uniMem(c)){a.exp=Math.max(a.exp,game.turn+ALLY_LEN2);continue}
+  if(left<=0){game.allies=game.allies.filter(x=>x!==c);delete e.ally[c];game.rel[c]=Math.max(-100,(game.rel[c]|0)-5);news('ulusal',`⌛ ${cname(c)} ile ittifak süresi doldu ve sona erdi.`,true);toast(`⌛ ${cname(c)} ittifakı sona erdi`)}
+  else if(left===10)news('ulusal',`⏳ ${cname(c)} ile ittifakın bitmesine 10 tur kaldı. İçişleri › Diplomasi'den yenileyebilirsin.`,true)}}
+function renewAlly(c){if(!game.allies.includes(c))return;const a=allyInfo(c),r=game.rel[c]|0;if(a.exp-game.turn>100){toast('İttifak zaten uzun süre geçerli');return}if(!useDP(2))return;
+ if(r>=10||Math.random()<0.5+r/100){a.exp=Math.max(a.exp,game.turn)+ALLY_LEN2;game.rel[c]=Math.min(100,r+3);news('ulusal',`🤝 ${cname(c)} ile ittifak ${ALLY_LEN2} tur uzatıldı.`);toast('🤝 İttifak yenilendi')}else{game.rel[c]=r-5;toast(`✋ ${cname(c)} yenilemeyi reddetti`)}diploUI()}
+function diploUI(){const me=game.me,T=game.turn;DIPO=1;INTAB='dip';
+ const AL=game.allies.filter(c=>owner.includes(c)),W=warsOf(me).filter(x=>owner.includes(x.e)),PC=Object.keys(game.pact||{}).map(Number).filter(c=>game.pact[c]>T&&owner.includes(c)),VS=typeof vassalsOf==='function'?vassalsOf(me):[];
+ const ROW=(c,mid,btn)=>`<div class="drow"><span style="flex:1;min-width:0;cursor:pointer" onclick="selectCountry(${c})">${fimg(c,14)} <b>${cname(c)}</b><br><small style="color:#bfae88">${mid}</small></span>${btn||''}</div>`;
+ $('sub').innerHTML=inTabs('dip')+`<div class="box fa">
+ <div class="sect">🤝 Müttefikler (${AL.length})</div>${AL.length?AL.map(c=>{const a=allyInfo(c),left=a.exp-T,um=uniMem(c);return ROW(c,`${T-a.t} <span>turdur müttefik</span> · ${um?'<span>Birlik üyesi</span>':`<span>kalan</span> <b style="color:${left<=15?'#e0806a':'#9fc48a'}">${left}</b> <span>tur</span>`}`,`${um?'':`<button class="sm2" onclick="renewAlly(${c})" ${left>100?'disabled':''}>🔄 2📜</button>`}<button class="sm2 b-red" onclick="DIPO=1;betrayUI(${c})">🗡 3📜</button>`)}).join(''):'<div class="hint">Müttefikin yok</div>'}
+ <div class="sect">⚔ Savaşlar (${W.length})</div>${W.length?W.map(x=>ROW(x.e,`${T-x.t} <span>turdur savaştasın</span> · <span>skor</span> ${warScore(me,x.e)}%`,`<button class="sm2" onclick="selectCountry(${x.e})">🏛</button>`)).join(''):'<div class="hint">Kimseyle savaşta değilsin</div>'}
+ <div class="sect">📜 Saldırmazlık paktları (${PC.length})</div>${PC.length?PC.map(c=>ROW(c,`<span>kalan</span> <b>${game.pact[c]-T}</b> <span>tur</span>`)).join(''):'<div class="hint">Saldırmazlık paktın yok</div>'}
+ ${VS.length?`<div class="sect">👑 Vasallar (${VS.length})</div>${VS.map(c=>ROW(c,'<span>Vasalın</span>')).join('')}`:''}
+ <div class="hint" style="color:#cdbb92">🔄 Yenile: ittifakı ${ALLY_LEN2} tur uzatır · 🗡 İhanet: ittifakı bozar</div></div>`}
+function selectCountry(c){if(!owner.includes(c))return;const v=owner[C[c].cap]===c?C[c].cap:owner.indexOf(c);DIPO=0;closeSide&&closeSide();cam={x:P[v].x,y:P[v].y,z:Math.max(cam.z,4)};selectProv(v);foreignUI(c);req()}
+// ---------- foreign affairs (simplified, override) ----------
+function foreignUI(c){const me=game.me,r=game.rel[c]|0,w=atWar(me,c),al=game.allies.includes(c),tr=truce(me,c),cl=coolLeft(c),env=game.envoys.find(e=>e.c===c),dis=cl>0||!!env;
+ const pact=(game.pact[c]||0)>game.turn,acc=!!game.access[c],gave=!!game.gave[c],u=UNI();
+ const wait=env?`<div class="hint">✉ Elçi yolda — yanıt ${Math.max(0,env.due-game.turn)} tur sonra</div>`:cl>0?`<div class="hint">⏳ ${cl} tur sonra tekrar görüşebilirsin</div>`:'';
+ const B_=(on,cls,ic,t,sm,dsb)=>`<button class="${cls||''}" onclick="${on}" ${dsb?'disabled':''}>${ic} <span>${t}</span>${sm?`<small>${sm}</small>`:''}</button>`;
+ const chips=[w?'<i class="chip" style="color:#e0605a">Savaşta</i>':'',al?`<i class="chip" style="color:#7fd08a">${uniMem(c)?'Birlik üyesi':'Müttefik'}</i>`:'',pact?`<i class="chip">📜 Pakt ${game.pact[c]-game.turn} tur</i>`:'',tr&&!w?'<i class="chip">🕊 Ateşkes</i>':'',acc?'<i class="chip">🛂 Erişim var</i>':'',game.vas[c]===me?'<i class="chip" style="color:#d8b56a">👑 Vasalın</i>':'',infOf(c)>=30?`<i class="chip" style="color:#e0906a">⚠ Saldırgan ${infOf(c)}</i>`:''].join('');
+ $('sub').innerHTML=`<div class="box fa"><div class="relh"><span>İlişki</span><b style="color:${relCol(r)}">${r>0?'+':''}${r} · ${relTxt(r)}</b></div><span class="rbar wide"><i style="width:${(r+100)/2}%;background:${relCol(r)}"></i></span>${chips?`<div class="chips">${chips}</div>`:''}${wait}
+ ${game.vas[c]===me?`<div class="sect">👑 Vasal</div><div class="fg">${B_(`annexVassal(${c})`,'','👑','İlhak et','10📜')}${B_(`delete game.vas[${c}];toast('Bağımsızlık verildi');refreshBar()`,'sec2','🕊','Bağımsızlık ver')}</div>`:''}
+ <div class="sect">⚔ Savaş</div><div class="fg">${w?B_(`negotiate(${c})`,'b-blue','📜','Barış müzakeresi',`skor ${warScore(me,c)}%`)+B_(`callAllies(${c})`,'b-green','🤝','Müttefik çağır',((game.ext.call||{})[c]||0)>game.turn?(game.ext.call[c]-game.turn)+' tur':'1📜',((game.ext.call||{})[c]||0)>game.turn||!(game.allies.some(a=>a!==c&&!atWar(a,c)&&owner.includes(a))||vassalsOf(me).some(v=>v!==c&&!atWar(v,c)))):B_(`warUI(${c})`,'b-red','⚔','Savaş aç',pact?'Pakt var':tr?'Ateşkes':r>-10?'İlişki ≤ -10 olmalı':'3📜',r>-10||tr||pact)}${B_(`cyberUI(${c})`,'','💻','Siber saldırı')}</div>
+ <div class="sect">🤝 Diplomasi</div><div class="fg">${al?B_(`betrayUI(${c})`,'b-red','🗡','İhanet et','3📜'):B_(`allyUI(${c})`,'','🤝','İttifak iste','3📜',w||dis)}${B_(`envoyUI(${c})`,'b-green','✉','Elçi gönder','2📜',w||dis)}${B_(`pactUI(${c})`,'','📜','Saldırmazlık paktı',pact?(game.pact[c]-game.turn)+' tur':'2📜',w||pact||dis)}${B_(`accessUI(${c})`,'','🛂','Erişim iste',acc?'var':'1📜',w||acc||dis)}${B_(`giveAccess(${c})`,'','🛂',gave?'Erişimi geri al':'Erişim ver','',w)}${u&&!u.m.includes(c)?B_(`uniInvite(${c});foreignUI(${c})`,'','🏳','Birliğe davet',r<50?'İlişki +50 olmalı':'2📜',r<50||w):B_(`insultUI(${c})`,'b-brown','😠','Hakaret et','1📜',w||dis||al)}</div>
+ <div class="sect">💰 Ekonomi</div><div class="fg">${B_(`tradeUI(${c})`,'','⚖','Ticaret',!w&&r<10?'İlişki +10 olmalı':'',w||r<10)}${B_(`giftUI(${c})`,'','💰','Altın gönder','',w)}${B_(`cityList(${c})`,'sec2','🏙','Şehir listesi')}${B_(`selectCountry(${c})`,'sec2','📍','Haritada göster')}</div></div>`}
+// ---------- trade: pick city on map ----------
+let TPK=null,TSEL={};
+function tPickStart(c,which){TPK={c,which};mode='tpick';toast(which==='b'?`🗺 ${cname(c)} ülkesinden almak istediğin şehre dokun`:'🗺 Satmak istediğin kendi şehrine dokun');card.style.opacity='.35';}
+function tPick(v){const p=TPK;if(!p){mode='play';return}if(v===OCEAN||v<0){toast('Bir şehre dokun');return}
+ if(p.which==='b'){if(owner[v]!==p.c||v===C[p.c].cap){toast(owner[v]===p.c?'Başkent satılmaz':`Sadece ${cname(p.c)} şehirleri`);return}}else{if(owner[v]!==game.me||v===C[game.me].cap){toast(owner[v]===game.me?'Başkent satılamaz':'Sadece kendi şehirlerin');return}}
+ TSEL[p.which]=v;mode='play';TPK=null;card.style.opacity='';sel=v;paint();req();tradeUI(p.c);const id=p.which==='b'?'tB':'tS';if($(id)){$(id).value=v;if(p.which==='b'&&typeof tPrice==='function')tPrice()}toast('✔ '+P[v].n+' seçildi')}
+// ---------- group move: auto-pick armies within movement points ----------
+function mmStart(){MMP=-1;MSEL=new Set();MSELF=new Set();if(selF)MSELF.add(selF);const me=game.me,max=Math.max(1,game.mp*2-(selF?1:0));const L=mmIdle();const h0=selP>=0&&homeArmy(selP,me)&&!tkBusy(homeArmy(selP,me))?selP:-1;
+ const ref=h0>=0?P[h0]:selP>=0?P[selP]:P[C[me].cap];const dd=i=>{let dx=Math.abs(P[i].x-ref.x);dx=Math.min(dx,W-dx);return dx*dx+(P[i].y-ref.y)**2};
+ if(h0>=0)MSEL.add(h0);const seen=new Set([h0]);const R=[];for(const a of L)if(!seen.has(a.p)){seen.add(a.p);R.push(a.p)}R.sort((a,b)=>dd(a)-dd(b));for(const p of R){if(MSEL.size+MSELF.size>=max)break;MSEL.add(p)}
+ mode='mmove';mmUI();req();if(R.length+(h0>=0?1:0)>MSEL.size)toast(`🏃 Puanın ${MSEL.size} orduya yetiyor · en yakınlar seçildi`)}
+// ---------- news: tap to go to country ----------
+function newsCountry(t){let best=-1,bl=0;for(let c=0;c<C.length;c++){if(!owner.includes(c))continue;const n=cname(c);if(n&&n.length>bl&&t.includes(n)&&c!==game.me){best=c;bl=n.length}}if(best<0&&t.includes(cname(game.me)))best=game.me;return best}
+function newsGo(k){const L=game.news.filter(x=>x.cat===newsTab),x=L[k];if(!x)return;const c=x.c!==undefined&&x.c>=0&&owner.includes(x.c)?x.c:newsCountry(x.t);if(c<0){toast('Bu haberde bir ülke yok');return}closeNews();selectCountry(c)}
+// ---------- new technology branches ----------
+(function(){const MODN={nav:['Modern savaş gemileri','Hızlı çıkarma gemileri','Denizaltı filosu','Deniz ticaret filosu','Uçak gemisi','İnsansız deniz araçları'],min:['Jeolojik araştırma','Ağır iş makineleri','Derin madencilik','Otomatik madenler','Nadir toprak elementleri','Akıllı madencilik'],ind:['Montaj hatları','Ağır sanayi','Otomasyon','Robotik fabrikalar','Yarı iletken üretimi','Yapay zekâ ile üretim']};
+ const MEDN={nav:['Kadırga filosu','Hızlı çıkarma kayıkları','Kalyon','Deniz ticaret yolları','Ağır savaş gemisi','Pusula ve haritacılık'],min:['Maden ocakları','Demir aletler','Su çarklı pompalar','Barutla kazı','Derin kuyular','Maden loncaları'],ind:['Zanaat atölyeleri','Loncalar','Su değirmenleri','Dokuma tezgâhları','Matbaa','Manifaktür']};
+ const WWN={nav:['Zırhlı kruvazör','Çıkarma gemileri','Denizaltı','Deniz ticaret filosu','Uçak gemisi','Radar ve sonar'],min:['Buharlı kazı','Dinamit','Ağır iş makineleri','Elektrikli madenler','Derin madencilik','Mekanize madencilik'],ind:['Seri üretim','Ağır sanayi','Elektrifikasyon','Montaj hatları','Savaş sanayii','Otomasyon']};
+ const EFF={nav:['Filo gücü +%15','Denizden çıkarma 1 hareket puanı','Filo gücü +%20','Kaynak geliri +%5','Filo gücü +%25','Filo gücü +%30'],min:['Maden üretimi +%15','Maden üretimi +%15','Maden üretimi +%20','Maden üretimi +%20','Maden üretimi +%20','Maden üretimi +%30'],ind:Array(6).fill('Gelir +%3, ekonomi büyümesi ve kaynak değeri +%5')};
+ const TN={nav:'⚓ Donanma',min:'⛏ Madencilik',ind:'🏭 Sanayi'};
+ const mk=nm=>{const o={};for(const k in TN)o[k]={n:TN[k],nodes:nm[k].map((x,i)=>[x,EFF[k][i]])};return o};
+ const SPC={n:'🚀 Uzay',nodes:[['Uzay Ajansı','Roket Kalkış Merkezi inşa edilebilir (başkentte veya en değerli şehirde).'],['Roket Motorları','Roket üretimi ve test fırlatması açılır.'],['Yörünge Bilimi','Fırlatma başarı şansı +%20.'],['Uydu Teknolojisi','Uydu fırlatılır: her uydu gelir +%1,5 ve teknoloji puanı verir (en fazla 8).'],['Uzay Teleskobu','Teleskop fırlatılır: galaksi, bulutsu ve ötegezegen keşifleri yapılır.'],['Ay Programı','Ay\'a iniş ve Ay\'dan numune getirme görevi.'],['Derin Uzay Sondaları','Mars, Jüpiter, Satürn ve Neptün\'e sonda gönderilir.'],['Uzay İstasyonu','Yörüngeye istasyon modülleri kurulur: her modül teknoloji puanı verir.']]};
+ for(const [T,nm] of [[TREE_MOD,MODN],[TREE_MED,MEDN],[TREE_WW1,WWN],[TREE_WW2,WWN]]){const add=mk(nm);delete T.spc;Object.assign(T,add);T.spc=SPC}})();
+TCOST.splice(0,TCOST.length,18,38,70,112,175,260,340,430);
+const navMul=c=>[1,1.15,1.15,1.35,1.35,1.6,1.9][tl(c,'nav')]||1;
+const seaC=()=>tl(game.me,'nav')>=2?1:2;
+// ---------- space missions ----------
+const PLAN={mars:{n:'Mars',t:8,pr:2},jup:{n:'Jüpiter',t:14,pr:3},sat:{n:'Satürn',t:18,pr:3},nep:{n:'Neptün',t:26,pr:4}};
+function spS(){const S=spX();S.sat=S.sat||0;S.tel=S.tel||0;S.iss=S.iss||0;S.mq=S.mq||[];S.gal=S.gal||[];S.moon=S.moon||0;S.pr=S.pr||{};return S}
+function spBonusTP(){if(!game||!game.ext||!game.ext.sp)return 0;const S=game.ext.sp;return (S.sat||0)*0.1+(S.iss||0)*0.5+(S.tel||0)*0.2}
+const spScale=()=>Math.max(1,Math.sqrt(Math.max(1,grossOf(game.me))/10000));
+const SPM={sat:{n:'Uydu fırlat',ic:'🛰',L:4,c:0},tel:{n:'Uzay teleskobu fırlat',ic:'🔭',L:5,c:60000},moon:{n:'Ay\'dan numune getir',ic:'🌕',L:6,c:150000},probe:{n:'Uzay sondası gönder',ic:'🛸',L:7,c:120000},iss:{n:'İstasyon modülü',ic:'🧑‍🚀',L:8,c:100000}};
+const spCost=k=>Math.round(SPM[k].c*spScale());
+function spaceBox(){const me=game.me,S=spS(),L=tl(me,'spc'),sc=spaceCenter(me),cost=rocketCost(),T=game.turn;
+ let h=`<div class="box fa" style="margin:10px 14px"><b>🛰 Uzay programı</b><div class="kv"><div><small>Kalkış merkezi</small><b>${sc!==undefined?P[sc].n:L>=1?'Yok':'—'}</b></div><div><small>Hazır roket</small><b>${S.r}</b></div><div><small>Başarı şansı</small><b>%${Math.round(launchChance()*100)}</b></div><div><small>Prestij</small><b>${game.ext.prest||0} ⭐</b></div></div>
+ <div class="kv"><div><small>Uydu</small><b>${S.sat}/8</b></div><div><small>Teleskop</small><b>${S.tel}</b></div><div><small>İstasyon</small><b>${S.iss}/6</b></div><div><small>Keşif</small><b>${S.gal.length}</b></div></div>`;
+ if(sc===undefined)h+=`<div class="hint">${L<1?'Uzay Ajansı araştırması gerekli.':'Önce başkentinde veya en değerli şehrinde Roket Kalkış Merkezi inşa et.'}</div>`;
+ const can=L>=2&&sc!==undefined;
+ h+=`<div class="fg"><button onclick="buildRocket()" ${!can||game.gold<cost||S.q.length>=2?'disabled':''}>🚀 <span>Roket üret</span><small>${kfmt(cost)}💰 · ${ROCKET_T} tur${S.q.length?' · üretimde '+S.q.length:''}</small></button><button class="b-red" onclick="launchRocket()" ${S.r<1||sc===undefined?'disabled':''}>🔥 <span>Test fırlatması</span><small>1 roket</small></button></div>`;
+ h+=`<div class="sect">Görevler (her görev 1 roket kullanır)</div><div class="fg">`;
+ for(const k in SPM){const m=SPM[k],lock=L<m.L,full=(k==='sat'&&S.sat>=8)||(k==='iss'&&S.iss>=6)||(k==='tel'&&S.tel>=3);const c=spCost(k);
+  if(k==='probe'){h+=`<button onclick="probeUI()" ${lock||S.r<1||sc===undefined?'disabled':''}>${m.ic} <span>${m.n}</span><small>${lock?'Seviye '+m.L:kfmt(c)+'💰'}</small></button>`;continue}
+  h+=`<button onclick="spMission('${k}')" ${lock||full||S.r<1||sc===undefined||game.gold<c?'disabled':''}>${m.ic} <span>${m.n}</span><small>${lock?'Seviye '+m.L:full?'Dolu':c?kfmt(c)+'💰':'Ücretsiz'}</small></button>`}
+ h+=`<button onclick="observe()" ${!S.tel||(S.obs||0)>T?'disabled':''}>🌌 <span>Gökyüzü gözlemi</span><small>${!S.tel?'Teleskop gerekli':(S.obs||0)>T?(S.obs-T)+' tur':'Ücretsiz'}</small></button><button class="sec2" onclick="galleryUI()" ${S.gal.length?'':'disabled'}>🖼 <span>Keşif arşivi</span><small>${S.gal.length}</small></button></div>`;
+ if(S.mq.length)h+=`<div class="sect">Yoldaki görevler</div>`+S.mq.map(q=>`<div class="row"><span>${q.k==='moon'?'🌕 Ay numune görevi':'🛸 '+PLAN[q.p].n+' sondası'}</span><b>${Math.max(0,q.t-T)} tur</b></div>`).join('');
+ return h+'</div>'}
+function probeUI(){const S=spS(),c=spCost('probe');const p=$('techP');const box=document.createElement('div');showSpModal('🛸 Sonda hedefi seç',null,`<div class="fg">${Object.entries(PLAN).map(([k,v])=>`<button onclick="closeSpModal();spMission('probe','${k}')" ${game.gold<c?'disabled':''}>${v.n}<small>${v.t} tur · ${S.pr[k]?'tekrar':'ilk'}</small></button>`).join('')}</div><div class="hint">Maliyet ${kfmt(c)}💰 + 1 roket</div>`)}
+function spLaunchRoll(k){const S=spS(),sc=spaceCenter(game.me);if(S.r<1||sc===undefined)return null;S.r--;S.n++;const ok=Math.random()<launchChance()*(k==='moon'?0.92:k==='probe'?0.94:1);if(ok)S.ok++;else{hap[sc]=Math.max(0,hap[sc]-3)}return {ok,sc}}
+function spMission(k,arg){const S=spS(),c=spCost(k);if(game.gold<c){toast('💰 Yetersiz altın');return}const R=spLaunchRoll(k);if(!R)return;game.gold-=c;const me=game.me,T=game.turn;closeSide();
+ if(!R.ok){news('ulusal',`💥 ${SPM[k].n} görevi fırlatmada başarısız oldu. Roket kaybedildi.`,true);rocketShow(me,false,false,P[R.sc].n);updHud();return}
+ if(k==='sat'){S.sat++;news('ulusal',`🛰 Uydumuz yörüngeye yerleşti! Toplam uydu: ${S.sat}. Gelir ve teknoloji arttı.`)}
+ else if(k==='tel'){S.tel++;news('ulusal','🔭 Uzay teleskobumuz yörüngede! Artık gökyüzü gözlemleri yapabilirsin.')}
+ else if(k==='iss'){S.iss++;if(S.iss>=6){game.ext.prest=(game.ext.prest||0)+5;news('ulusal','🧑‍🚀 Uzay istasyonumuz tamamlandı! Prestij +5.')}else news('ulusal',`🧑‍🚀 İstasyon modülü ${S.iss}/6 yörüngeye eklendi.`)}
+ else if(k==='moon'){S.mq.push({k:'moon',t:T+6});news('ulusal','🌕 Ay numune görevi yola çıktı. 6 tur sonra Dünya\'ya dönecek.')}
+ else if(k==='probe'){const pl=PLAN[arg]||PLAN.mars;S.mq.push({k:'probe',p:arg in PLAN?arg:'mars',t:T+pl.t});news('ulusal',`🛸 ${pl.n} sondamız fırlatıldı. Varış: ${pl.t} tur.`)}
+ for(const k2 in game.rel)game.rel[k2]=Math.min(100,game.rel[k2]+1);rocketShow(me,true,false,P[R.sc].n);updHud()}
+function launchRocket(){const R=spLaunchRoll('test');if(!R)return;closeSide();const S=spS();if(R.ok){game.ext.prest=(game.ext.prest||0)+1;for(let i=0;i<N;i++)if(owner[i]===game.me)hap[i]=Math.min(100,hap[i]+4);news('ulusal',`🚀 ${cname(game.me)} roketi uzaya ulaştı! Prestij +1.`)}else news('ulusal','💥 Roket fırlatma sırasında infilak etti.',true);rocketShow(game.me,R.ok,R.ok&&S.ok===1,P[R.sc].n);updHud()}
+let OBSN=0;
+function observe(){const S=spS();if(!S.tel||(S.obs||0)>game.turn)return;S.obs=game.turn+Math.max(2,5-S.tel);const kinds=['gal','gal','neb','exo'];const k=kinds[(Math.random()*kinds.length)|0],seed=(Math.random()*1e9)|0,num=1000+(seed%9000);
+ const n=k==='gal'?`AD-${num} sarmal gökadası`:k==='neb'?`AD-${num} bulutsusu`:`AD-${num}b ötegezegeni`;S.gal.unshift({k,n,seed,t:game.turn});S.gal=S.gal.slice(0,40);game.tp+=2;if(S.gal.length%3===0)game.ext.prest=(game.ext.prest||0)+1;
+ news('ulusal',`🌌 Teleskobumuz yeni bir keşif yaptı: ${n}. Teknoloji puanı +2.`);closeSide();showSpModal('🌌 '+n,spImg(k,seed),`<div class="hint" style="color:#cdbb92">${k==='gal'?'Milyarlarca yıldızdan oluşan uzak bir sarmal gökada.':k==='neb'?'Yeni yıldızların doğduğu dev bir gaz ve toz bulutu.':'Başka bir yıldızın çevresinde dolanan, daha önce bilinmeyen bir gezegen.'}</div>`);updHud()}
+function spMissionTick(){if(!game||!game.ext||!game.ext.sp)return;const S=spS(),T=game.turn;const done=S.mq.filter(q=>q.t<=T);if(!done.length)return;S.mq=S.mq.filter(q=>q.t>T);
+ for(const q of done){const seed=(Math.random()*1e9)|0;if(q.k==='moon'){S.moon++;game.ext.prest=(game.ext.prest||0)+3;game.tp+=12;S.gal.unshift({k:'moon',n:'Ay numunesi #'+S.moon,seed,t:T});news('ulusal','🌕 Ay\'dan getirilen numuneler Dünya\'ya ulaştı! Prestij +3, teknoloji puanı +12.');QSP.push(['🌕 Ay numunesi',spImg('moon',seed),'Ay yüzeyinden toplanan kaya ve toz örnekleri laboratuvarlarda inceleniyor.'])}
+  else{const pl=PLAN[q.p];S.pr[q.p]=(S.pr[q.p]||0)+1;game.ext.prest=(game.ext.prest||0)+pl.pr;game.tp+=8;S.gal.unshift({k:q.p,n:pl.n+' sondası görüntüsü',seed,t:T});news('ulusal',`🛸 Sondamız ${pl.n}'e ulaştı ve ilk görüntüleri gönderdi! Prestij +${pl.pr}.`);QSP.push(['🛸 '+pl.n,spImg(q.p,seed),pl.n+' sondamızdan gelen yakın çekim görüntü.'])}}
+ S.gal=S.gal.slice(0,40);setTimeout(()=>{const x=QSP.shift();if(x)showSpModal(...x)},900)}
+const QSP=[];
+function galleryUI(){const S=spS();showSpModal('🖼 Keşif arşivi',null,`<div class="gal">${S.gal.map((g,i)=>`<div onclick="showSpModal('${g.n.replace(/'/g,"\\'")}',spImg('${g.k}',${g.seed}),'')"><img src="${spImg(g.k,g.seed,160,100)}"><small>${g.n}</small></div>`).join('')}</div>`)}
+function showSpModal(t,img,html){let o=$('spM');if(!o){o=document.createElement('div');o.id='spM';document.body.appendChild(o)}o.innerHTML=`<div class="spm"><div class="np-h"><b>${t}</b><button class="x2" onclick="closeSpModal()">✕</button></div>${img?`<img src="${img}" style="width:100%;display:block;border-radius:4px">`:''}<div style="padding:8px 2px">${html||''}</div></div>`;o.style.display='flex';if(typeof translateTree==='function')translateTree(o)}
+function closeSpModal(){const o=$('spM');if(o)o.style.display='none'}
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const SPIMG=new Map();
+function spImg(k,seed,w,h){w=w||480;h=h||300;const key=k+seed+'_'+w;if(SPIMG.has(key))return SPIMG.get(key);const cv=document.createElement('canvas');cv.width=w;cv.height=h;const g=cv.getContext('2d'),R=rng(seed),s=w/480;
+ g.fillStyle='#03040a';g.fillRect(0,0,w,h);for(let i=0;i<500*s;i++){const b=R();g.fillStyle=`rgba(255,255,255,${0.2+b*0.7})`;g.fillRect(R()*w,R()*h,b>0.97?2*s:1*s,b>0.97?2*s:1*s)}
+ const glow=(x,y,r,c0,c1)=>{const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,c0);gr.addColorStop(1,c1);g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,7);g.fill()};
+ if(k==='gal'){const cx=w/2,cy=h/2,arms=2+((R()*3)|0),tilt=0.35+R()*0.5,rot=R()*6,hue=190+R()*60;g.save();g.translate(cx,cy);g.rotate(rot);g.scale(1,tilt);
+  for(let i=0;i<9000*s;i++){const a=(i%arms)*2*Math.PI/arms,t=R()*4.2,r=t*42*s,th=a+t*1.15+(R()-0.5)*0.55,x=Math.cos(th)*r+(R()-0.5)*14*s,y=Math.sin(th)*r+(R()-0.5)*14*s;const l=Math.max(25,85-t*14);g.fillStyle=`hsla(${t<1?45:hue},${t<1?80:70}%,${l}%,${0.35+R()*0.5})`;g.fillRect(x,y,1.3*s,1.3*s)}
+  glow(0,0,46*s,'rgba(255,240,200,.95)','rgba(255,200,120,0)');g.restore()}
+ else if(k==='neb'){const hs=[R()*360,R()*360,R()*360];g.globalCompositeOperation='lighter';for(let i=0;i<70;i++){const x=w*(0.2+R()*0.6),y=h*(0.2+R()*0.6),r=(30+R()*90)*s,hu=hs[i%3];glow(x,y,r,`hsla(${hu},80%,55%,.16)`,`hsla(${hu},80%,40%,0)`)}for(let i=0;i<20;i++)glow(R()*w,R()*h,(3+R()*5)*s,'rgba(255,255,255,.9)','rgba(160,200,255,0)');g.globalCompositeOperation='source-over'}
+ else if(k==='exo'){glow(w*0.15,h*0.3,90*s,'rgba(255,230,180,1)','rgba(255,150,60,0)');const px=w*0.62,py=h*0.58,pr=78*s,hu=R()*360;const gr=g.createRadialGradient(px-pr*0.5,py-pr*0.4,pr*0.1,px,py,pr);gr.addColorStop(0,`hsl(${hu},55%,62%)`);gr.addColorStop(0.7,`hsl(${hu},50%,30%)`);gr.addColorStop(1,'#050508');g.fillStyle=gr;g.beginPath();g.arc(px,py,pr,0,7);g.fill();glow(px,py,pr*1.15,'rgba(0,0,0,0)','rgba(120,180,255,0)')}
+ else{const px=w/2,py=h/2,pr=(k==='sat'?82:105)*s;const PC={mars:['#c1440e','#e27b58','#8c2f12'],jup:['#d8ca9d','#a57c50','#e9dcc0'],sat:['#e3d4a4','#c2a36b','#f0e4c4'],nep:['#3e66f9','#5b8cff','#22409a'],moon:['#9c9c9c','#bdbdbd','#6f6f6f']}[k]||['#888','#aaa','#666'];
+  g.save();g.beginPath();g.arc(px,py,pr,0,7);g.clip();g.fillStyle=PC[0];g.fillRect(px-pr,py-pr,pr*2,pr*2);
+  if(k==='jup'||k==='sat'){for(let y=-pr;y<pr;y+=6*s){g.fillStyle=R()<0.5?PC[1]:PC[2];g.globalAlpha=0.35+R()*0.4;g.fillRect(px-pr,py+y,pr*2,(3+R()*5)*s)}g.globalAlpha=1;if(k==='jup'){g.fillStyle='#b5523b';g.beginPath();g.ellipse(px+pr*0.3,py+pr*0.35,pr*0.16,pr*0.09,0,0,7);g.fill()}}
+  else if(k==='moon'){for(let i=0;i<60;i++){const x=px+(R()-0.5)*2*pr,y=py+(R()-0.5)*2*pr,r=(2+R()*14)*s;g.fillStyle=R()<0.5?PC[2]:PC[1];g.globalAlpha=0.6;g.beginPath();g.arc(x,y,r,0,7);g.fill()}g.globalAlpha=1}
+  else{for(let i=0;i<40;i++){g.fillStyle=R()<0.5?PC[1]:PC[2];g.globalAlpha=0.35;g.beginPath();g.ellipse(px+(R()-0.5)*2*pr,py+(R()-0.5)*2*pr,(10+R()*40)*s,(5+R()*18)*s,R()*3,0,7);g.fill()}g.globalAlpha=1}
+  const sh=g.createRadialGradient(px-pr*0.45,py-pr*0.45,pr*0.2,px,py,pr*1.05);sh.addColorStop(0,'rgba(0,0,0,0)');sh.addColorStop(1,'rgba(0,0,0,.85)');g.fillStyle=sh;g.fillRect(px-pr,py-pr,pr*2,pr*2);g.restore();
+  if(k==='sat'){g.strokeStyle='rgba(230,215,170,.75)';g.lineWidth=7*s;g.beginPath();g.ellipse(px,py,pr*1.9,pr*0.42,-0.25,0,7);g.stroke();g.strokeStyle='rgba(200,180,140,.45)';g.lineWidth=4*s;g.beginPath();g.ellipse(px,py,pr*1.6,pr*0.34,-0.25,0,7);g.stroke()}}
+ const u=cv.toDataURL('image/jpeg',0.85);SPIMG.set(key,u);return u}
+// ---------- per-turn hook ----------
+function extTick(){try{resTick();ecoBal();cureTick();infTick();isrTick();uniTick();spMissionTick()}catch(e){console.error(e)}}
+// ---------- extra map modes / investments ----------
+MODES.res='  Kaynaklar';MFMT.res=x=>fmt(x)+' 💰';CITYM.res=[i=>provResVal(i),x=>fmt(x)+' 💰 · '];
+SELMODES.res={n:'Maden ve tarım yatırımı',d:'Kaynak üretimi +%25 (en fazla 4 kez) · 3 turda uygulanır',cost:i=>Math.max(3000,Math.round(provResVal(i)*14*(1+((XT().rinv||{})[i]||0)))),act:(i,f)=>{const X=XT();X.rinv=X.rinv||{};X.rinv[i]=Math.min(4,(X.rinv[i]||0)+f)}};
+SELMODES.dis={n:'Tedavi kampanyası',d:'Salgın -%25, mutluluk +2 · 3 turda uygulanır',cost:i=>inf[i]>0.005?pc(pop[i],5e6,7000,1.1):300,act:(i,f)=>{inf[i]=Math.max(0,inf[i]-0.25*f);hap[i]=Math.min(100,hap[i]+2*f)}};
+SELMODES.eco.cost=i=>pc(ecoP[i],200,20000,1.15);
+SELMODES.eco.act=(i,f)=>{const e0=(XT().e0||[])[i]||ecoP[i],m=Math.max(0.2,1-Math.max(0,ecoP[i]/Math.max(0.05,e0)-1)/2.2);ecoP[i]*=1+0.10*f*m;unemp[i]=Math.max(2,unemp[i]-2*f)};
+
 // ===== SOUND (synthesized, quiet) =====
 let AC=null,MG=null,MUS=null,MUG=null;
-function applyVol(){if(!AC)return;const sv=(SET.svol??6)/10,mv=(SET.mvol??7)/10;MG.gain.value=0.45*sv*sv;MUG.gain.value=1.6*mv*mv}
-function audio(){if(AC)return AC;try{AC=new (window.AudioContext||window.webkitAudioContext)();MG=AC.createGain();MG.connect(AC.destination);MUG=AC.createGain();MUG.connect(AC.destination);applyVol()}catch(e){AC=null}return AC}
+function applyVol(){if(!AC)return;const sv=(SET.svol??6)/10,mv=(SET.mvol??8)/10;MG.gain.value=0.45*sv*sv;MUG.gain.value=2.8*mv*mv}
+function audio(){if(AC)return AC;try{AC=new (window.AudioContext||window.webkitAudioContext)();MG=AC.createGain();MG.connect(AC.destination);MUG=AC.createGain();const MC=AC.createDynamicsCompressor();MC.threshold.value=-14;MC.ratio.value=4;MUG.connect(MC);MC.connect(AC.destination);applyVol()}catch(e){AC=null}return AC}
 function tone(f,d,type,vol,slide){const a=audio();if(!a)return;const o=a.createOscillator(),g=a.createGain(),t=a.currentTime;o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+d);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol||0.3,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(g);g.connect(MG);o.start(t);o.stop(t+d+0.02)}
 function noise(d,vol,fc,q,delay,sweep){const a=audio();if(!a)return;const len=Math.ceil(a.sampleRate*d),buf=a.createBuffer(1,len,a.sampleRate),ch=buf.getChannelData(0);for(let i=0;i<len;i++)ch[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
  const s=a.createBufferSource();s.buffer=buf;const f=a.createBiquadFilter();f.type='lowpass';const t=a.currentTime+(delay||0);f.frequency.setValueAtTime(fc||800,t);if(sweep)f.frequency.exponentialRampToValueAtTime(sweep,t+d);f.Q.value=q||0.7;const g=a.createGain();g.gain.value=vol||0.5;s.connect(f);f.connect(g);g.connect(MG);s.start(t)}
@@ -2903,24 +3476,52 @@ function sfx(k){if(!SET.sound)return;if(typeof ERA!=='undefined'&&ERA==='med'&&(
 const kickMusic=()=>{audio();if(!AC)return;const go=()=>{if(SET.music&&!document.hidden)musicStart()};if(AC.state==='suspended')AC.resume().then(go).catch(()=>{});else go()};
 document.addEventListener('pointerdown',kickMusic,{capture:true});document.addEventListener('keydown',kickMusic,{capture:true});document.addEventListener('touchstart',kickMusic,{capture:true,passive:true});
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('button'))sfx('click')},{capture:true});
-// ===== MUSIC: synthesized martial march (original, royalty free) =====
-let MUSI=null;const MBPM=92,MSTEP=60/MBPM/4;const mf=n=>440*Math.pow(2,(n-69)/12);
-const MCH=[[50,53,57],[46,50,53],[48,52,55],[45,49,52]],MROOT=[38,34,36,33];
-const MMEL=[[[0,62,6],[6,65,2],[8,69,6],[14,67,2]],[[0,65,4],[4,62,4],[8,70,6],[14,69,2]],[[0,67,4],[4,64,4],[8,72,4],[12,70,4]],[[0,69,8],[8,61,4],[12,64,4]],
- [[0,74,4],[4,72,2],[6,70,2],[8,69,6],[14,65,2]],[[0,70,4],[4,69,4],[8,67,4],[12,65,4]],[[0,64,4],[4,67,4],[8,72,6],[14,70,2]],[[0,69,6],[6,67,2],[8,65,2],[10,64,2],[12,62,4]]];
+// ===== MUSIC: original synthesized tracks (royalty free) — calm menu, peaceful reign, war =====
+let MUSI=null;const mf=n=>440*Math.pow(2,(n-69)/12);
+const MSC={min:[0,2,3,5,7,8,10],maj:[0,2,4,5,7,9,11],dor:[0,2,3,5,7,9,10],hmin:[0,2,3,5,7,8,11]};
+const TRACKS=[
+ {m:'menu',bpm:64,root:50,sc:'maj',prog:[0,4,5,3],arp:1,pad:'sine',lead:'triangle',dr:0,seed:11},
+ {m:'menu',bpm:58,root:45,sc:'dor',prog:[0,3,6,4],arp:2,pad:'triangle',lead:'sine',dr:0,seed:23},
+ {m:'menu',bpm:70,root:52,sc:'min',prog:[0,5,2,6],arp:1,pad:'sine',lead:'triangle',dr:0,seed:37},
+ {m:'menu',bpm:62,root:47,sc:'maj',prog:[0,5,3,4],arp:2,pad:'sine',lead:'sine',dr:0,seed:131},
+ {m:'peace',bpm:84,root:48,sc:'maj',prog:[0,3,4,0],arp:1,pad:'triangle',lead:'square',dr:'light',seed:41},
+ {m:'peace',bpm:78,root:50,sc:'dor',prog:[0,6,3,4],arp:2,pad:'sine',lead:'triangle',dr:'light',seed:53},
+ {m:'peace',bpm:90,root:43,sc:'maj',prog:[0,5,3,4],arp:1,pad:'sawtooth',lead:'triangle',dr:'light',seed:67},
+ {m:'peace',bpm:74,root:45,sc:'hmin',prog:[0,3,4,0],arp:2,pad:'triangle',lead:'sine',dr:'light',seed:71},
+ {m:'war',bpm:92,root:38,sc:'min',prog:[0,5,6,4],arp:0,pad:'sawtooth',lead:'sawtooth',dr:'march',seed:83},
+ {m:'war',bpm:116,root:40,sc:'hmin',prog:[0,5,4,0],arp:3,pad:'sawtooth',lead:'square',dr:'war',seed:97},
+ {m:'war',bpm:104,root:36,sc:'min',prog:[0,6,5,4],arp:3,pad:'sawtooth',lead:'sawtooth',dr:'war',seed:101},
+ {m:'war',bpm:96,root:41,sc:'dor',prog:[0,2,6,4],arp:0,pad:'triangle',lead:'sawtooth',dr:'march',seed:113},
+ {m:'war',bpm:124,root:38,sc:'hmin',prog:[0,1,4,0],arp:3,pad:'sawtooth',lead:'square',dr:'war',seed:127}];
+function mRng(s){return()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff}}
+function mBuild(T){if(T.mel)return;const R=mRng(T.seed),S=MSC[T.sc];const deg=d=>T.root+24+S[((d%7)+7)%7]+12*Math.floor(d/7);
+ const RH=T.m==='menu'?[[[0,8],[8,8]],[[0,6],[6,2],[8,8]],[[0,12],[12,4]],[[0,4],[4,4],[8,8]]]:T.m==='war'?[[[0,4],[4,2],[6,2],[8,4],[12,4]],[[0,2],[2,2],[4,4],[8,2],[10,2],[12,4]],[[0,6],[6,2],[8,6],[14,2]],[[0,3],[3,1],[4,4],[8,3],[11,1],[12,4]]]:[[[0,4],[4,4],[8,6],[14,2]],[[0,6],[6,2],[8,4],[12,4]],[[0,2],[2,2],[4,4],[8,8]],[[0,4],[4,2],[6,2],[8,8]]];
+ T.mel=[];let d=T.prog[0]+7;for(let b=0;b<8;b++){const ch=T.prog[b%4],rh=RH[(R()*RH.length)|0],bar=[];for(const [st,l] of rh){if(st===0||st===8){const opts=[ch,ch+2,ch+4].map(x=>x+7);d=opts.reduce((m,x)=>Math.abs(x-d)<Math.abs(m-d)?x:m,opts[0])}else d+=R()<0.5?(R()<0.5?1:-1):(R()<0.5?2:-2);d=Math.max(4,Math.min(13,d));bar.push([st,deg(d),l])}T.mel.push(bar)}
+ T.chord=b=>{const c=T.prog[b%4];return [c,c+2,c+4].map(x=>T.root+12+S[x%7]+12*Math.floor(x/7))};T.bass=b=>T.root+S[T.prog[b%4]%7]}
 function mVoice(type,f,t,d,vol,cut,vib){const a=AC,o=a.createOscillator(),gg=a.createGain(),fl=a.createBiquadFilter();o.type=type;o.frequency.setValueAtTime(f,t);if(vib){const l=a.createOscillator(),lg=a.createGain();l.frequency.value=5.2;lg.gain.value=f*0.006;l.connect(lg);lg.connect(o.frequency);l.start(t);l.stop(t+d+0.1)}
  fl.type='lowpass';fl.frequency.value=cut;gg.gain.setValueAtTime(0.0001,t);gg.gain.exponentialRampToValueAtTime(vol,t+Math.min(0.08,d*0.3));gg.gain.setValueAtTime(vol,t+d*0.7);gg.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(fl);fl.connect(gg);gg.connect(MUSI.g);o.start(t);o.stop(t+d+0.05)}
 function mDrum(t,f,vol,dec){const a=AC,o=a.createOscillator(),gg=a.createGain();o.frequency.setValueAtTime(f*1.6,t);o.frequency.exponentialRampToValueAtTime(f,t+0.08);gg.gain.setValueAtTime(vol,t);gg.gain.exponentialRampToValueAtTime(0.0001,t+dec);o.connect(gg);gg.connect(MUSI.g);o.start(t);o.stop(t+dec+0.05)}
-function mSnare(t,vol){const a=AC,len=Math.ceil(a.sampleRate*0.14),b=a.createBuffer(1,len,a.sampleRate),ch=b.getChannelData(0);for(let i=0;i<len;i++)ch[i]=(Math.random()*2-1)*Math.pow(1-i/len,3);const s=a.createBufferSource();s.buffer=b;const fl=a.createBiquadFilter();fl.type='bandpass';fl.frequency.value=1900;fl.Q.value=0.8;const gg=a.createGain();gg.gain.value=vol;s.connect(fl);fl.connect(gg);gg.connect(MUSI.g);s.start(t)}
-function musicSched(){if(!MUSI||!AC)return;const med=typeof ERA!=='undefined'&&ERA==='med';while(MUSI.next<AC.currentTime+0.35){const t=MUSI.next,s=MUSI.step%16,bar=Math.floor(MUSI.step/16)%16,ch=bar%4,sec=Math.floor(bar/4);
-  if(s===0){for(const n of MCH[ch])mVoice('sawtooth',mf(n),t,MSTEP*16,0.022,700,false);mVoice('triangle',mf(MROOT[ch]),t,MSTEP*7,0.11,400)}
-  if(s===8)mVoice('triangle',mf(MROOT[ch]+7),t,MSTEP*7,0.09,400);
-  if(s%4===0)mDrum(t,med?48:55,s===0?0.32:0.18,med?0.6:0.35);
-  if((s===4||s===12))mSnare(t,0.11);if((s===14||s===15||(bar%4===3&&s>=10)))mSnare(t,0.05);
-  if(sec===0||sec===2){const mel=MMEL[(sec===2?4:0)+ch];for(const [st,n,l] of mel)if(st===s)mVoice(med?'square':'sawtooth',mf(n),t,MSTEP*l*0.95,med?0.04:0.055,med?2200:1500,true)}
-  if(sec===1){const mel=MMEL[ch];for(const [st,n,l] of mel)if(st===s)mVoice('triangle',mf(n-12),t,MSTEP*l*0.95,0.06,1200,true)}
-  MUSI.next+=MSTEP;MUSI.step++}}
-function musicStart(){if(MUSI||!AC||AC.state!=='running')return;MUSI={next:AC.currentTime+0.05,step:0,g:AC.createGain()};MUSI.g.gain.value=0.0001;MUSI.g.gain.exponentialRampToValueAtTime(1,AC.currentTime+0.4);MUSI.g.connect(MUG);MUSI.iv=setInterval(musicSched,90)}
+let MNB=null;function mNoise(t,vol,fc,q,dur,type){const a=AC;if(!MNB){const len=a.sampleRate*0.3;MNB=a.createBuffer(1,len,a.sampleRate);const ch=MNB.getChannelData(0);for(let i=0;i<len;i++)ch[i]=Math.random()*2-1}const s=a.createBufferSource();s.buffer=MNB;const fl=a.createBiquadFilter();fl.type=type||'bandpass';fl.frequency.value=fc;fl.Q.value=q;const gg=a.createGain();gg.gain.setValueAtTime(vol,t);gg.gain.exponentialRampToValueAtTime(0.0001,t+dur);s.connect(fl);fl.connect(gg);gg.connect(MUSI.g);s.start(t);s.stop(t+dur+0.02)}
+const mSnare=(t,vol)=>mNoise(t,vol,1900,0.8,0.14);
+function musicMood(){if(typeof game==='undefined'||!game)return'menu';try{return enemiesOf(game.me).length?'war':'peace'}catch(e){return'peace'}}
+function pickTrack(m,not){const L=TRACKS.filter(t=>t.m===m&&t!==not);return L[(Math.random()*L.length)|0]||TRACKS[0]}
+function musicSched(){if(!MUSI||!AC)return;const T=MUSI.T,ST=60/T.bpm/4,med=typeof ERA!=='undefined'&&ERA==='med';
+ while(MUSI.next<AC.currentTime+0.35){const t=MUSI.next,s=MUSI.step%16,bar=Math.floor(MUSI.step/16),b=bar%16,cb=bar%4;
+  if(s===0&&bar>0){const md=musicMood();if(md!==MUSI.mood||bar>=32){musicSwitch(md);return}}
+  const W=T.m==='war',M=T.m==='menu',chord=T.chord(cb),bass=T.bass(cb);
+  if(s===0){for(const n of chord)mVoice(T.pad,mf(n),t,ST*16,M?0.03:W?0.024:0.026,M?900:W?750:1000,false);mVoice('triangle',mf(bass),t,ST*(W?3.5:7),M?0.09:0.12,450)}
+  if(s===8)mVoice('triangle',mf(bass+(W?0:7)),t,ST*(W?3.5:7),M?0.07:0.1,450);
+  if(W&&(s===4||s===12))mVoice('triangle',mf(bass+(s===12?7:0)),t,ST*3.5,0.1,450);
+  if(T.arp===1&&s%2===0){const n=chord[(s/2)%3]+12;mVoice('triangle',mf(n),t,ST*1.8,M?0.035:0.03,2200)}
+  if(T.arp===2){const seq=[0,1,2,1];const n=chord[seq[s%4]]+(s>=8?24:12);mVoice('sine',mf(n),t,ST*1.6,M?0.04:0.03,2600)}
+  if(T.arp===3&&s%2===0){const n=(s%4===0?bass:bass+7)+12;mVoice('sawtooth',mf(n),t,ST*1.4,0.028,900)}
+  if(b>=2&&T.dr){if(T.dr==='light'){if(s===0||s===10)mDrum(t,55,0.16,0.3);if(s%4===2)mNoise(t,0.035,7000,0.7,0.05,'highpass');if(s===8)mNoise(t,0.05,2200,0.8,0.1)}
+   else if(T.dr==='march'){if(s%4===0)mDrum(t,med?48:55,s===0?0.34:0.2,med?0.6:0.35);if(s===4||s===12)mSnare(t,0.12);if(s===14||s===15||(b%4===3&&s>=10))mSnare(t,0.055)}
+   else{if(s===0||s===3||s===8||s===11)mDrum(t,50,0.36,0.32);if(s===4||s===12)mSnare(t,0.15);if(s%2===1)mNoise(t,0.03,8000,0.7,0.04,'highpass');if(b%4===3&&s>=12)mDrum(t,s%2?95:80,0.22,0.2)}}
+  if(b>=4){const mel=T.mel[(b-4)%8];for(const [st,n,l] of mel)if(st===s){const oct=b>=12&&!M?-12:0;mVoice(med&&!M?'square':T.lead,mf(n+oct),t,ST*l*0.95,M?0.045:W?0.05:0.045,M?1800:W?1600:2000,true)}}
+  MUSI.next+=ST;MUSI.step++}}
+function musicSwitch(md){const old=MUSI;if(!old)return;const T=pickTrack(md,old.T);clearInterval(old.iv);const g=old.g;try{g.gain.setTargetAtTime(0.0001,AC.currentTime,0.6)}catch(e){}setTimeout(()=>{try{g.disconnect()}catch(e){}},3000);MUSI=null;musicStart(T,md)}
+function musicStart(T,md){if(MUSI||!AC||AC.state!=='running')return;md=md||musicMood();T=T||pickTrack(md);mBuild(T);MUSI={T,mood:md,next:AC.currentTime+0.1,step:0,g:AC.createGain()};MUSI.g.gain.value=0.0001;MUSI.g.gain.exponentialRampToValueAtTime(1,AC.currentTime+1.2);MUSI.g.connect(MUG);MUSI.iv=setInterval(musicSched,90)}
 function musicStop(){if(!MUSI)return;clearInterval(MUSI.iv);const g=MUSI.g;try{g.gain.setTargetAtTime(0.0001,AC.currentTime,0.3)}catch(e){}setTimeout(()=>{try{g.disconnect()}catch(e){}},1600);MUSI=null}
 setInterval(()=>{const on=SET.music&&AC&&AC.state==='running'&&!document.hidden;if(on&&!MUSI)musicStart();else if(!on&&MUSI)musicStop()},700);
 // ===== ANIMATED MAIN MENU (cached world map, slow tour through countries) =====
@@ -2962,7 +3563,7 @@ const AY=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos',
 // ===== MENU / SAVE SYSTEM =====
 const LS={get:(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}};
 const SKEY='atlasAoH.saves.v1',LKEY='atlasAoH.last',SETKEY='atlasAoH.settings';
-let SET=Object.assign({sound:true,music:true,svol:6,mvol:7,fs:true,provNames:true,borders:true,lang:'en'},LS.get(SETKEY,{}));
+let SET=Object.assign({sound:true,music:true,svol:6,mvol:8,fs:true,provNames:true,borders:true,lang:'en'},LS.get(SETKEY,{}));
 let mode='menu',game=null,pend=null;
 const $=id=>document.getElementById(id);
 function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',1800)}
@@ -2970,7 +3571,7 @@ function dateStr(t){const G=(typeof game!=='undefined'&&game)||{};const d=new Da
 const DIFF=['Kolay','Normal','Zor','Çok Zor'];
 function showMenu(html){mode='menu';if(!game)setTimeout(startTour,30);else stopTour();if($('selBar'))$('selBar').style.display='none';closeNews();closeEco();$('modeRank').style.display='none';$('log').style.display='none';$('menu').style.display='flex';$('mp').innerHTML=html;hud.style.display='none';$('pick').style.display='none';$('setup').style.display='none';card.style.display='none';0}
 function hideMenu(){$('menu').style.display='none';0}
-function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.0.8</div><div class="sub">Strateji · Tur Tabanlı · 1300 – 2027</div>
+function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.0.9</div><div class="sub">Strateji · Tur Tabanlı · 1300 – 2027</div>
  ${!game&&LS.get(LKEY,null)&&saves().some(s=>s.id===LS.get(LKEY,null))?'<button class="mb" onclick="continueGame()">⏯ Kaldığın yerden devam et</button>':''}<button class="mb ${!game&&LS.get(LKEY,null)?'sec':''}" onclick="gameMenu()">▶ Oyun</button><button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button>
  <button class="mb sec" onclick="leadersMenu()">👑 Liderler</button><button class="mb sec" onclick="helpMenu()">📖 Nasıl Oynanır</button><button class="mb sec" onclick="aboutMenu()">ℹ Hakkında</button>${game?'<button class="mb sec" onclick="resume()">↩ Oyuna Dön</button>':''}`)}
 const cleanName=s=>String(s||'').replace(/[<>&"'`\\]/g,'').trim().slice(0,28);
@@ -3029,7 +3630,7 @@ let RANKC={t:-1,r:0};function hudRank(){if(RANKC.t===game.turn&&RANKC.me===game.
  const tot=C.map((c,i)=>eco[i]/mx(eco)*30+tech[i]/mx(tech)*20*Math.min(1,Math.pow(eco[i]/500,0.35))+popv[i]/mx(popv)*20+land[i]/mx(land)*30);const me=game.me;let r=1;for(let i=0;i<C.length;i++)if(i!==me&&owner.includes(i)&&tot[i]>tot[me])r++;RANKC={t:game.turn,me,r};return r}
 let newsTab='ulusal';
 function openNews(t){if(!game)return;if(!t||$('newsP').style.display!=='block')closeSide();if(t)newsTab=t;$('newsP').style.display='block';$('tY').classList.toggle('on',newsTab==='yerel');$('tU').classList.toggle('on',newsTab==='ulusal');
- const L=game.news.filter(x=>x.cat===newsTab);$('nl').innerHTML=L.length?L.map(x=>`<div class="ni ${x.bad?'bad':''} ${x.read?'':'new'}"><span>${dateStr(x.turn)}</span>${x.t}</div>`).join(''):'<div class="ni" style="opacity:.6">Henüz haber yok.</div>';
+ const L=game.news.filter(x=>x.cat===newsTab);$('nl').innerHTML=L.length?L.map((x,k)=>`<div class="ni go ${x.bad?'bad':''} ${x.read?'':'new'}" onclick="newsGo(${k})"><span>${dateStr(x.turn)}</span>${x.t}</div>`).join(''):'<div class="ni" style="opacity:.6">Henüz haber yok.</div>';
  L.forEach(x=>x.read=true);updNewsBtn()}
 function closeNews(){$('newsP').style.display='none'}
 function snapshot(){return{id:game.saveId||('s'+Date.now()),me:game.me,diff:game.diff,aggr:game.aggr,fog:game.fog,turn:game.turn,owner:owner.slice(),pop:pop.map(x=>Math.round(x)),armies,aid,wars:game.wars,allies:game.allies,gold:game.gold,rel:game.rel,imp:game.imp,arel:game.arel,truce:game.truce,dp:game.dp,news:game.news.slice(0,40),envoys:game.envoys,cool:game.cool,aicool:game.aicool,unrest:game.unrest,hap:hap.map(x=>Math.round(x)),bld:[...bld],ecoP:ecoP.map(x=>+x.toFixed(3)),unemp:[...unemp].map(x=>+x.toFixed(2)),ign:[...ign].map(x=>+x.toFixed(2)),inf:[...inf].map(x=>+x.toFixed(3)),dis:[...dis],deaths:[...deaths].map(Math.round),tech:TECH.map(x=>+x.toFixed(3)),fleets,tax:game.tax,inv:game.inv,build:game.build,outb:game.outb,dseq:game.dseq,pact:game.pact,access:game.access,gave:game.gave,mp:game.mp,airCd:game.airCd,gov:game.gov,vas:game.vas,newC:game.newC,flag:game.flag,names:game.names,color:game.color,mprod:game.mprod,aimis:game.aimis,mob:game.mob,missiles:game.missiles,propUntil:game.propUntil,govCd:game.govCd,festCd:game.festCd,caps:C.map(c=>c.cap),tree:game.tree,tp:game.tp,cyberVis:game.cyberVis,cybCd:game.cybCd,tankCd:game.tankCd,dmg:game.dmg,core:[...CORE],formed:game.formed,scn:game.scn,y0:game.y0,m0:game.m0,d0:game.d0,nofog:game.nofog,strait:game.strait,fee:game.fee,proj:game.proj,repub:game.repub,ext:game.ext,mil:MIL.slice(),skeys:game.skeys,bloc:game.bloc,evd:game.evd,v:11,cam:{...cam},time:Date.now()}}
