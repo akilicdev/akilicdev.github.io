@@ -413,7 +413,7 @@ function zoomAt(sx,sy,f){const a=s2w(sx,sy);cam.z*=f;clamp();const b=s2w(sx,sy);
 let rq=0;function req(){if(!rq)rq=requestAnimationFrame(()=>{rq=0;draw()})}
 
 // ===== GAME LOGIC =====
-const isMed=s=>s==='1300'||s==='1200';const isModern=s=>s==='2027'||s==='2026';const MEDPOP={'1300':0.06,'1200':0.05};
+const isMed=s=>s==='1300'||s==='1200'||s==='1400';const isModern=s=>s==='2027'||s==='2026';const MEDPOP={'1300':0.06,'1200':0.05,'1400':0.065};
 function QO(k,q,by){if(!game)return;if(!game.ext)game.ext={};const o=game.ext.qo||(game.ext.qo={});if(o[k])return;o[k]=1;by=by||'Mustafa Kemal Atatürk';setTimeout(()=>showQuote(q,by),400);news('ulusal',`💬 “${q}” — ${by}`)}
 const stabOf=i=>{const s=game&&game.ext&&game.ext.stab;return s&&s[i]!==undefined?s[i]:100};
 function setStab(i,v){if(!game)return;const X=game.ext||(game.ext={});const s=X.stab||(X.stab={});if(v>=100)delete s[i];else s[i]=Math.max(0,v)}
@@ -551,12 +551,12 @@ const NATO=new Set(['United States','Canada','United Kingdom','France','Germany'
 const tk19Lock=(a,b)=>{if(game.scn!=='1919'||!game.skeys)return false;const K=game.skeys,t=K.tbm;if(a!==t&&b!==t)return false;const o=a===t?b:a;return ['gre','ita','fra','gbr','ist','arm','geo'].some(k=>K[k]===o)};
 const natoPair=(a,b)=>C[a]&&C[b]&&NATO.has(C[a].n)&&NATO.has(C[b].n)&&a<C0&&b<C0;
 function aiWars(){if(game.turn<5)return;const ag=game.aggr/100,f=AGF();const aiw=game.wars.filter(w=>w[0]!==game.me&&w[1]!==game.me).length;
- if(aiw>=1+Math.round(ag*(isMed(game.scn)?14:isModern(game.scn)?10:5)))return;
+ if(aiw>=1+Math.round(ag*(isMed(game.scn)?8:isModern(game.scn)?10:5)))return;
  const ALIVE=[];{const s=new Set(owner);for(const c of s)if(C[c]&&!C[c].tribal)ALIVE.push(c)}
- const med=isMed(game.scn),mod=isModern(game.scn);for(let t=0;t<(med?10:mod?6:3);t++){if(Math.random()>f*(med?1.6:mod?1.1:0.7))continue;const a=ALIVE[(Math.random()*ALIVE.length)|0];if(a===game.me||MIL[a]<(isMed(game.scn)?800:5000)||enemiesOf(a).length)continue;
+ const med=isMed(game.scn),mod=isModern(game.scn);for(let t=0;t<(med?8:mod?6:3);t++){if(Math.random()>f*(med?1.3:mod?1.1:0.7))continue;const a=ALIVE[(Math.random()*ALIVE.length)|0];if(a===game.me||MIL[a]<(isMed(game.scn)?800:5000)||enemiesOf(a).length)continue;
   if(C[a].tribal)continue;const cands=[...CNEAR[a]].filter(b=>b!==game.me&&!C[b].tribal&&!scnProtected(a,b)&&!tk19Lock(a,b)&&!(game.bloc&&game.bloc[a]&&game.bloc[a]!=='N'&&game.bloc[a]===game.bloc[b])&&owner.includes(b)&&!atWar(a,b)&&!truce(a,b)&&enemiesOf(b).length===0);const pa=armyPower(a);
   for(const b of cands){const k=rel2(a,b);game.arel[k]-=3+((Math.random()*6)|0);if(game.arel[k]>-10)continue;
-   const r=pa/(armyPower(b)+1),land=CNB[a].has(b);let p=r>=2?0.6:r>=1.2?0.35:r>=0.8?0.08:0.02;if(!land)p*=0.5;if(SCNDEF[game.scn])p*=0.35;const ca=P[C[a].cap],cb_=P[C[b].cap];let dx=Math.abs(ca.x-cb_.x);dx=Math.min(dx,W-dx);p*=Math.max(0.1,1-Math.hypot(dx,ca.y-cb_.y)/250);
+   const r=pa/(armyPower(b)+1),land=CNB[a].has(b);let p=r>=2?0.6:r>=1.2?0.35:r>=0.8?0.08:0.02;if(!land)p*=0.5;if(SCNDEF[game.scn])p*=0.35;if(med){const na=provsOf(a).length;if(na>25)p*=25/na}const ca=P[C[a].cap],cb_=P[C[b].cap];let dx=Math.abs(ca.x-cb_.x);dx=Math.min(dx,W-dx);p*=Math.max(0.1,1-Math.hypot(dx,ca.y-cb_.y)/250);
    if(Math.random()<p){startWar(a,b);return}}}}
 function aiDiplomacy(){const me=game.me,f=AGF(),myP=armyPower(me);
  for(const c of CNEAR[me]){if(!owner.includes(c)||C[c].tribal||atWar(me,c)||game.allies.includes(c)||truce(me,c)||game.vas[c]!==undefined)continue;
@@ -1610,6 +1610,10 @@ function cnameL(i){const c=C[i];if(!c)return '?';if(c.hist){return c.hist[LANG]|
  if(c.L)return c.L[li()]||c.n;return DISPLAY[c.n]||c.n}
 // UI dictionary: [tr, en, ar, zh, it, es, de, fr, ru]
 const DICT=[
+['Yıldırım ve Timur','Bayezid and Timur','بايزيد وتيمور','巴耶济德与帖木儿','Bayezid e Tamerlano','Bayezid y Tamerlán','Bayezid und Timur','Bayezid et Tamerlan','Баязид и Тимур'],
+['Yıldırım Bayezid Anadolu ve Balkanlar\'ı birleştirdi. Doğuda Timur, güneyde Memlükler; Bizans yalnızca İstanbul\'da','Bayezid the Thunderbolt has united Anatolia and the Balkans. Timur in the east, the Mamluks in the south; Byzantium holds only Constantinople','وحّد بايزيد الصاعقة الأناضول والبلقان. تيمور في الشرق والمماليك في الجنوب؛ بيزنطة لم يبق لها إلا القسطنطينية','“雷霆”巴耶济德统一了安纳托利亚和巴尔干。东有帖木儿，南有马穆鲁克；拜占庭只剩君士坦丁堡','Bayezid il Fulmine ha unito Anatolia e Balcani. A est Tamerlano, a sud i Mamelucchi; a Bisanzio resta solo Costantinopoli','Bayezid el Rayo ha unido Anatolia y los Balcanes. Al este Tamerlán, al sur los mamelucos; Bizancio solo conserva Constantinopla','Bayezid der Blitz hat Anatolien und den Balkan vereint. Im Osten Timur, im Süden die Mamluken; Byzanz hält nur noch Konstantinopel','Bayezid la Foudre a uni l\'Anatolie et les Balkans. À l\'est Tamerlan, au sud les Mamelouks ; Byzance ne tient plus que Constantinople','Баязид Молниеносный объединил Анатолию и Балканы. На востоке Тимур, на юге мамлюки; у Византии остался только Константинополь'],
+['topraklarında isyan!',': uprising in its lands!',': انتفاضة في أراضيها!','：境内爆发起义！',': rivolta nelle sue terre!',': ¡levantamiento en sus tierras!',': Aufstand in seinen Ländern!',': soulèvement sur ses terres !',': восстание на её землях!'],
+['yeniden bağımsızlığını ilan etti.','has declared independence again.','أعلنت استقلالها من جديد.','再次宣布独立。','ha di nuovo dichiarato l\'indipendenza.','ha vuelto a declarar su independencia.','hat erneut die Unabhängigkeit erklärt.','a de nouveau proclamé son indépendance.','снова провозгласила независимость.'],
 ['İlişkiler','Relations','العلاقات','关系','Relazioni','Relaciones','Beziehungen','Relations','Отношения'],
 ['Üretim','Production','الإنتاج','生产','Produzione','Producción','Produktion','Production','Производство'],
 ['Birlik','Union','الاتحاد','联盟','Unione','Unión','Union','Union','Союз'],
@@ -2670,7 +2674,7 @@ function scenarioOwner1300(L){L=L||S1300;const out=new Int32Array(N).fill(-1);co
    if(r.p&&r.p.some(pg=>inPoly(x,y,pg))){out[i]=si;continue}if(cset.has(P[i].c))out[i]=si}});
  return out}
 function applyScenario1300(){applyScenarioMed('1300')}
-function applyScenarioMed(scn){const L=scn==='1200'?S1200:S1300;const sid=scenarioOwner1300(L);const made=[];
+function applyScenarioMed(scn){const L=scn==='1200'?S1200:scn==='1400'?S1400:S1300;const sid=scenarioOwner1300(L);const made=[];
  L.forEach((s,si)=>{const ids=[];for(let i=0;i<N;i++)if(sid[i]===si)ids.push(i);if(!ids.length){made.push(-1);return}
   let cap=ids.find(i=>P[i].ne===s[6])??ids.slice().sort((a,b)=>BASEPOP[b]-BASEPOP[a])[0];if(s[6]&&!ids.some(i=>P[i].ne===s[6])){const k=ids.find(i=>P[i].L&&P[i].L.includes(s[6]));if(k!==undefined)cap=k}
   const parent=P[ids[0]].c;const d={n:'S:'+s[0],cap,parent,col:s[3],size:ids.length,hist:{tr:s[1],en:s[2]},tribal:s[7]?1:0,fl:s[4],scn:1};const c=addCountryRaw(d);SCN_NEWC.push(d);made.push(c);for(const i of ids){owner[i]=c;CORE[i]=c}});
@@ -2856,7 +2860,7 @@ const HN_MED={Turkey:{Istanbul:['Konstantinopolis','Constantinople'],Bursa:['Pru
  Spain:{'Community of Madrid':['Toledo','Toledo']},Italy:{'Vatican City':['Roma','Rome']},Kazakhstan:{Almaty:['Almalık','Almaliq'],'Almaty City':['Almalık','Almaliq']},China:{Beijing:['Hanbalık','Khanbaliq']},Vietnam:{'Ho Chi Minh City':['Prey Nokor','Prey Nokor']},Indonesia:{Jakarta:['Sunda Kelapa','Sunda Kelapa']}};
 const HN_MOD={Italy:{'Vatican City':['Roma','Rome']}};
 const HN_1919={Poland:{'Greater Poland Voivodeship':['Poznań','Poznań'],'Kuyavian-Pomeranian Voivodeship':['Bydgoszcz','Bydgoszcz'],'Silesian Voivodeship':['Katowice','Katowice'],'Lesser Poland Voivodeship':['Krakov','Kraków'],'Podkarpackie Voivodeship':['Przemyśl','Przemyśl']},Ukraine:{Lviv:['Lwów','Lwów']},Romania:{'Cluj-Napoca':['Cluj','Cluj'],'Timiș':['Timişoara','Timișoara'],Oradea:['Oradea','Oradea'],'Brașov':['Braşov','Brașov'],'Satu Mare':['Satu Mare','Satu Mare']}};
-const HNG={'1200':[HN_MED],'1300':[HN_MED],'1914':[HN_OTT,HN_WW1],'1919':[HN_OTT,HN_WW1,HN_1919],'1939':[HN_WW2],'2027':[HN_MOD],'2026':[HN_MOD]};
+const HNG={'1200':[HN_MED],'1300':[HN_MED],'1400':[HN_MED],'1914':[HN_OTT,HN_WW1],'1919':[HN_OTT,HN_WW1,HN_1919],'1939':[HN_WW2],'2027':[HN_MOD],'2026':[HN_MOD]};
 var NAMESCN='2027';
 function provNames(scn){if(scn)NAMESCN=scn;const L=HNG[NAMESCN]||[HN_MOD];const k=li();
  for(let i=0;i<N;i++){let n=P[i].L?P[i].L[k]||P[i].ne:P[i].ne;const cn=C[P[i].c].n;for(const T of L){const t=T[cn]&&T[cn][P[i].ne];if(t)n=k===0?t[0]:t[1]}P[i].n=n}
@@ -2931,6 +2935,101 @@ function scenPeace(a,b,pp){const x=scnKey(a),y=scnKey(b);if(x===undefined||y===u
 function tkVictory(){if(game.scn!=='1919'||game.repub)return;const t=SCN_KEY.tbm;if(t===undefined)return;const tr=C.findIndex(c=>c.n==='Turkey');for(let i=0;i<N;i++)if(P[i].c===tr&&P[i].ne!=='Hatay'&&owner[i]!==t)return;
  game.repub=1;C[t].hist={tr:'Türkiye Cumhuriyeti',en:'Republic of Türkiye'};news('ulusal','🎉 Kurtuluş Savaşı kazanıldı! Anadolu ve Trakya özgür. Türkiye Cumhuriyeti ilan edildi.');if(t===game.me){sfx('fanfare');toast('🎉 Türkiye Cumhuriyeti ilan edildi!')}LAYER=null}
 
+// ===== 1400: YILDIRIM BAYEZİD AND TIMUR =====
+const S1400=[
+ ['osm','Osmanlı Devleti','Ottoman Sultanate',[175,40,40],'cres',{tr:['Edirne','Kırklareli','Tekirdağ','Bursa','Bilecik','Eskişehir','Kocaeli','Sakarya','Yalova','Düzce','Bolu','Balıkesir','Çanakkale','Manisa','İzmir','Aydın','Muğla','Denizli','Kütahya','Uşak','Afyonkarahisar','Isparta','Burdur','Antalya','Ankara','Kırıkkale','Çankırı','Kastamonu','Zonguldak','Bartın','Karabük','Konya','Karaman','Aksaray','Niğde','Nevşehir','Kırşehir','Kayseri','Yozgat','Çorum','Amasya','Tokat','Sivas','Samsun','Ordu','Malatya'],c:['Bulgaria','North Macedonia'],cp:[['Greece'],[[20.4,39.2],[20.4,42],[27,42],[27,40.6],[24,39.2]]]},'Edirne'],
+ ['byz','Bizans İmparatorluğu','Byzantine Empire',[110,45,120],'cross',{tr:['Istanbul'],cp:[['Greece'],[[21,36.2],[21,38.3],[23.4,38.1],[23.4,36.2]]]},'Istanbul'],
+ ['ven','Venedik Cumhuriyeti','Republic of Venice',[170,60,80],'cross',{cp:[['Italy'],[[11.2,45],[11.2,46.6],[13.9,46.6],[13.5,45.4],[12.3,44.9]]],p:[[[23.4,34.7],[23.4,35.8],[26.5,35.8],[26.5,34.7]]]},'Venice'],
+ ['lat','Latin Dukalıkları','Latin Duchies',[190,170,120],'cross',{c:['Greece']},'Athens'],
+ ['cnd','Candaroğulları','Jandarid Beylik',[150,60,90],'cres',{tr:['Sinop']},'Sinop'],
+ ['tre','Trabzon İmparatorluğu','Empire of Trebizond',[150,80,130],'cross',{tr:['Trabzon','Rize','Giresun']},'Trabzon'],
+ ['erz','Erzincan Emirliği','Emirate of Erzincan',[120,100,150],'cres',{tr:['Erzincan','Tunceli','Gümüşhane','Bayburt','Erzurum']},'Erzincan'],
+ ['dlk','Dulkadiroğulları','Dulkadirid Beylik',[90,130,90],'cres',{tr:['Kahramanmaraş','Osmaniye']},'Kahramanmaraş'],
+ ['rmz','Ramazanoğulları','Ramadanid Beylik',[160,120,70],'cres',{tr:['Adana','Mersin']},'Adana'],
+ ['akk','Akkoyunlular','Aq Qoyunlu',[225,225,220],'cres',{tr:['Diyarbakır','Batman','Siirt','Bingöl','Elazığ','Adıyaman']},'Diyarbakır'],
+ ['art','Artuklular','Artuqids',[150,110,60],'cres',{tr:['Mardin','Şırnak']},'Mardin'],
+ ['kko','Karakoyunlular','Kara Koyunlu',[45,45,55],'cres',{tr:['Van','Bitlis','Muş','Ağrı','Iğdır','Hakkâri']},'Van'],
+ ['geo','Gürcistan Krallığı','Kingdom of Georgia',[170,60,60],'cross',{tr:['Artvin','Ardahan','Kars'],c:['Georgia']},'Tbilisi'],
+ ['mam','Memlük Sultanlığı','Mamluk Sultanate',[200,170,80],'cres',{tr:['Hatay','Gaziantep','Kilis','Şanlıurfa'],c:['Egypt','Syria','Lebanon','Israel','Gaza Strip','West Bank','Jordan'],p:[[[34.5,29.5],[38,30],[40.5,25],[41.5,21],[39.2,21.4],[37,24.5]]]},'Cairo'],
+ ['kib','Kıbrıs Krallığı','Kingdom of Cyprus',[200,180,90],'cross',{c:['Cyprus','Northern Cyprus']}],
+ ['jal','Celayirliler','Jalayirid Sultanate',[110,150,140],'cres',{c:['Iraq']},'Baghdad'],
+ ['tim','Timur İmparatorluğu','Timurid Empire',[60,100,160],'sun',{c:['Iran','Azerbaijan','Armenia','Turkmenistan','Uzbekistan','Tajikistan','Afghanistan','Pakistan'],cp:[['Kazakhstan'],[[55,40],[55,45],[72,45],[80,43],[80,40]]]},'Samarkand'],
+ ['bul','Vidin Çarlığı','Tsardom of Vidin',[60,120,70],'cross',{cp:[['Bulgaria','Serbia'],[[22,43.4],[22,44.3],[23.4,44.3],[23.4,43.4]]]},'Vidin'],
+ ['srb','Sırp Despotluğu','Serbian Despotate',[150,50,50],'cross',{c:['Serbia','Kosovo','Montenegro']}],
+ ['alb','Arnavut Prenslikleri','Albanian Principalities',[180,40,50],'cross',{c:['Albania']}],
+ ['bos','Bosna Krallığı','Kingdom of Bosnia',[60,80,140],'cross',{c:['Bosnia']}],
+ ['wal','Eflak Prensliği','Principality of Wallachia',[60,90,150],'cross',{cp:[['Romania'],[[22,43.6],[22,45.4],[27.3,45.4],[28.6,44.8],[28.6,43.6]]]},'Bucharest'],
+ ['mld','Boğdan Prensliği','Principality of Moldavia',[140,60,50],'cross',{c:['Moldova'],cp:[['Romania','Ukraine'],[[25.3,45.4],[25.3,48.4],[28.3,48.4],[30,46],[28.2,45.3]]]},'Suceava'],
+ ['hun','Macaristan Krallığı','Kingdom of Hungary',[160,70,60],'cross',{c:['Hungary','Slovakia','Croatia','Romania']}],
+ ['mos','Moskova Büyük Knezliği','Grand Duchy of Moscow',[110,140,70],'cross',{cp:[['Russia'],[[33,53],[33,59.5],[46,59.5],[47,55],[41,53]]]},'Moscow'],
+ ['nov','Novgorod Cumhuriyeti','Novgorod Republic',[90,110,150],'cross',{cp:[['Russia'],[[27,57.3],[27,70],[66,70],[66,61],[46,59.5],[33,59.5]]]},'Novgorod'],
+ ['teu','Töton Şövalyeleri','Teutonic Order',[200,200,190],'cross',{c:['Latvia','Estonia'],cp:[['Russia'],[[19.5,54.3],[22.9,54.3],[22.9,55.4],[19.5,55.4]]]}],
+ ['lit','Litvanya Büyük Dükalığı','Grand Duchy of Lithuania',[140,60,70],'cross',{c:['Lithuania','Belarus'],cp:[['Ukraine','Russia'],[[22,48],[22,52.5],[27,57.3],[33,57.3],[33,53],[36,50.5],[33,47.5],[28,48]]]},'Vilnius'],
+ ['gho','Altın Orda','Golden Horde',[200,160,60],'sun',{c:['Ukraine'],cp:[['Russia','Kazakhstan'],[[30,43],[33,53],[41,53],[47,55],[56,56],[66,57],[70,50],[70,45],[55,45],[55,40],[46,40],[37,43]]]},'Sarai'],
+ ['pol','Polonya Krallığı','Kingdom of Poland',[190,60,70],'cross',{c:['Poland']}],
+ ['kal','Kalmar Birliği','Kalmar Union',[170,60,60],'cross',{c:['Denmark','Norway','Sweden','Finland','Iceland']},'Copenhagen'],
+ ['grn','Grönland halkları','Greenland peoples',[120,120,110],'tribe',{cp:[['Denmark'],[[-75,58],[-75,84],[-10,84],[-10,58]]]},'',1],
+ ['hre','Kutsal Roma İmparatorluğu','Holy Roman Empire',[200,180,70],'cross',{c:['Germany','Austria','Czechia','Netherlands','Belgium','Luxembourg','Switzerland','Slovenia']}],
+ ['mil','Milano Dükalığı','Duchy of Milan',[90,140,110],'cross',{cp:[['Italy'],[[8.4,44.6],[8.4,46.6],[11.2,46.6],[11.2,44.6]]]},'Milan'],
+ ['pap','Papalık Devleti','Papal States',[220,200,120],'cross',{cp:[['Italy'],[[11.3,42.3],[13,41.9],[13.5,42.3],[13.9,43.6],[12.5,44.6],[11.6,44.3]]]},'Rome'],
+ ['ara','Aragon Tacı','Crown of Aragon',[200,170,60],'cross',{c:['Malta'],cp:[['Spain'],[[-2.2,43],[3.8,43],[4.5,39.5],[3,38.5],[-0.5,37.9],[-1.6,40.6]]],p:[[[12,36.5],[16,36.5],[16,38.4],[12,38.4]],[[8,38.8],[8,41.3],[10,41.3],[10,38.8]]]},'Barcelona'],
+ ['nap','Napoli Krallığı','Kingdom of Naples',[90,110,160],'cross',{cp:[['Italy'],[[13,41.9],[16.5,41.9],[19,40.2],[16,37.8],[15.5,38.4],[13.5,40.5]]]},'Naples'],
+ ['flo','Floransa Cumhuriyeti','Republic of Florence',[150,120,90],'cross',{c:['Italy','San Marino']},'Florence'],
+ ['fra','Fransa Krallığı','Kingdom of France',[50,70,150],'cross',{c:['France']}],
+ ['sco','İskoçya Krallığı','Kingdom of Scotland',[70,80,140],'cross',{cp:[['United Kingdom'],[[-9,55.1],[-9,61],[0,61],[0,55.1]]]}],
+ ['eng','İngiltere Krallığı','Kingdom of England',[170,40,50],'cross',{c:['United Kingdom','Ireland']}],
+ ['por','Portekiz Krallığı','Kingdom of Portugal',[60,120,80],'cross',{c:['Portugal']}],
+ ['gra','Gırnata Emirliği','Emirate of Granada',[80,140,90],'cres',{cp:[['Spain'],[[-5.9,36],[-1.6,37.3],[-2.6,37.7],[-4.6,37.5],[-6.1,36.6]]]},'Granada'],
+ ['nav','Navarra Krallığı','Kingdom of Navarre',[160,120,60],'cross',{cp:[['Spain'],[[-2.5,42.4],[-2.5,43.3],[-1.2,43.3],[-1.2,42.4]]]}],
+ ['cas','Kastilya Tacı','Crown of Castile',[180,120,60],'cross',{c:['Spain']}],
+ ['haf','Hafsiler','Hafsid Sultanate',[120,160,90],'cres',{c:['Tunisia','Libya'],cp:[['Algeria'],[[5,30],[5,37.5],[9,37.5],[9.5,30]]]}],
+ ['zey','Zeyyaniler','Zayyanid Kingdom',[90,140,120],'cres',{cp:[['Algeria'],[[-2,30],[-2,36],[5,37.5],[5,30]]]}],
+ ['mer','Merinîler','Marinid Sultanate',[170,90,60],'cres',{c:['Morocco']}],
+ ['sah','Sahra kabileleri','Saharan tribes',[150,130,100],'tribe',{c:['Algeria','Mauritania','Niger']},'',1],
+ ['mak','Makurya Krallığı','Kingdom of Makuria',[140,100,70],'cross',{c:['Sudan']}],
+ ['eth','Habeşistan','Ethiopian Empire',[60,130,70],'cross',{c:['Ethiopia','Eritrea']}],
+ ['adl','Adal Sultanlığı','Adal Sultanate',[120,150,90],'cres',{c:['Djibouti','Somalia']}],
+ ['mal','Mali İmparatorluğu','Mali Empire',[200,150,50],'sun',{c:['Mali','Senegal','Gambia','Guinea','Guinea-Bissau']}],
+ ['kan','Bornu Sultanlığı','Bornu Sultanate',[160,110,60],'sun',{c:['Chad']}],
+ ['kil','Kilva Sultanlığı','Kilwa Sultanate',[90,140,110],'cres',{c:['Tanzania','Kenya','Comoros']}],
+ ['kng','Kongo Krallığı','Kingdom of Kongo',[170,80,70],'sun',{c:['Angola','Congo']}],
+ ['zim','Büyük Zimbabve','Kingdom of Zimbabwe',[140,110,70],'sun',{c:['Zimbabwe','Mozambique']}],
+ ['afr','Afrika kabileleri','African tribes',[130,110,80],'tribe',{c:['Nigeria','Ghana','Togo','Benin','Burkina Faso',"Côte d'Ivoire",'Liberia','Sierra Leone','Cameroon','Central African Rep.','S. Sudan','Uganda','Rwanda','Burundi','DR Congo','Gabon','Equatorial Guinea','Zambia','Malawi','Namibia','Botswana','South Africa','Lesotho','Swaziland','Madagascar','Sao Tome and Principe','Cape Verde','Mauritius','Seychelles']},'',1],
+ ['yem','Resulîler','Rasulid Sultanate',[120,150,100],'cres',{c:['Yemen']}],
+ ['omn','Umman İmamlığı','Imamate of Oman',[170,80,70],'cres',{c:['Oman','United Arab Emirates']}],
+ ['arb','Arap kabileleri','Arab tribes',[170,140,100],'tribe',{c:['Saudi Arabia','Qatar','Bahrain','Kuwait']},'',1],
+ ['mgh','Moğolistan Hanlığı','Moghulistan',[110,140,170],'sun',{c:['Kyrgyzstan','Kazakhstan'],cp:[['China'],[[73,35],[73,49.5],[96,44],[96,35]]]},'Almaliq'],
+ ['tib','Tibet','Tibet',[170,110,60],'sun',{cp:[['China'],[[78,27],[78,36.5],[100,36.5],[100,27]]]},'Lhasa'],
+ ['nyu','Kuzey Yuan','Northern Yuan',[150,130,90],'sun',{c:['Mongolia'],cp:[['China','Russia'],[[96,41.5],[96,56],[135,56],[125,48],[119,42]]]},'Karakorum'],
+ ['min','Ming Hanedanı','Ming Dynasty',[200,60,50],'sun',{c:['China','Macau S.A.R']},'Beijing'],
+ ['jos','Joseon Krallığı','Joseon',[80,130,160],'sun',{c:['North Korea','South Korea']},'Seoul'],
+ ['jap','Muromachi Şogunluğu','Muromachi Shogunate',[220,220,215],'sun',{c:['Japan']},'Kyoto'],
+ ['dvi','Đại Ngu','Đại Ngu',[190,80,60],'sun',{cp:[['Vietnam'],[[100,16],[100,24],[110,24],[110,16]]]}],
+ ['chm','Champa','Champa',[120,90,140],'sun',{c:['Vietnam']}],
+ ['khm','Khmer Krallığı','Khmer Kingdom',[90,120,80],'sun',{c:['Cambodia']}],
+ ['lxa','Lan Xang Krallığı','Lan Xang',[160,130,80],'sun',{c:['Laos']}],
+ ['ayu','Ayutthaya Krallığı','Ayutthaya Kingdom',[180,140,90],'sun',{c:['Thailand']}],
+ ['ava','Ava Krallığı','Ava Kingdom',[150,120,60],'sun',{c:['Myanmar']}],
+ ['mlk','Malakka Sultanlığı','Malacca Sultanate',[100,150,110],'cres',{c:['Malaysia','Singapore','Brunei']}],
+ ['maj','Majapahit','Majapahit',[160,60,50],'sun',{c:['Indonesia','Timor-Leste']}],
+ ['srl','Seylan Krallıkları','Kingdoms of Ceylon',[120,150,90],'sun',{c:['Sri Lanka','Maldives']}],
+ ['del','Delhi Sultanlığı','Delhi Sultanate',[60,120,70],'cres',{cp:[['India'],[[72,24.5],[72,32.5],[80,32.5],[81,27],[78,24.5]]]},'Delhi'],
+ ['jau','Jaunpur Sultanlığı','Jaunpur Sultanate',[130,150,90],'cres',{cp:[['India'],[[81,24],[81,28],[86,27.5],[86,24]]]},'Jaunpur'],
+ ['ben','Bengal Sultanlığı','Bengal Sultanate',[90,150,120],'cres',{c:['Bangladesh'],cp:[['India'],[[86,21.5],[86,27.5],[90,27.5],[90,21.5]]]},'Dhaka'],
+ ['bah','Behmenî Sultanlığı','Bahmani Sultanate',[100,130,70],'cres',{cp:[['India'],[[73,15.5],[73,21],[81,21],[81,15.5]]]},'Gulbarga'],
+ ['hin','Vijayanagara İmparatorluğu','Vijayanagara Empire',[170,100,60],'sun',{c:['India']}],
+ ['nep','Nepal Krallığı','Kingdom of Nepal',[170,60,70],'sun',{c:['Nepal','Bhutan']}],
+ ['sib','Sibirya kabileleri','Siberian tribes',[120,130,130],'tribe',{c:['Russia']},'',1],
+ ['tai','Tayvan ve Filipin halkları','Formosan & Philippine peoples',[120,140,110],'tribe',{c:['Taiwan','Philippines']},'',1],
+ ['may','Maya şehir devletleri','Maya city-states',[60,140,110],'sun',{c:['Guatemala','Belize'],cp:[['Mexico'],[[-92,22],[-86,22],[-86,17.8],[-92,17.8]]]}],
+ ['mex','Tepanek İmparatorluğu','Tepanec Empire',[170,90,50],'sun',{cp:[['Mexico'],[[-106,23.5],[-97,23.5],[-92,17.8],[-92,14.5],[-106,18]]]}],
+ ['chi','Chimú Krallığı','Chimú Kingdom',[150,120,80],'sun',{cp:[['Peru'],[[-82,-11],[-82,-3],[-76,-3],[-76,-11]]]}],
+ ['cus','Cusco Krallığı','Kingdom of Cusco',[190,150,50],'sun',{c:['Peru']}],
+ ['nam','Kuzey Amerika yerlileri','North American peoples',[140,120,90],'tribe',{c:['United States','Canada','Mexico','Bahamas']},'',1],
+ ['cam','Orta Amerika ve Karayip halkları','Central American & Caribbean peoples',[130,130,90],'tribe',{c:['Honduras','Nicaragua','Costa Rica','Panama','El Salvador','Cuba','Haiti','Dominican Rep.','Jamaica','Trinidad and Tobago','Barbados','Grenada','Saint Lucia','Saint Vincent and the Grenadines','Dominica','Antigua and Barbuda','Saint Kitts and Nevis','Caribbean Netherlands']},'',1],
+ ['sam','Güney Amerika yerlileri','South American peoples',[120,130,80],'tribe',{c:['Brazil','Argentina','Chile','Colombia','Venezuela','Ecuador','Bolivia','Paraguay','Uruguay','Guyana','Suriname']},'',1],
+ ['aus','Avustralya Aborjinleri','Aboriginal Australia',[160,110,70],'tribe',{c:['Australia']},'',1],
+ ['oce','Okyanusya halkları','Peoples of Oceania',[110,130,130],'tribe',{c:['New Zealand','Papua New Guinea','Fiji','Solomon Islands','Vanuatu','Samoa','Tonga','Kiribati','Micronesia','Marshall Islands','Palau','Nauru','Tuvalu','Spratly Is.']},'',1]];
 // ===== 1200: SELJUK ERA =====
 const S1200=[
  ['sel','Anadolu Selçuklu Sultanlığı','Sultanate of Rum',[160,45,40],'cres',{tr:['Konya','Karaman','Aksaray','Niğde','Nevşehir','Kayseri','Kırşehir','Kırıkkale','Ankara','Çankırı','Çorum','Yozgat','Amasya','Tokat','Sivas','Malatya','Eskişehir','Afyonkarahisar','Kütahya','Uşak','Isparta','Burdur','Denizli','Kastamonu','Samsun','Kahramanmaraş','Adıyaman']},'Konya'],
@@ -3442,13 +3541,24 @@ function spImg(k,seed,w,h){w=w||480;h=h||300;const key=k+seed+'_'+w;if(SPIMG.has
   if(k==='sat'){g.strokeStyle='rgba(230,215,170,.75)';g.lineWidth=7*s;g.beginPath();g.ellipse(px,py,pr*1.9,pr*0.42,-0.25,0,7);g.stroke();g.strokeStyle='rgba(200,180,140,.45)';g.lineWidth=4*s;g.beginPath();g.ellipse(px,py,pr*1.6,pr*0.34,-0.25,0,7);g.stroke()}}
  const u=cv.toDataURL('image/jpeg',0.85);SPIMG.set(key,u);return u}
 // ---------- per-turn hook ----------
-function extTick(){try{resTick();ecoBal();cureTick();infTick();isrTick();uniTick();spMissionTick()}catch(e){console.error(e)}}
+function extTick(){try{resTick();ecoBal();cureTick();infTick();isrTick();uniTick();spMissionTick();medRevolt()}catch(e){console.error(e)}}
 // ---------- extra map modes / investments ----------
 MODES.res='  Kaynaklar';MFMT.res=x=>fmt(x)+' 💰';CITYM.res=[i=>provResVal(i),x=>fmt(x)+' 💰 · '];
 SELMODES.res={n:'Maden ve tarım yatırımı',d:'Kaynak üretimi +%25 (en fazla 4 kez) · 3 turda uygulanır',cost:i=>Math.max(3000,Math.round(provResVal(i)*14*(1+((XT().rinv||{})[i]||0)))),act:(i,f)=>{const X=XT();X.rinv=X.rinv||{};X.rinv[i]=Math.min(4,(X.rinv[i]||0)+f)}};
 SELMODES.dis={n:'Tedavi kampanyası',d:'Salgın -%25, mutluluk +2 · 3 turda uygulanır',cost:i=>inf[i]>0.005?pc(pop[i],5e6,7000,1.1):300,act:(i,f)=>{inf[i]=Math.max(0,inf[i]-0.25*f);hap[i]=Math.min(100,hap[i]+2*f)}};
 SELMODES.eco.cost=i=>pc(ecoP[i],200,20000,1.15);
 SELMODES.eco.act=(i,f)=>{const e0=(XT().e0||[])[i]||ecoP[i],m=Math.max(0.2,1-Math.max(0,ecoP[i]/Math.max(0.05,e0)-1)/2.2);ecoP[i]*=1+0.10*f*m;unemp[i]=Math.max(2,unemp[i]-2*f)};
+// ---------- medieval: overextended empires face uprisings that restore conquered states ----------
+function medRevolt(){if(!game||!isMed(game.scn)||game.turn<10)return;const me=game.me,alive=new Set(owner),X=XT();X.rev=X.rev||{};
+ const st=stabilityAll();const own={};for(let i=0;i<N;i++){const c=CORE[i];if(c===undefined||c<0||alive.has(c)||C[c].tribal)continue;(own[c]||(own[c]=[])).push(i)}
+ for(const k in own){const d=+k;if(d===me||(X.rev[d]||0)>game.turn)continue;const ids=own[d];const cnt={};for(const i of ids)cnt[owner[i]]=(cnt[owner[i]]||0)+1;const o=+Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];if(C[o].tribal)continue;
+  const size=provsOf(o).length,ext=Math.max(0,size/20-0.8);if(ext<=0)continue;let p=0.006*Math.min(4,ext)*(1+Math.max(0,60-st[o])/40)*(o===me?0.5:1)*(enemiesOf(o).length?1.4:1);if(Math.random()>p)continue;
+  const reg=ids.filter(i=>owner[i]===o&&i!==C[o].cap);if(!reg.length)continue;X.rev[d]=game.turn+40;
+  for(const i of reg){owner[i]=d;hap[i]=60}const cap=reg.find(i=>i===C[d].cap)??reg.slice().sort((a,b)=>pop[b]-pop[a])[0];C[d].cap=cap;
+  for(const a of armies)if(a.o===o&&reg.includes(a.p)){const kk=Math.round(a.n*0.5);a.n-=kk;armies.push({id:aid++,o:d,p:a.p,n:kk,path:[]})}
+  let men=0;for(const i of reg)men+=pop[i]*0.02;armies.push({id:aid++,o:d,p:cap,n:Math.max(500,Math.round(men)),path:[]});armies=armies.filter(a=>a.n>0);
+  refreshNb(d);refreshNb(o);if(game.rel[d]===undefined||o===me)game.rel[d]=o===me?-60:10;startWarQuiet(d,o);dirty=true;
+  if(o===me||CNEAR[me].has(o)||CNEAR[me].has(d))news('ulusal',`⚔ ${cname(o)} topraklarında isyan! ${cname(d)} yeniden bağımsızlığını ilan etti.`,o===me)}}
 
 // ===== SOUND (synthesized, quiet) =====
 let AC=null,MG=null,MUS=null,MUG=null;
@@ -3571,7 +3681,7 @@ function dateStr(t){const G=(typeof game!=='undefined'&&game)||{};const d=new Da
 const DIFF=['Kolay','Normal','Zor','Çok Zor'];
 function showMenu(html){mode='menu';if(!game)setTimeout(startTour,30);else stopTour();if($('selBar'))$('selBar').style.display='none';closeNews();closeEco();$('modeRank').style.display='none';$('log').style.display='none';$('menu').style.display='flex';$('mp').innerHTML=html;hud.style.display='none';$('pick').style.display='none';$('setup').style.display='none';card.style.display='none';0}
 function hideMenu(){$('menu').style.display='none';0}
-function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.0.9</div><div class="sub">Strateji · Tur Tabanlı · 1300 – 2027</div>
+function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.0.10</div><div class="sub">Strateji · Tur Tabanlı · 1300 – 2027</div>
  ${!game&&LS.get(LKEY,null)&&saves().some(s=>s.id===LS.get(LKEY,null))?'<button class="mb" onclick="continueGame()">⏯ Kaldığın yerden devam et</button>':''}<button class="mb ${!game&&LS.get(LKEY,null)?'sec':''}" onclick="gameMenu()">▶ Oyun</button><button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button>
  <button class="mb sec" onclick="leadersMenu()">👑 Liderler</button><button class="mb sec" onclick="helpMenu()">📖 Nasıl Oynanır</button><button class="mb sec" onclick="aboutMenu()">ℹ Hakkında</button>${game?'<button class="mb sec" onclick="resume()">↩ Oyuna Dön</button>':''}`)}
 const cleanName=s=>String(s||'').replace(/[<>&"'`\\]/g,'').trim().slice(0,28);
@@ -3595,7 +3705,7 @@ function devCountry(){const ls=navigator.languages&&navigator.languages.length?n
  const by={tr:'Turkey',de:'Germany',fr:'France',it:'Italy',es:'Spain',ru:'Russia',ar:'Egypt',zh:'China',en:'United Kingdom'};const n=by[devLang()];const i=C.findIndex(c=>c.n===n);return i>=0?i:C.findIndex(c=>c.n==='Turkey')}
 function confirmDel(b){if(b.dataset.c){return true}b.dataset.c=1;b.textContent='Emin misin?';return false}
 function aboutMenu(){showMenu(`<h2>Hakkında</h2><div class="sub" style="opacity:.85">Atlas Dominion — Tugrion<br>Gerçek dünya il haritası üzerinde tur tabanlı strateji.<br><br>Sürüm 1.0<br>Bayraklar: flag-icons (MIT)<br>Nehir ve göl verisi: © OpenStreetMap katkıcıları (ODbL), geo-maps<br>Veriler: Dünya Bankası (nüfus 2025, GSYH son yıl), IISS (aktif asker)</div><button class="mb sec" onclick="mainMenu()">← Geri</button>`)}
-function scenMenu(){const card=(y,t,d)=>`<button class="scn" onclick="newGame('${y}')"><b>${y}</b><span>${t}</span><small>${d}</small></button>`;showMenu(`<h2>Başlangıç yılı</h2><div class="sub">Hangi yıldan başlamak istersin?</div><div class="scnL">${card('2027','Modern dünya','Gerçek ülkeler, ordular, ekonomi, teknoloji ve uzay. ABD–İsrail ile İran–Filistin, Rusya ile Ukrayna savaşta')}${card('1939','İkinci Dünya Savaşı','Almanya Polonya\'ya saldırdı. Mihver ve Müttefikler; uçaklar, tanklar, roketler')}${card('1919','Kurtuluş Savaşı','Mustafa Kemal Samsun\'a çıktı. Ankara Hükümeti işgale karşı: Yunan, Fransız ve İtalyan kuvvetleri, doğuda Ermenistan')}${card('1914','Birinci Dünya Savaşı','Temmuz Krizi: İttifak ve İtilaf Devletleri. Siperler, ilk tanklar ve çift kanatlı uçaklar')}${card('1200','Selçuklu dönemi','Anadolu Selçuklu Sultanlığı ve Bizans. Haçlılar, Eyyubiler, Harezmşahlar; doğuda Moğollar yükseliyor')}${card('1300','Beylikler dönemi','Osmanlı Beyliği kuruluyor. Süvari, okçu, mancınık; Anadolu beyliklere bölünmüş')}</div><button class="mb sec" onclick="gameMenu()">← Geri</button>`)}
+function scenMenu(){const card=(y,t,d)=>`<button class="scn" onclick="newGame('${y}')"><b>${y}</b><span>${t}</span><small>${d}</small></button>`;showMenu(`<h2>Başlangıç yılı</h2><div class="sub">Hangi yıldan başlamak istersin?</div><div class="scnL">${card('2027','Modern dünya','Gerçek ülkeler, ordular, ekonomi, teknoloji ve uzay. ABD–İsrail ile İran–Filistin, Rusya ile Ukrayna savaşta')}${card('1939','İkinci Dünya Savaşı','Almanya Polonya\'ya saldırdı. Mihver ve Müttefikler; uçaklar, tanklar, roketler')}${card('1919','Kurtuluş Savaşı','Mustafa Kemal Samsun\'a çıktı. Ankara Hükümeti işgale karşı: Yunan, Fransız ve İtalyan kuvvetleri, doğuda Ermenistan')}${card('1914','Birinci Dünya Savaşı','Temmuz Krizi: İttifak ve İtilaf Devletleri. Siperler, ilk tanklar ve çift kanatlı uçaklar')}${card('1400','Yıldırım ve Timur','Yıldırım Bayezid Anadolu ve Balkanlar\'ı birleştirdi. Doğuda Timur, güneyde Memlükler; Bizans yalnızca İstanbul\'da')}${card('1300','Beylikler dönemi','Osmanlı Beyliği kuruluyor. Süvari, okçu, mancınık; Anadolu beyliklere bölünmüş')}${card('1200','Selçuklu dönemi','Anadolu Selçuklu Sultanlığı ve Bizans. Haçlılar, Eyyubiler, Harezmşahlar; doğuda Moğollar yükseliyor')}</div><button class="mb sec" onclick="gameMenu()">← Geri</button>`)}
 function newGame(scn){scn=scn||'2027';hideMenu();mode='pick';game=null;armies=[];resetCountries();restoreModern();owner=P.map(p=>p.c);pop=BASEPOP.slice();SCN_NEWC=[];SCN_KEY={};if(isMed(scn))applyScenarioMed(scn);else if(SCNDEF[scn])applyScenarioWW(scn);else if(isModern(scn))apply2026();setEra(eraOf(scn));provNames(scn);buildBorders();selC=-1;sel=-1;paint();$('pick').style.display='block';hud.style.display='none';$('setup').style.display='none';
  pend={me:-1,diff:1,aggr:50,fog:60,nofog:false,scn};req()}
 function chooseCountry(c){if(C[c].tribal){toast('Bu topraklar yerli halklara ait, oynanamaz');return}pend.me=c;selC=c;paint();req();const nP=P.filter(p=>owner[P.indexOf(p)]===c).length;
