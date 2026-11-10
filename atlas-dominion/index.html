@@ -4286,6 +4286,46 @@ if(typeof tpGain==='function'){const _tpG=tpGain;window.tpGain=function(){const 
 if(typeof pauseMenu==='function'){const _pm=pauseMenu;window.pauseMenu=function(){if(!MP.on)return _pm();showMenu(`<h2>👥 Oda ${MP.code}</h2><div class="sub">${cname(game.me)} · Tur ${game.turn}</div><button class="mb" onclick="resume()">↩ Oyuna Dön</button>${MP.host?'<button class="mb sec" onclick="saveGame();resume()">💾 Kaydet</button>':''}<button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button><button class="mb red" onclick="mpLeave();mainMenu()">✕ Odadan çık${MP.host?' (kaydedilir)':''}</button>`)}}
 if(typeof mainMenu==='function'){const _mm=mainMenu;window.mainMenu=function(){if(MP.on&&(MP.started||MP.resumed)&&!game)mpLeave();return _mm.apply(this,arguments)}}
 
+// ===== CLOUD SAVES (v1.3): every save is also kept in Supabase under a 10-letter cloud code =====
+const CLA='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function cloudCode(){let c=LS.get('ad_cloud',null);if(!c||!/^[A-Z0-9]{10}$/.test(c)){c='';const r=crypto.getRandomValues(new Uint8Array(10));for(const x of r)c+=CLA[x%CLA.length];LS.set('ad_cloud',c)}return c}
+const fmtCode=c=>c.slice(0,5)+'-'+c.slice(5);
+async function cloudCall(fn,body){let err;for(let i=0;i<MPBASES.length;i++){const k=(MPBI+i)%MPBASES.length;try{const r=await mpHttp('rpc/'+fn,{method:'POST',body,timeout:15000},MPBASES[k]);MPBI=k;return r}catch(e){err=e}}throw err||new Error('bağlantı yok')}
+async function gzB64(str){const cs=new CompressionStream('gzip'),w=cs.writable.getWriter();w.write(new TextEncoder().encode(str));w.close();const b=new Uint8Array(await new Response(cs.readable).arrayBuffer());let bin='';for(let i=0;i<b.length;i+=0x8000)bin+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(bin)}
+const saveMeta=s=>({nm:saveName(s),scn:s.scn||'2027',turn:s.turn,diff:s.diff,col:s.col||CC[s.me]||'120,120,120',y0:s.y0,m0:s.m0,d0:s.d0,time:s.time,gid:s.gid||s.id});
+let CLBUSY=false,CLLAST=0,CLWANT=null,CLLIST=null;
+async function cloudPut(s){if(!s||!s.id||!/^[A-Za-z0-9_]{1,40}$/.test(s.id))return false;await cloudCall('cs_put',{p_code:cloudCode(),p_sid:s.id,p_meta:saveMeta(s),p_body:await gzB64(JSON.stringify(s))});return true}
+// upload the save of the running game (throttled for autosaves, immediate for manual saves / leaving)
+function cloudUp(force){if(window.MPTEST||!game||!game.saveId)return;const now=Date.now();if(!force&&now-CLLAST<120000)return;CLWANT=game.saveId;if(CLBUSY)return;CLBUSY=true;CLLAST=now;
+ (async()=>{try{while(CLWANT){const id=CLWANT;CLWANT=null;const s=saves().find(x=>x.id===id);if(s)await cloudPut(s)}}catch(e){console.warn('cloud up',e);CLLAST=now-90000}finally{CLBUSY=false}})()}
+if(typeof saveGame==='function'){const _sg=saveGame;window.saveGame=function(silent){const ok=_sg.apply(this,arguments);if(ok&&game&&!game.mpd&&!(typeof MP!=='undefined'&&MP.on))cloudUp(!silent||document.hidden);return ok}}
+if(typeof delSave==='function'){const _ds=delSave;window.delSave=function(id,b){const had=saves().some(s=>s.id===id);if(!had){if(!confirmDel(b))return;cloudCall('cs_del',{p_code:cloudCode(),p_sid:id}).catch(()=>{});CLLIST=(CLLIST||[]).filter(x=>x.sid!==id);loadMenu();return}const n=saves().length;_ds.apply(this,arguments);if(saves().length<n){cloudCall('cs_del',{p_code:cloudCode(),p_sid:id}).catch(()=>{});CLLIST=(CLLIST||[]).filter(x=>x.sid!==id)}}}
+// load menu: device saves + cloud saves in one list, newest first
+const TRASH='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
+window.loadMenu=function(){const loc=saves(),cl=CLLIST||[],byId={};
+ for(const s of loc)byId[s.id]={id:s.id,m:saveMeta(s),t:s.time||0,local:true};
+ for(const c of cl){const e=byId[c.sid];if(e){if((c.meta.time||c.t)>e.t+3000){e.newer=true;e.m=c.meta;e.t=c.meta.time||c.t}e.cloud=true}else byId[c.sid]={id:c.sid,m:c.meta,t:c.meta.time||c.t,cloud:true}}
+ const all=Object.values(byId).sort((a,b)=>b.t-a.t);
+ const row=e=>`<div class="slot"><span class="flag" style="width:14px;height:34px;border-radius:4px;background:rgb(${e.m.col||'120,120,120'})"></span><div class="i"><b>${escH(e.m.nm||'?')}</b><span>Tur ${e.m.turn} · ${saveDate({...e.m,turn:e.m.turn})} · ${DIFF[e.m.diff]||''}<br>${new Date(e.t).toLocaleString('tr-TR')} <small style="opacity:.75">${!e.local?' · bulutta':e.newer?' · bulutta daha yeni':e.cloud?' · yedekli':''}</small></span></div>
+ <button onclick="${e.local&&!e.newer?`loadSave('${e.id}')`:`cloudLoad('${e.id}')`}">Yükle</button><button style="background:#6e2e24" onclick="delSave('${e.id}',this)">${TRASH}</button></div>`;
+ showMenu(`<h2>Oyun Yükle</h2>${all.length?all.map(row).join(''):'<div class="sub">Kayıt yok</div>'}
+ <div class="sub" id="clSt" style="font-size:12px;margin-top:6px">${CLLIST?'Bulut eşitlendi':'Bulut kayıtları yükleniyor…'}</div>
+ <div class="opt" style="flex-direction:column;align-items:stretch;gap:6px"><span>☁ Bulut kodun: <b style="letter-spacing:2px">${fmtCode(cloudCode())}</b></span><small style="opacity:.7">Bu kodu başka cihazda girersen kayıtların orada da görünür. Kodu kimseyle paylaşma.</small>
+ <div style="display:flex;gap:6px"><input id="clC" maxlength="11" placeholder="Başka cihazın kodu" style="flex:1;padding:8px;border-radius:6px;border:1px solid #6b5a3e;background:#1a150f;color:#efe6d2;font-size:15px;letter-spacing:2px;text-transform:uppercase"><button onclick="cloudSetCode()">Bağla</button></div></div>
+ <button class="mb sec" onclick="gameMenu()">← Geri</button>`);
+ if(!CLLIST||Date.now()-(window.CLAT||0)>20000)cloudRefresh()};
+async function cloudRefresh(){window.CLAT=Date.now();try{const L=await cloudCall('cs_list',{p_code:cloudCode()});CLLIST=Array.isArray(L)?L:[];
+  // back up device saves the cloud doesn't have yet (or has older)
+  const have={};for(const c of CLLIST)have[c.sid]=c.meta.time||c.t;const up=saves().filter(s=>!(s.id in have)||(s.time||0)>have[s.id]+3000).slice(0,6);
+  if($('clSt')&&$('menu')&&$('menu').innerText.includes('Bulut kodun'))loadMenu();
+  for(const s of up){try{await cloudPut(s)}catch(e){console.warn(e);break}}if(up.length){const L2=await cloudCall('cs_list',{p_code:cloudCode()});CLLIST=Array.isArray(L2)?L2:CLLIST}
+  if($('clSt'))$('clSt').textContent='Bulut eşitlendi';}
+ catch(e){console.warn('cloud list',e);if($('clSt'))$('clSt').textContent='Buluta ulaşılamadı · sadece bu cihazdaki kayıtlar görünüyor'}}
+async function cloudLoad(id){toast('☁ Buluttan indiriliyor…');try{const b=await cloudCall('cs_get',{p_code:cloudCode(),p_sid:id});if(!b)throw new Error('kayıt yok');const sv=await mpUnpack(b);
+  let all=saves().filter(s=>s.id!==sv.id);all.unshift(sv);all=all.slice(0,20);while(!LS.set(SKEY,all)){if(all.length<=1)break;all.pop()}loadSave(null,sv)}
+ catch(e){console.warn(e);toast('⚠ Buluttan yüklenemedi: '+String(e.message||e).slice(0,40))}}
+function cloudSetCode(){const v=String(($('clC')||{}).value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(v.length!==10){toast('Kod 10 karakter olmalı');return}if(v===cloudCode()){toast('Bu zaten senin kodun');return}LS.set('ad_cloud',v);CLLIST=null;toast('☁ Kod bağlandı');loadMenu()}
+
 const AY=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 
 
@@ -4300,7 +4340,7 @@ function dateStr(t){const G=(typeof game!=='undefined'&&game)||{};const d=new Da
 const DIFF=['Kolay','Normal','Zor','Çok Zor'];
 function showMenu(html){mode='menu';if(!game)setTimeout(startTour,30);else stopTour();if($('selBar'))$('selBar').style.display='none';closeNews();closeEco();$('modeRank').style.display='none';$('log').style.display='none';$('menu').style.display='flex';$('mp').innerHTML=html;hud.style.display='none';$('pick').style.display='none';$('setup').style.display='none';card.style.display='none';0}
 function hideMenu(){$('menu').style.display='none';0}
-function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.2.2</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
+function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.3.0</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
  ${!game&&LS.get(LKEY,null)&&saves().some(s=>s.id===LS.get(LKEY,null))?'<button class="mb" onclick="continueGame()">⏯ Kaldığın yerden devam et</button>':''}<button class="mb ${!game&&LS.get(LKEY,null)?'sec':''}" onclick="gameMenu()">▶ Oyun</button><button class="mb sec" onclick="mpMenu()">👥 Arkadaşlarla Oyna</button><button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button>
  <button class="mb sec" onclick="leadersMenu()">👑 Liderler</button><button class="mb sec" onclick="helpMenu()">📖 Nasıl Oynanır</button><button class="mb sec" onclick="aboutMenu()">ℹ Hakkında</button>${game?'<button class="mb sec" onclick="resume()">↩ Oyuna Dön</button>':''}<button class="mb red" onclick="exitApp()">⏻ Çıkış</button>`)}
 function exitApp(){try{if(game&&!(typeof MP!=='undefined'&&MP.on))saveGame(true);if(typeof MP!=='undefined'&&MP.on)mpLeave()}catch(e){}if(window.AtlasApp&&AtlasApp.exit){AtlasApp.exit();return}try{if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App){Capacitor.Plugins.App.exitApp();return}}catch(e){}try{window.close()}catch(e){}setTimeout(()=>{game=null;showMenu(`<h2>👋 Görüşmek üzere</h2><div class="sub">Oyun kaydedildi. Kapatmak için bu sekmeyi kapatabilirsin.</div><button class="mb sec" onclick="mainMenu()">← Ana menü</button>`)},300)}
@@ -4308,7 +4348,7 @@ const cleanName=s=>String(s||'').replace(/[<>&"'`\\]/g,'').trim().slice(0,28);
 function saves(){return LS.get(SKEY,[])}
 function gameMenu(){const last=LS.get(LKEY,null),ok=last&&saves().some(s=>s.id===last);
  showMenu(`<h2>Oyun</h2><button class="mb" onclick="scenMenu()">🆕 Yeni Oyun</button>
- <button class="mb sec" onclick="loadMenu()" ${saves().length?'':'disabled'}>📂 Oyun Yükle</button>
+ <button class="mb sec" onclick="loadMenu()">📂 Oyun Yükle</button>
  <button class="mb sec" onclick="continueGame()" ${ok?'':'disabled'}>⏯ Oyuna Devam Et</button>
  <button class="mb sec" onclick="mainMenu()">← Geri</button>`)}
 function settingsMenu(){const sw=(k,t)=>`<div class="opt"><span>${t}</span><div class="sw ${SET[k]?'on':''}" onclick="SET.${k}=!SET.${k};LS.set(SETKEY,SET);this.classList.toggle('on');LAYER=null;req()"></div></div>`;
