@@ -603,7 +603,7 @@ function endTurnNow(){if(!game||busy)return;busy=true;sfx('turn');dirty=false;ca
  for(let i=0;i<N;i++){const cap=BASEPOP[i]*1.05;if(pop[i]<cap)pop[i]=Math.min(cap,pop[i]*1.001+1);const o=owner[i];const tgt=(CORE[i]===o?72:48)-Math.min(15,enemiesOf(o).length*6*(gov(o)==='dem'?1.5:1))-(unemp[i]-7)*0.8+govF(o,'hap')+(tl(o,'med')>=3?2:0)+(tl(o,'med')>=6?3:0)-((game.dmg[i]||0)>game.turn?6:0)+(o===game.me?(0.2-game.tax)*60-Math.max(0,(game.mob||2)-2)*4:0);hap[i]+=(tgt-hap[i])*0.03}
  game.dp=Math.min(50,game.dp+0.5+govF(game.me,'dp'));processEnvoys();unrestNews();buildTick();debtTick();coupTick();straitTick();projTick();spaceTick();stabTick();allyTick();extTick();aiColonize();vassalTick();missileTick();aiBuild();aiCyber();game.tp+=tpGain();if(game.turn%10===0)aiTreeTick();game.mp=Math.min(30,game.mp+Math.min(12,5+Math.floor(provsOf(game.me).length/40)));const anyDis=diseaseTick();investTick();
  if(typeof mpPerPlayer==='function')mpPerPlayer();consolidate();calcEco();game.gold+=income();game.turn++;if(!isModern(game.scn)&&typeof scenTick==='function')scenTick();if(!owner.includes(game.me)){busy=false;if(typeof MP!=='undefined'&&MP.on&&MP.host){if(!MP.deadShown){MP.deadShown=true;toast('💀 Ülken yıkıldı · oda açık kalır')}}else{gameOver();return}}
- const cq=BLOG.filter(e=>e.now!==undefined);if(cq.length){VOWN=owner.slice();for(let k=cq.length-1;k>=0;k--)VOWN[cq[k].p]=cq[k].prev}
+ const cq=BLOG.filter(e=>e.now!==undefined);if(cq.length&&!(typeof MP!=='undefined'&&MP.on)){VOWN=owner.slice();for(let k=cq.length-1;k>=0;k--)VOWN[cq[k].p]=cq[k].prev}
  if(dirty){buildBorders();paint()}else if(MAPMODE!=='pol')paint();refreshBar();updHud();req();autoSave();busy=false;refreshPanels();if(game.offer)showOffer();if(BLOG.length&&!(typeof MP!=='undefined'&&MP.on))playReplay()}
 function consolidate(){const m=new Map(),out=[];for(const a of armies){if(a.path.length){out.push(a);continue}const k=a.o*100000+a.p;const h=m.get(k);if(h){h.n+=a.n;if(a.g&&h.o!==game.me&&CORE[h.p]!==h.o)h.g=1}else{m.set(k,a);out.push(a)}}armies=out}
 let busy=false;
@@ -726,12 +726,12 @@ function warUI(c){if(game.rel[c]>-10||truce(game.me,c))return;if(!useDP(3))retur
 function allyUI(c){const p=allyChance(c),pc=Math.round(p*100),col=p>=0.75?'#7f9f5e':p>=0.25?'#c9a24a':'#a5503c';
  $('sub').innerHTML=`<div class="box"><div>Kabul etme ihtimali: <b style="color:${col}">%${pc}</b></div>
  <div class="pbar"><div style="width:${Math.max(3,pc)}%;background:${col}"></div></div>
- <div style="font-size:12px;opacity:.75;margin:4px 0 6px">${p<0.25?'Bu ülke şu an ittifaka sıcak bakmıyor. Önce ilişkileri geliştir.':'Elçi gönderilir, yanıt 10 tur sonra gelir.'}</div>
+ <div style="font-size:12px;opacity:.75;margin:4px 0 6px">${p<0.25?'Bu ülke şu an ittifaka sıcak bakmıyor. Önce ilişkileri geliştir.':'Elçi gönderilir, yanıt '+MPT(10)+' tur sonra gelir.'}</div>
  <button onclick="sendAlly(${c})" ${p<0.25?'disabled':''}>✉ Elçiyi gönder (3 📜)</button></div>`}
-function sendAlly(c){if(allyChance(c)<0.25||!useDP(3))return;game.envoys.push({c,type:'ally',due:game.turn+10});game.cool[c]=game.turn+15;toast(`✉ İttifak elçisi ${cname(c)} yolunda`);refreshBar()}
-function envoyUI(c){if(!useDP(2))return;game.envoys.push({c,type:'rel',due:game.turn+10});game.cool[c]=game.turn+15;toast(`✉ Elçi ${cname(c)} yolunda, yanıt 10 tur sonra`);refreshBar()}
+function sendAlly(c){if(allyChance(c)<0.25||!useDP(3))return;game.envoys.push({c,type:'ally',due:game.turn+MPT(10)});game.cool[c]=game.turn+MPT(15);toast(`✉ İttifak elçisi ${cname(c)} yolunda`);refreshBar()}
+function envoyUI(c){if(!useDP(2))return;game.envoys.push({c,type:'rel',due:game.turn+MPT(10)});game.cool[c]=game.turn+MPT(15);toast(`✉ Elçi ${cname(c)} yolunda, yanıt ${MPT(10)} tur sonra`);refreshBar()}
 function insultUI(c){if(!useDP(1))return;game.rel[c]=Math.max(-100,game.rel[c]-(10+Math.random()*6|0));game.cool[c]=game.turn+2;toast(`😠 ${cname(c)} ülkesine hakaret ettin`);refreshBar()}
-function betrayUI(c){if(!useDP(3))return;game.allies=game.allies.filter(x=>x!==c);game.rel[c]=Math.max(-100,game.rel[c]-60);game.cool[c]=game.turn+15;
+function betrayUI(c){if(!useDP(3))return;game.allies=game.allies.filter(x=>x!==c);game.rel[c]=Math.max(-100,game.rel[c]-60);game.cool[c]=game.turn+MPT(15);
  for(const n of CNB[game.me]){if(n!==c&&game.rel[n]!==undefined)game.rel[n]=Math.max(-100,game.rel[n]-(5+Math.random()*6|0))}
  for(const n of CNB[c]){if(n!==c&&n!==game.me&&game.rel[n]!==undefined)game.rel[n]=Math.max(-100,game.rel[n]-4)}
  if(game.ext&&game.ext.ally)delete game.ext.ally[c];for(let i=0;i<N;i++)if(owner[i]===game.me)hap[i]=Math.max(0,hap[i]-3);news('ulusal',`🗡 ${cname(c)} ile ittifakımızı bozduk. Komşu devletler bu ihanete tepkili.`,true);toast('🗡 İhanet edildi');if(DIPO){DIPO=0;refreshBar();diploUI()}else refreshBar()}
@@ -902,7 +902,7 @@ function buildUI(){const v=selP;let h='<div class="box bl">';
  BINFO.forEach((b,k)=>{if(b.k==='PORT'&&!PCELL[v].length)return;if((b.k==='AIR'||b.k==='AD')&&tl(game.me,'air')<1&&!lv(v,k))return;if(b.k==='SILO'&&tl(game.me,'mis')<1&&!lv(v,k))return;if(b.k==='SPACE'&&!lv(v,k)&&(game.scn!=='2027'||tl(game.me,'spc')<1||(v!==C[game.me].cap&&v!==bestCity(game.me))))return;const M=bmax(k),L=lv(v,k),q=game.build.find(x=>x.p===v&&x.k===b.k),cost=L<M?bcost(v,k):0;
   h+=`<div class="bi"><div><b>${b.i} ${b.n} <small>${'★'.repeat(L)}${'☆'.repeat(M-L)}</small></b><span>${b.d}</span></div>${q?`<em>⏳ ${q.due-game.turn} tur</em>`:L>=M?'<em>✓ Maks</em>':`<button onclick="doBuild('${b.k}')" ${game.gold<cost?'disabled':''}>${L?'Sv'+(L+1):'İnşa'} · ${kfmt(cost)} 💰</button>`}</div>`});
  $('sub').innerHTML=h+'</div>'}
-function doBuild(key){const k=B[key];if(lv(selP,k)>=bmax(k)||game.build.some(x=>x.p===selP&&x.k===key))return;if(key==='SPACE'&&game.build.some(x=>x.k==='SPACE')){toast('Zaten bir kalkış merkezi inşa ediliyor');return}const cost=bcost(selP,k);if(game.gold<cost)return;game.gold-=cost;game.build.push({p:selP,k:key,due:game.turn+BUILD_TURNS});toast(`🏗 ${BINFO[k].n} inşaatı başladı (${BUILD_TURNS} tur)`);updHud();buildUI()}
+function doBuild(key){const k=B[key];if(lv(selP,k)>=bmax(k)||game.build.some(x=>x.p===selP&&x.k===key))return;if(key==='SPACE'&&game.build.some(x=>x.k==='SPACE')){toast('Zaten bir kalkış merkezi inşa ediliyor');return}const cost=bcost(selP,k);if(game.gold<cost)return;game.gold-=cost;game.build.push({p:selP,k:key,due:game.turn+MPT(BUILD_TURNS)});toast(`🏗 ${BINFO[k].n} inşaatı başladı (${BUILD_TURNS} tur)`);updHud();buildUI()}
 const TAXMAX=0.3;
 function ecoUI(){if(!game)return;calcEco();
  const sl=(id,val,max,lbl,cb)=>`<div class="opt"><span>${lbl}<br><b id="${id}V">%${Math.round(val*100)}</b></span><input type="range" min="0" max="${max}" value="${Math.round(val*100)}" oninput="${cb}"></div>`;
@@ -1143,6 +1143,7 @@ function selectCountry(c){if(!owner.includes(c))return;const v=owner[C[c].cap]==
 
 // ===== FLAGS / GOVERNMENT / COUPS / VASSALS / PEACE / MISSILES / AI BUILD =====
 var VOWN=null;
+function MPT(n){return(typeof MP!=='undefined'&&MP.on&&MP.started)?Math.max(1,Math.round(n/3)):n}
 function kktcFlag(){if(GENF.k)return GENF.k;const cv=document.createElement('canvas');cv.width=60;cv.height=45;const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,60,45);g.fillStyle='#e30a17';g.fillRect(0,5,60,4);g.fillRect(0,36,60,4);g.beginPath();g.arc(26,22.5,8,0,7);g.fill();g.fillStyle='#fff';g.beginPath();g.arc(28,22.5,6.4,0,7);g.fill();star(g,35,22.5,4,'#e30a17');return GENF.k=cv.toDataURL()}
 function flagOf(c){if(C[c]&&C[c].fl&&!(game&&game.flag&&game.flag[c]))return scenFlag(c);if(C[c].n==='Northern Cyprus'&&!(game&&game.flag&&game.flag[c]))return kktcFlag();if(game&&game.flag&&game.flag[c])return game.flag[c];if(FLAGS[C[c].n])return FLAGS[C[c].n];return genFlag(c)}
 const GENF={};function genFlag(c){if(GENF[c])return GENF[c];const cv=document.createElement('canvas');cv.width=60;cv.height=45;const g=cv.getContext('2d');const col=CC[c],s=(c*2654435761)>>>0;
@@ -1268,9 +1269,9 @@ function interiorUI(){const me=game.me,st=stabilityAll()[me],g=gov(me);const ris
  <button class="b-green" onclick="festival()" ${fcd>0?'disabled':''}>🎉 Ulusal bayram düzenle · ${kfmt(Math.max(5000,grossOf(me)*2))}💰${fcd>0?' ('+fcd+' tur)':''}</button>
  <button onclick="propaganda()">📣 Propaganda kampanyası · 5📜 (10 tur darbe riski azalır)</button>
  <div class="ngh">Tarihi devletler</div>${histAvail().length?histAvail().map(k=>{const pr=histProgress(k);return `<button onclick="histUI('${k}')"><img class="fl" src="${histFlag(HIST[k].fl)}" style="height:12px"> ${HIST[k].n} (${HIST[k].y}) · %${Math.round(pr.own/pr.tot*100)}</button>`}).join(''):'<div class="hint" style="color:#bfae88">Ülkenin dönüşebileceği tarihi bir devlet yok.</div>'}</div>`}
-function changeGov(){const k=$('govS').value;if(k===gov(game.me)){toast('Zaten bu yönetim');return}if(game.gold<25000){toast('💰 Yetersiz altın');return}if(!useDP(10))return;game.gold-=25000;game.gov[game.me]=k;game.govCd=game.turn+30;for(let i=0;i<N;i++)if(owner[i]===game.me)hap[i]=Math.max(0,hap[i]-10);news('yerel',`🏛 Yönetim şekli değişti: artık ${GOV[k].n}.`);updHud();interiorUI()}
+function changeGov(){const k=$('govS').value;if(k===gov(game.me)){toast('Zaten bu yönetim');return}if(game.gold<25000){toast('💰 Yetersiz altın');return}if(!useDP(10))return;game.gold-=25000;game.gov[game.me]=k;game.govCd=game.turn+MPT(30);for(let i=0;i<N;i++)if(owner[i]===game.me)hap[i]=Math.max(0,hap[i]-10);news('yerel',`🏛 Yönetim şekli değişti: artık ${GOV[k].n}.`);updHud();interiorUI()}
 function moveCap(){const i=+$('capS').value;if(isNaN(i))return;const cost=Math.round(30000+provValue(i)*0.2);if(game.gold<cost){toast('💰 Yetersiz altın');return}game.gold-=cost;C[game.me].cap=i;news('yerel',`🏙 Başkent ${P[i].n} şehrine taşındı.`);updHud();interiorUI()}
-function festival(){const c=Math.max(5000,grossOf(game.me)*2);if(game.gold<c){toast('💰 Yetersiz altın');return}game.gold-=c;game.festCd=game.turn+20;for(let i=0;i<N;i++)if(owner[i]===game.me)hap[i]=Math.min(100,hap[i]+8);toast('🎉 Halk bayramı kutluyor');updHud();interiorUI()}
+function festival(){const c=Math.max(5000,grossOf(game.me)*2);if(game.gold<c){toast('💰 Yetersiz altın');return}game.gold-=c;game.festCd=game.turn+MPT(20);for(let i=0;i<N;i++)if(owner[i]===game.me)hap[i]=Math.min(100,hap[i]+8);toast('🎉 Halk bayramı kutluyor');updHud();interiorUI()}
 function propaganda(){if(!useDP(5))return;game.propUntil=game.turn+10;toast('📣 Propaganda başladı');interiorUI()}
 // ---- customization ----
 const FPAT={h3:'Yatay üçlü',v3:'Dikey üçlü',h2:'Yatay ikili',cross:'Haç',cres:'Hilal ve yıldız',star:'Yıldız'};
@@ -1446,7 +1447,7 @@ function spaceBox(){const me=game.me,S=spX(),L=tl(me,'spc'),sc=spaceCenter(me),c
  h+=`<div class="acts" style="margin-top:6px"><button onclick="buildRocket()" ${!can||game.gold<cost||S.q.length>=2?'disabled':''}>🚀 Roket üret · ${kfmt(cost)} 💰 · ${ROCKET_T} tur</button><button class="b-red" onclick="launchRocket()" ${S.r<1||sc===undefined?'disabled':''}>🔥 Fırlat</button></div>`;
  if(!can)h+=`<div class="hint">${L<2?'Roket üretmek için Roket Motorları araştırması gerekli.':'Önce başkentinde veya en değerli şehrinde Roket Kalkış Merkezi inşa et.'}</div>`;
  return h+'</div>'}
-function buildRocket(){const S=spX(),c=rocketCost();if(game.gold<c||S.q.length>=2)return;game.gold-=c;S.q.push(game.turn+ROCKET_T);toast(`🚀 Roket üretimi başladı (${ROCKET_T} tur)`);updHud();techUI()}
+function buildRocket(){const S=spX(),c=rocketCost();if(game.gold<c||S.q.length>=2)return;game.gold-=c;S.q.push(game.turn+MPT(ROCKET_T));toast(`🚀 Roket üretimi başladı (${ROCKET_T} tur)`);updHud();techUI()}
 function spaceTick(){if(!game||game.scn!=='2027')return;const S=spX();const done=S.q.filter(d=>d<=game.turn);if(done.length){S.q=S.q.filter(d=>d>game.turn);S.r+=done.length;toast('🚀 Roket fırlatmaya hazır!');news('ulusal','🚀 Yeni roketimiz hazır. Teknoloji panelindeki Uzay sekmesinden fırlatabilirsin.')}
  if(spaceCenter(game.me)===undefined&&S.r)return;
  if(game.turn>25&&Math.random()<0.012){const L=['United States','China','Russia','India','Japan','France'].map(n=>C.findIndex(c=>c.n===n)).filter(c=>c>=0&&c!==game.me&&owner.includes(c));if(L.length){const c=L[(Math.random()*L.length)|0];news('ulusal',`🚀 ${cname(c)} uzaya yeni bir roket fırlattı.`)}}}
@@ -3700,7 +3701,7 @@ function cureUI(){const me=game.me,c=CU(),T=game.turn,M=myOutbreaks(),g=grossOf(
 function cureAct(k){const c=CU(),g=grossOf(game.me),T=game.turn;if(k==='q'){if(!useDP(3))return;c.q=T+10;news('yerel','🚧 Ülke genelinde karantina ilan edildi.')}
  else{const cost=Math.round(k==='m'?Math.max(5000,g*1.5):Math.max(8000,g*2.5));if(game.gold<cost){toast('💰 Yetersiz altın');return}game.gold-=cost;if(k==='m'){c.m=T+8;news('yerel','💊 Ülke genelinde ücretsiz ilaç dağıtımı başladı.')}else{c.h=T+10;news('yerel','🏥 Salgın bölgelerine sahra hastaneleri kuruldu.')}}
  updHud();cureUI()}
-function vacStart(id){const c=CU(),cost=Math.round(Math.max(10000,grossOf(game.me)*3));if(game.gold<cost){toast('💰 Yetersiz altın');return}game.gold-=cost;c.v[id]=game.turn+vacTurns();news('yerel',`🧪 ${(game.outb[id]||{}).name||'Salgın'} için aşı çalışması başladı.`);updHud();cureUI()}
+function vacStart(id){const c=CU(),cost=Math.round(Math.max(10000,grossOf(game.me)*3));if(game.gold<cost){toast('💰 Yetersiz altın');return}game.gold-=cost;c.v[id]=game.turn+MPT(vacTurns());news('yerel',`🧪 ${(game.outb[id]||{}).name||'Salgın'} için aşı çalışması başladı.`);updHud();cureUI()}
 function vacCamp(id){const c=CU(),cost=Math.round(Math.max(6000,grossOf(game.me)*2));if(game.gold<cost){toast('💰 Yetersiz altın');return}game.gold-=cost;c.imm[id]=1;for(let i=0;i<N;i++)if(owner[i]===game.me&&dis[i]==id){inf[i]*=0.25;hap[i]=Math.min(100,hap[i]+3)}news('yerel',`💉 ${(game.outb[id]||{}).name||'Salgın'} aşı kampanyası tamamlandı. Halk bağışık hale geliyor.`);updHud();paint();cureUI()}
 function cureTick(){const c=CU(),T=game.turn;if(c.q>T)for(let i=0;i<N;i++)if(owner[i]===game.me&&inf[i]>0.005)hap[i]=Math.max(0,hap[i]-0.4);for(const id in c.v)if(c.v[id]===T)news('yerel',`🧪 ${(game.outb[id]||{}).name||'Salgın'} aşısı hazır! İçişleri › Salgın bölümünden kampanyayı başlat.`)}
 // ---------- infamy & coalitions ----------
@@ -3882,12 +3883,12 @@ function spMission(k,arg){const S=spS(),c=spCost(k);if(game.gold<c){toast('💰 
  if(k==='sat'){S.sat++;news('ulusal',`🛰 Uydumuz yörüngeye yerleşti! Toplam uydu: ${S.sat}. Gelir ve teknoloji arttı.`)}
  else if(k==='tel'){S.tel++;news('ulusal','🔭 Uzay teleskobumuz yörüngede! Artık gökyüzü gözlemleri yapabilirsin.')}
  else if(k==='iss'){S.iss++;if(S.iss>=6){game.ext.prest=(game.ext.prest||0)+5;news('ulusal','🧑‍🚀 Uzay istasyonumuz tamamlandı! Prestij +5.')}else news('ulusal',`🧑‍🚀 İstasyon modülü ${S.iss}/6 yörüngeye eklendi.`)}
- else if(k==='moon'){S.mq.push({k:'moon',t:T+6});news('ulusal','🌕 Ay numune görevi yola çıktı. 6 tur sonra Dünya\'ya dönecek.')}
- else if(k==='probe'){const pl=PLAN[arg]||PLAN.mars;S.mq.push({k:'probe',p:arg in PLAN?arg:'mars',t:T+pl.t});news('ulusal',`🛸 ${pl.n} sondamız fırlatıldı. Varış: ${pl.t} tur.`)}
+ else if(k==='moon'){S.mq.push({k:'moon',t:T+MPT(6)});news('ulusal','🌕 Ay numune görevi yola çıktı. 6 tur sonra Dünya\'ya dönecek.')}
+ else if(k==='probe'){const pl=PLAN[arg]||PLAN.mars;S.mq.push({k:'probe',p:arg in PLAN?arg:'mars',t:T+MPT(pl.t)});news('ulusal',`🛸 ${pl.n} sondamız fırlatıldı. Varış: ${pl.t} tur.`)}
  for(const k2 in game.rel)game.rel[k2]=Math.min(100,game.rel[k2]+1);rocketShow(me,true,false,P[R.sc].n);updHud()}
 function launchRocket(){const R=spLaunchRoll('test');if(!R)return;closeSide();const S=spS();if(R.ok){game.ext.prest=(game.ext.prest||0)+1;for(let i=0;i<N;i++)if(owner[i]===game.me)hap[i]=Math.min(100,hap[i]+4);news('ulusal',`🚀 ${cname(game.me)} roketi uzaya ulaştı! Prestij +1.`)}else news('ulusal','💥 Roket fırlatma sırasında infilak etti.',true);rocketShow(game.me,R.ok,R.ok&&S.ok===1,P[R.sc].n);updHud()}
 let OBSN=0;
-function observe(){const S=spS();if(!S.tel||(S.obs||0)>game.turn)return;S.obs=game.turn+Math.max(2,5-S.tel);const kinds=['gal','gal','neb','exo'];const k=kinds[(Math.random()*kinds.length)|0],seed=(Math.random()*1e9)|0,num=1000+(seed%9000);
+function observe(){const S=spS();if(!S.tel||(S.obs||0)>game.turn)return;S.obs=game.turn+MPT(Math.max(2,5-S.tel));const kinds=['gal','gal','neb','exo'];const k=kinds[(Math.random()*kinds.length)|0],seed=(Math.random()*1e9)|0,num=1000+(seed%9000);
  const n=k==='gal'?`AD-${num} sarmal gökadası`:k==='neb'?`AD-${num} bulutsusu`:`AD-${num}b ötegezegeni`;S.gal.unshift({k,n,seed,t:game.turn});S.gal=S.gal.slice(0,40);game.tp+=2;if(S.gal.length%3===0)game.ext.prest=(game.ext.prest||0)+1;
  news('ulusal',`🌌 Teleskobumuz yeni bir keşif yaptı: ${n}. Teknoloji puanı +2.`);closeSide();showSpModal('🌌 '+n,spImg(k,seed),`<div class="hint" style="color:#cdbb92">${k==='gal'?'Milyarlarca yıldızdan oluşan uzak bir sarmal gökada.':k==='neb'?'Yeni yıldızların doğduğu dev bir gaz ve toz bulutu.':'Başka bir yıldızın çevresinde dolanan, daha önce bilinmeyen bir gezegen.'}</div>`);updHud()}
 function spMissionTick(){if(!game||!game.ext||!game.ext.sp)return;const S=spS(),T=game.turn;const done=S.mq.filter(q=>q.t<=T);if(!done.length)return;S.mq=S.mq.filter(q=>q.t>T);
@@ -4099,32 +4100,37 @@ const isHum=c=>!!(game&&game.mpd&&game.mpd.humans&&game.mpd.humans.includes(c));
 const mpHumans=()=>(game&&game.mpd&&game.mpd.humans)||[];
 const MPSPEEDS=[[30,'Yavaş · 30 sn'],[15,'Normal · 15 sn'],[8,'Hızlı · 8 sn']];
 // ---------- transport: plain HTTPS (Supabase REST) — works where WebSockets are blocked ----------
-const MPBASES=['https://atlas-dominion-api.vercel.app/rest/v1/','https://lhhwltdrmptjkjdkwgfq.supabase.co/rest/v1/'];let MPREST=MPBASES[0];
-let MPCH=null,MPPOLL=null,MPLAST=0,MPSV=0,MPKEY='';
-async function mpHttp(path,opt){opt=opt||{};const r=await fetch(MPREST+path,{method:opt.method||'GET',headers:Object.assign({apikey:MPCFG.key,Authorization:'Bearer '+MPCFG.key,'Content-Type':'application/json'},opt.headers||{}),body:opt.body?JSON.stringify(opt.body):undefined,cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status+' '+(await r.text()).slice(0,120));const t=await r.text();return t?JSON.parse(t):null}
+const MPBASES=['https://api.tugrion.com/rest/v1/','https://atlas-dominion-api.vercel.app/rest/v1/','https://lhhwltdrmptjkjdkwgfq.supabase.co/rest/v1/'];let MPREST=MPBASES[0],MPBI=0;
+let MPCH=null,MPPOLL=null,MPLAST=0,MPSV=0,MPKEY='',MPERR={};
+async function mpHttp(path,opt,base){opt=opt||{};const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),opt.timeout||9000);try{const r=await fetch((base||MPREST)+path,{method:opt.method||'GET',headers:Object.assign({apikey:MPCFG.key,Authorization:'Bearer '+MPCFG.key,'Content-Type':'application/json'},opt.headers||{}),body:opt.body?JSON.stringify(opt.body):undefined,cache:'no-store',signal:ac.signal});if(!r.ok)throw new Error('HTTP '+r.status+' '+(await r.text()).slice(0,120));const t=await r.text();return t?JSON.parse(t):null}catch(e){if(e&&e.name==='AbortError')throw new Error('zaman aşımı');throw e}finally{clearTimeout(tm)}}
+// try every route (own domain → relay → direct) and keep the first that answers
+async function mpPickBase(code){MPERR={};for(let i=0;i<MPBASES.length;i++){const b=MPBASES[(MPBI+i)%MPBASES.length];try{const r=await mpHttp('rpc/mp_last',{method:'POST',body:{p_room:code},timeout:7000},b);MPBI=(MPBI+i)%MPBASES.length;MPREST=b;return typeof r==='number'?r:+r||0}catch(e){MPERR[b.split('/')[2]]=String(e.message||e).slice(0,60)}}throw new Error('Hiçbir sunucuya ulaşılamadı')}
 function mpConnect(code,cb,tryN){tryN=tryN||1;mpClose();MP.status='connecting';
  if(window.MPTEST){MPCH={send:m=>window.MPTEST(JSON.stringify(m))};MP.status='ok';setTimeout(()=>cb&&cb(true),0);return}
- if(navigator.onLine===false){cb&&cb(false,'offline');return}
- MPREST=MPBASES[(tryN-1)%MPBASES.length];
- mpHttp(`mp_msgs?room=eq.${code}&select=id&order=id.desc&limit=1`).then(r=>{MPLAST=r&&r[0]?r[0].id:0;MPSV=0;MP.status='ok';
+ if(navigator.onLine===false){cb&&cb(false,'İnternet yok');return}
+ mpPickBase(code).then(last=>{MPLAST=last;MPSV=0;MP.status='ok';
    MPCH={send:m=>{const body=JSON.stringify(m);if(body.length>19000)return;mpHttp('mp_msgs',{method:'POST',headers:{Prefer:'return=minimal'},body:{room:code,sender:MP.pid,target:m.to||'',body}}).catch(e=>console.warn('mp send',e))}};
    MPPOLL=setInterval(mpPoll,900);cb&&cb(true)})
-  .catch(e=>{console.warn('mp connect',e);if(tryN<4){toast(`🔌 Tekrar deneniyor (${tryN+1}/4)…`);setTimeout(()=>mpConnect(code,cb,tryN+1),800*tryN)}else{MP.status='err';cb&&cb(false,String(e.message||e))}})}
+  .catch(e=>{console.warn('mp connect',e);if(tryN<3){toast(`🔌 Tekrar deneniyor (${tryN+1}/3)…`);setTimeout(()=>mpConnect(code,cb,tryN+1),1000*tryN)}else{MP.status='err';cb&&cb(false,Object.entries(MPERR).map(([h,m])=>h+': '+m).join(' | ')||String(e.message||e))}})}
 let MPBUSY=false,MPFAILS=0;
-async function mpPoll(){if(MPBUSY||!MP.on)return;MPBUSY=true;try{
-  const r=await mpHttp(`mp_msgs?room=eq.${MP.code}&id=gt.${MPLAST}&select=id,sender,target,body&order=id.asc&limit=60`);
-  for(const x of r||[]){MPLAST=Math.max(MPLAST,x.id);if(x.sender===MP.pid||(x.target&&x.target!==MP.pid))continue;let m;try{m=JSON.parse(x.body)}catch(e){continue}m.from=x.sender;try{mpOnMsg(m)}catch(e){console.error(e)}}
-  if(MP.guest&&MP.started!==null){const v=await mpHttp(`mp_state?room=eq.${MP.code}&select=v`);if(v&&v[0]&&v[0].v>MPSV){const st=await mpHttp(`mp_state?room=eq.${MP.code}&select=v,body`);if(st&&st[0]&&st[0].body){MPSV=st[0].v;MP.hostSeen=Date.now();const sv=await mpUnpack(st[0].body);mpGotState(sv)}}}
-  MPFAILS=0}catch(e){MPFAILS++;if(MPFAILS===5)toast('⚠ Bağlantı zayıf, tekrar deneniyor…');console.warn('mp poll',e)}finally{MPBUSY=false}}
+async function mpPoll(){if(MPBUSY||!MP.on)return;MPBUSY=true;const t0=Date.now();try{
+  const want=MP.guest&&MP.welcomed;
+  const r=await mpHttp('rpc/mp_poll',{method:'POST',body:{p_room:MP.code,p_after:MPLAST,p_sv:want?MPSV:9e15}});const rtt=Date.now()-t0;
+  for(const x of (r&&r.msgs)||[]){MPLAST=Math.max(MPLAST,x.id);if(x.sender===MP.pid||(x.target&&x.target!==MP.pid))continue;let m;try{m=JSON.parse(x.body)}catch(e){continue}m.from=x.sender;try{mpOnMsg(m)}catch(e){console.error(e)}}
+  if(want&&r&&r.v){if(r.upd&&r.now){const left=(r.lft||0)-(r.now-r.upd)/1000;MP.next=Date.now()-rtt/2+Math.max(0,left)*1000}
+   if(r.v>MPSV&&r.body){MPSV=r.v;MP.hostSeen=Date.now();const sv=await mpUnpack(r.body);mpGotState(sv)}}
+  if(MPFAILS>=3)toast('✔ Bağlantı geri geldi');MPFAILS=0}catch(e){MPFAILS++;console.warn('mp poll',e);
+  if(MPFAILS===3){toast('⚠ Bağlantı zayıf, başka yol deneniyor…');MPBI=(MPBI+1)%MPBASES.length;MPREST=MPBASES[MPBI]}
+  if(MPFAILS===6){MPBI=(MPBI+1)%MPBASES.length;MPREST=MPBASES[MPBI]}}finally{MPBUSY=false}}
 function mpClose(){if(MPPOLL)clearInterval(MPPOLL);MPPOLL=null;MPCH=null}
 function mpSend(t,d,to){if(!MPCH)return;MPCH.send({t,d,from:MP.pid,to:to||'',code:MP.code})}
 async function mpPackState(){const s=JSON.stringify(mpSnap());const cs=new CompressionStream('gzip'),w=cs.writable.getWriter();w.write(new TextEncoder().encode(s));w.close();const b=new Uint8Array(await new Response(cs.readable).arrayBuffer());let bin='';for(let i=0;i<b.length;i+=0x8000)bin+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(bin)}
 async function mpUnpack(b64){const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);const ds=new DecompressionStream('gzip'),w=ds.writable.getWriter();w.write(u);w.close();return JSON.parse(await new Response(ds.readable).text())}
-function mpGotState(sv){if(!MP.guest)return;MP.started=true;if(MP.me<0)return;MP.paused=!!(sv.mpd&&sv.mpd.paused);MP.next=Date.now()+((sv.mpd&&sv.mpd.left)||0)*1000;mpApplyState(sv);const L=$('mpL');if(L)L.style.display='none'}
+function mpGotState(sv){if(!MP.guest||!MP.welcomed)return;MP.started=true;if(MP.me<0)return;MP.paused=!!(sv.mpd&&sv.mpd.paused);if(window.MPTEST)MP.next=Date.now()+((sv.mpd&&sv.mpd.left)||0)*1000;mpApplyState(sv);const L=$('mpL');if(L)L.style.display='none'}
 let MPSID=0;
-async function mpBroadcastState(to){if(!MP.host||!game||MP.pushing)return;mpStoreMe();MP.pushing=true;MP.lastSync=Date.now();MP.dirtyAt=0;try{const data=await mpPackState();
+async function mpBroadcastState(to){if(!MP.host||!game||MP.pushing)return;mpRelSync();mpStoreMe();MP.pushing=true;MP.lastSync=Date.now();MP.dirtyAt=0;try{const data=await mpPackState();
  if(window.MPTEST){const id=++MPSID+'_'+Date.now(),CH=150000,n=Math.ceil(data.length/CH);for(let i=0;i<n;i++)mpSend('st',{id,i,n,x:data.slice(i*CH,(i+1)*CH)},to);return}
- if(!MPKEY)MPKEY=[...crypto.getRandomValues(new Uint8Array(16))].map(x=>x.toString(16).padStart(2,'0')).join('');await mpHttp('rpc/mp_put_state',{method:'POST',body:{p_room:MP.code,p_key:MPKEY,p_body:data}})}catch(e){console.warn('mp push',e);MP.dirtyAt=Date.now()}finally{MP.pushing=false}}
+ if(!MPKEY)MPKEY=[...crypto.getRandomValues(new Uint8Array(16))].map(x=>x.toString(16).padStart(2,'0')).join('');const lft=MP.paused?(game.mpd.left||MP.speed):Math.max(0,(MP.next-Date.now())/1000);await mpHttp('rpc/mp_put_state2',{method:'POST',body:{p_room:MP.code,p_key:MPKEY,p_body:data,p_left:lft}})}catch(e){console.warn('mp push',e);MP.dirtyAt=Date.now()}finally{MP.pushing=false}}
 // ---------- per-player state ----------
 const PF=['gold','dp','mp','tp','tax','inv','mob','rel','allies','envoys','cool','aicool','unrest','news','pact','access','gave','build','proj','offer','missiles','propUntil','govCd','festCd','cyberVis','cybCd','mprod','vasInc','lastIns'];
 const PFX=['sp','uni','cure','ally','call','prest','E0','g0','qo','vil','evj'];
@@ -4136,12 +4142,17 @@ function mpInitPlayer(c){const me0=game.me;mpStoreMe();const pl={gold:0,dp:10,mp
  game.mpd.pl[c]=pl;mpLoad(c);C.forEach((x,i)=>{if(i===c)return;const h=((i*2654435761+c*40503)>>>0)%41;game.rel[i]=isHum(i)?0:(CNB[c].has(i)?-20:-5)+h});calcEco();game.gold=Math.round(grossOf(c)*10);
  if(isMed(game.scn)){for(const a of armies)if(a.o===c)a.n=Math.round(a.n*2.5);game.gold=Math.round(game.gold*3);MIL[c]=Math.round(MIL[c]*2.5)}
  game.news=[{cat:'ulusal',t:`🤝 Çok oyunculu oyun başladı. Ülken: ${cname(c)}`,turn:game.turn,read:false,c}];mpStoreMe();mpLoad(me0)}
+// human↔human relations are one shared number: changes from either side add up
+function mpRelSync(){if(!MP.host||!game||!game.mpd)return;mpStoreMe();const H=mpHumans(),hr=game.mpd.hr||(game.mpd.hr={});
+ for(let i=0;i<H.length;i++)for(let j=i+1;j<H.length;j++){const a=Math.min(H[i],H[j]),b=Math.max(H[i],H[j]),pa=game.mpd.pl[a],pb=game.mpd.pl[b];if(!pa||!pb)continue;pa.rel=pa.rel||{};pb.rel=pb.rel||{};
+  const k=a+'-'+b,ra=+pa.rel[b]||0,rb=+pb.rel[a]||0,L=hr[k];let v=L===undefined?(ra+rb)/2:L+(ra-L)+(rb-L);v=Math.max(-100,Math.min(100,Math.round(v)));pa.rel[b]=v;pb.rel[a]=v;hr[k]=v}
+ mpLoad(game.me)}
 // ---------- host: run the guests' share of every turn ----------
 function mpPerPlayer(){if(!MP.host||!game||!game.mpd)return;const host=game.me;for(const c of mpHumans()){if(c===host||!owner.includes(c))continue;mpSwap(c);MP.swap=true;
   try{game.dp=Math.min(50,game.dp+0.5+govF(c,'dp'));processEnvoys();unrestNews();buildTick();debtTick();projTick();spaceTick();allyTick();vassalTick();cureTick();uniTick();spMissionTick();aiDiplomacy();
    for(const q of (game.mprod||[]).slice())if(q.due<=game.turn){game.mprod=game.mprod.filter(x=>x!==q);if(owner[q.p]===c)game.missiles++}
    game.tp+=tpGain();game.mp=Math.min(30,game.mp+Math.min(12,5+Math.floor(provsOf(c).length/40)));MPONLY=c;investTick();MPONLY=-1;calcEco();game.gold+=income()}catch(e){console.error('mpPerPlayer',e)}
-  finally{MPONLY=-1;MP.swap=false;mpSwap(host)}}}
+  finally{MPONLY=-1;MP.swap=false;mpSwap(host)}}mpRelSync()}
 // ---------- host: execute a guest command in that player's context ----------
 const MPACT=new Set(['envoyUI','warUI','insultUI','sendAlly','negSend','negSurrender','tryPeace','villageAid','toggleStrait','formHist','doRecruit','doBuild','doCyber','makeMissile','doMissile','doAir','doTank','acceptOffer','stopArmy','askTribute','buyWar','buyVassal','buyCity','sellCity','buyAccess','betrayUI','pactUI','accessUI','giveAccess','doGift','annexVassal','callAllies','renewAlly','unlock','buildRocket','launchRocket','spMission','observe','cureAct','vacStart','vacCamp','uniFound','uniInvite','uniKick','uniDissolve','changeGov','moveCap','festival','propaganda','doSel','mmGo','setTax','setInv','mpSetMob','mpIndep','__pick']);
 function mpDummy(){const D=new Proxy(function(){},{get:(t,k)=>k===Symbol.toPrimitive?()=>'':k==='value'||k==='textContent'||k==='innerHTML'?'':k==='length'?0:k==='checked'?false:k==='style'||k==='classList'||k==='dataset'?D:D,set:()=>true,apply:()=>D});return D}
@@ -4154,7 +4165,7 @@ function mpExec(c,fn,a,ctx){if(!MPACT.has(fn)||!game||!owner.includes(c))return[
   if(fn==='__pick'){mode='move';pickAt({x:+a[0],y:+a[1]})}else{mode='play';(MPFN[fn]||window[fn]).apply(null,Array.isArray(a)?a.slice(0,4):[])}}
  catch(e){console.error('mpExec',fn,e)}
  finally{MPDOM=null;MP.swap=false;selP=keep.selP;selF=keep.selF;mode=keep.mode;MAPMODE=keep.MAPMODE;SEL=keep.SEL;MSEL=keep.MSEL;MSELF=keep.MSELF;MMP=keep.MMP;ARMYPCT=keep.ARMYPCT;if(keep.NEG)NEG=keep.NEG;UDR=keep.UDR;mpSwap(host)}
- if(dirty){buildBorders();dirty=false}paint();req();return MP.out.slice(0,6)}
+ const hadV=!!VOWN;VOWN=null;mpRelSync();if(dirty||hadV){buildBorders();dirty=false}paint();req();return MP.out.slice(0,6)}
 const MPFN={};
 // UI functions that must stay silent while the host runs another player's command
 const MPUI=['refreshBar','foreignUI','interiorUI','diploUI','relUI','resUI','cureUI','uniUI','govUI','techUI','updHud','showOffer','playReplay','rocketShow','showSpModal','closeSpModal','buildUI','recruitUI','tradeUI','statsUI','cityList','closeBar','closeSide','selectProv','selectFleet','fxLoop','QO','showQuote','sfx','selUI','showModeRank','mmUI','missileUI','airUI','tankUI','straitUI','negotiate','histUI','custUI','ecoRef','refreshPanels','uniEdit','probeUI','galleryUI','observeUI','cancelMove','startMove'];
@@ -4182,30 +4193,33 @@ function mpApplyState(sv){if(!MP.guest)return;const first=!game||!game.mpd;const
 // ---------- messages ----------
 function mpOnMsg(m){if(!m||m.from===MP.pid||(m.to&&m.to!==MP.pid))return;const d=m.d||{};
  if(MP.host){const p=MP.players[m.from];
-  if(m.t==='hello'){const name=cleanName(d.name)||'Oyuncu';if(!MP.players[m.from])MP.players[m.from]={name,c:-1,seen:Date.now()};else{MP.players[m.from].name=name;MP.players[m.from].seen=Date.now()}mpLobbyBroadcast();if(MP.started){const c=MP.players[m.from].c;mpSend('welcome',{c,scn:MP.scn,speed:MP.speed},m.from);if(window.MPTEST)mpBroadcastState(m.from)}mpLobbyUI();return}
+  if(m.t==='hello'){const name=cleanName(d.name)||'Oyuncu';if(!MP.players[m.from]&&(MP.started||MP.resumed)){mpSend('deny',{why:'roster'},m.from);return}if(!MP.players[m.from])MP.players[m.from]={name,c:-1,seen:Date.now()};else{MP.players[m.from].name=name;MP.players[m.from].seen=Date.now()}mpLobbyBroadcast();if(MP.started){const c=MP.players[m.from].c;mpSend('welcome',{c,scn:MP.scn,speed:MP.speed},m.from);if(window.MPTEST)mpBroadcastState(m.from);else MP.dirtyAt=MP.dirtyAt||Date.now()}mpLobbyUI();return}
   if(!p)return;p.seen=Date.now();
-  if(m.t==='claim'&&!MP.started){const c=+d.c;if(!C[c]||C[c].tribal||Object.values(MP.players).some(q=>q!==p&&q.c===c)||c===MP.me){mpSend('deny',{c},m.from);return}p.c=c;mpLobbyBroadcast();mpLobbyUI();return}
+  if(m.t==='claim'&&!MP.started&&!MP.resumed){const c=+d.c;if(!C[c]||C[c].tribal||Object.values(MP.players).some(q=>q!==p&&q.c===c)||c===MP.me){mpSend('deny',{c},m.from);return}p.c=c;mpLobbyBroadcast();mpLobbyUI();return}
   if(m.t==='act'&&MP.started&&p.c>=0){const out=mpExec(p.c,d.fn,d.a,d.ctx);if(out.length)mpSend('toast',{t:out},m.from);MP.dirtyAt=MP.dirtyAt||Date.now();return}
   if(m.t==='hb')return;
   if(m.t==='bye'){p.seen=0;mpLobbyUI();return}return}
  if(MP.guest){if(m.t==='lobby'||m.t==='st'||m.t==='welcome'||m.t==='toast'||m.t==='pause')MP.hostSeen=Date.now();
-  if(m.t==='lobby'){MP.players=d.players||{};MP.speed=d.speed||15;const me=MP.players[MP.pid];if(d.scn&&d.scn!==MP.scn&&!d.started){MP.scn=d.scn;newGame(d.scn);mode='pick';$('setup').style.display='none'}MP.scn=d.scn;if(me){MP.me=me.c;if(!d.started&&me.c>=0){selC=me.c;paint();req()}}mpLobbyUI();return}
-  if(m.t==='deny'){toast('⛔ Bu ülke başka oyuncuda');return}
-  if(m.t==='welcome'){MPSV=0;MP.me=d.c;MP.speed=d.speed||15;MP.started=true;mpLobbyUI();return}
-  if(m.t==='start'){MP.started=true;MP.me=d.c[MP.pid]??MP.me;toast('▶ Oyun başlıyor…');return}
+  if(m.t==='lobby'){MP.players=d.players||{};MP.speed=d.speed||15;MP.resumed=!!d.resumed;const me=MP.players[MP.pid];if(!me&&(d.started||d.resumed)&&MP.helloAt&&Date.now()-MP.helloAt>6000){mpDenied();return}if(d.scn&&d.scn!==MP.scn&&!d.started&&!d.resumed){MP.scn=d.scn;newGame(d.scn);mode='pick';$('setup').style.display='none'}MP.scn=d.scn;if(me){MP.me=me.c;if(!d.started&&me.c>=0){selC=me.c;paint();req()}}mpLobbyUI();return}
+  if(m.t==='deny'){if(d.why==='roster'){mpDenied();return}toast('⛔ Bu ülke başka oyuncuda');return}
+  if(m.t==='welcome'){MPSV=0;MP.welcomed=true;MP.me=d.c;MP.speed=d.speed||15;MP.started=true;mpLobbyUI();return}
+  if(m.t==='start'){if(d.c[MP.pid]===undefined){mpDenied();return}MP.started=true;MP.welcomed=true;MPSV=0;MP.me=d.c[MP.pid];toast('▶ Oyun başlıyor…');return}
   if(m.t==='st'){const k=d.id;const b=MP.chunks[k]||(MP.chunks[k]={n:d.n,p:[],got:0});if(!b.p[d.i]){b.p[d.i]=d.x;b.got++}
    if(b.got===b.n){const all=b.p.join('');delete MP.chunks[k];for(const x in MP.chunks)if(x<k)delete MP.chunks[x];mpUnpack(all).then(mpGotState).catch(e=>console.error(e))}return}
   if(m.t==='toast'){for(const t of (d.t||[]).slice(0,3))setTimeout(()=>toast(t),0);return}
-  if(m.t==='end'){toast('🏁 Kurucu oyunu kapattı');mpLeave();return}}}
+  if(m.t==='end'){mpLeave();showMenu(`<h2>🏁 Kurucu oyundan çıktı</h2><div class="sub">Oyun kaydedildi. Kurucu odayı tekrar açınca aynı kodla yine katılabilirsin.</div><button class="mb" onclick="mainMenu()">← Ana menü</button>`);return}}}
+function mpDenied(){mpLeave();showMenu(`<h2>⛔ Bu oyuna katılamazsın</h2><div class="sub">Bu oda daha önce başka oyuncularla başladı. Sadece ilk baştaki oyuncular girebilir.</div><button class="mb" onclick="mpMenu()">← Geri</button>`)}
 // ---------- host clock ----------
 let MPIV=null;
 function mpTick(){if(!MP.on)return;const now=Date.now();
- if(MP.host&&MP.started&&game){if(!MP.paused&&now>=MP.next&&!busy&&mode!=='menu'){MP.ticking=true;try{closeReplay&&closeReplay();endTurnNow()}finally{MP.ticking=false}MP.next=Date.now()+MP.speed*1000;game.mpd.paused=false;game.mpd.left=MP.speed;mpBroadcastState()}
-  else if(MP.dirtyAt&&now-MP.lastSync>(window.MPTEST?700:1200)){game.mpd.left=Math.max(0,(MP.next-now)/1000);mpBroadcastState()}
-  if(now-(MP.lastHb||0)>4000){MP.lastHb=now;mpLobbyBroadcast(true)}}
+ if(MP.host&&MP.started&&game){if(!MP.paused&&now>=MP.next&&!busy){MP.ticking=true;try{closeReplay&&closeReplay();endTurnNow()}finally{MP.ticking=false}MP.next=Date.now()+MP.speed*1000;game.mpd.paused=false;game.mpd.left=MP.speed;mpBroadcastState()}
+  else if(MP.dirtyAt&&now-MP.lastSync>(window.MPTEST?700:1500)&&now-MP.dirtyAt>300){game.mpd.left=Math.max(0,(MP.next-now)/1000);mpBroadcastState()}
+  if(now-(MP.lastHb||0)>4000){MP.lastHb=now;mpLobbyBroadcast(true)}
+  if(now-(MP.lastSave||0)>60000){MP.lastSave=now;mpSaveRoom()}}
+ if(MP.host&&MP.resumed&&!MP.started&&now-(MP.lastHb||0)>4000){MP.lastHb=now;mpLobbyBroadcast(true)}
  if(MP.guest&&now-(MP.lastHb||0)>5000){MP.lastHb=now;mpSend('hb',{})}
- if(MP.guest&&MP.started&&MP.hostSeen&&now-MP.hostSeen>30000&&!MP.warned){MP.warned=true;toast('⚠ Kurucuyla bağlantı koptu, bekleniyor…')}
- if(MP.guest&&MP.hostSeen&&now-MP.hostSeen<5000)MP.warned=false;
+ if(MP.guest&&MP.started&&MP.hostSeen&&now-MP.hostSeen>20000&&!MP.warned){MP.warned=true;showMenu(`<h2>⏳ Kurucu bağlı değil</h2><div class="sub">Oyun kurucusu olmadan oyun devam edemez. Kurucu geri gelince oyun kendiliğinden devam eder.</div><button class="mb sec" onclick="mpLeave();mainMenu()">✕ Odadan çık</button>`)}
+ if(MP.guest&&MP.warned&&MP.hostSeen&&now-MP.hostSeen<5000){MP.warned=false;hideMenu();toast('✔ Kurucu geri geldi')}
  mpHud()}
 function mpHud(){const b=$('endTurn');if(!b||!game)return;if(!MP.on||!MP.started){if(b.dataset.mp){b.innerHTML='<span class="bl">Turu Bitir </span>▶';delete b.dataset.mp}return}
  const left=Math.max(0,Math.ceil((MP.next-Date.now())/1000));b.dataset.mp=1;b.innerHTML=MP.paused?'⏸ <span class="bl">Durdu</span>':`⏱ ${left} <span class="bl">sn</span>`;b.title=MP.host?'Durdur / devam ettir':'Zaman akıyor'}
@@ -4219,35 +4233,58 @@ function mpMenu(){const nm=escH(LS.get('ad_mpname','')||'');showMenu(`<h2>👥 A
  <div class="opt" style="flex-direction:column;align-items:stretch;gap:6px"><span>Adın</span><input id="mpN" maxlength="16" value="${nm}" placeholder="Örn. Kadir" style="padding:8px;border-radius:6px;border:1px solid #6b5a3e;background:#1a150f;color:#efe6d2;font-size:15px"></div>
  <button class="mb" onclick="mpHostMenu()">🏠 Oda kur</button>
  <div class="opt" style="flex-direction:column;align-items:stretch;gap:6px;margin-top:8px"><span>Oda kodu</span><input id="mpC" maxlength="6" placeholder="ABC123" style="padding:8px;border-radius:6px;border:1px solid #6b5a3e;background:#1a150f;color:#efe6d2;font-size:18px;letter-spacing:4px;text-transform:uppercase;text-align:center"></div>
- <button class="mb sec" onclick="mpJoin()">🔑 Odaya katıl</button>
+ <button class="mb sec" onclick="mpJoin()">🔑 Odaya katıl</button>${mpSaves().some(x=>x.pid===mpPid())?'<button class="mb sec" onclick="mpSavesMenu()">📂 Kayıtlı oyuna devam et</button>':''}
  <div class="sub" style="font-size:11px;opacity:.6;margin-top:6px">Sohbet yok, sadece oyun. İnternet bağlantısı gerekir.</div><button class="mb sec" onclick="mainMenu()">← Geri</button>`)}
 function mpName(){const n=cleanName(($('mpN')||{}).value||'');if(!n){toast('Önce adını yaz');return null}LS.set('ad_mpname',n);return n}
 function mpHostMenu(){const n=mpName();if(!n)return;MP.name=n;const sc=(y,t)=>`<button class="scn" onclick="mpHost('${y}')"><b>${y}</b><span>${t}</span></button>`;
  showMenu(`<h2>🏠 Oda kur</h2><div class="sub">Zaman hızı</div><div class="opt"><select id="mpS" style="flex:1">${MPSPEEDS.map(([s,t])=>`<option value="${s}" ${s===15?'selected':''}>${t} / tur</option>`).join('')}</select></div><div class="sub">Harita</div>
  <div class="scnL">${sc('2027','Modern dünya')}${sc('1939','İkinci Dünya Savaşı')}${sc('1919','Kurtuluş Savaşı')}${sc('1914','Birinci Dünya Savaşı')}${sc('1800','Napolyon çağı')}${sc('1650','Barut imparatorlukları')}${sc('1400','Yıldırım ve Timur')}${sc('1350','Orhan Gazi dönemi')}${sc('1300','Beylikler dönemi')}${sc('1200','Selçuklu dönemi')}</div><button class="mb sec" onclick="mpMenu()">← Geri</button>`)}
-function mpHost(scn){MPKEY='';if(!window.MPTEST)mpHttp('rpc/mp_cleanup',{method:'POST',body:{}}).catch(()=>{});MP.speed=+($('mpS')||{}).value||15;Object.assign(MP,{on:true,host:true,guest:false,code:mpCode(),pid:mpPid(),players:{},scn,started:false,paused:false,me:-1});mpWrapUI();
+function mpHost(scn){MPKEY='';if(!window.MPTEST)mpHttp('rpc/mp_cleanup',{method:'POST',body:{}}).catch(()=>{});MP.speed=+($('mpS')||{}).value||15;Object.assign(MP,{on:true,host:true,guest:false,code:mpCode(),pid:mpPid(),players:{},scn,started:false,resumed:false,paused:false,me:-1});mpWrapUI();
  toast('🔌 Bağlanıyor…');mpConnect(MP.code,(ok,why)=>{if(!ok){mpFail(why);return}newGame(scn);mpLobbyUI();if(!MPIV)MPIV=setInterval(mpTick,250)})}
 function mpJoin(){const n=mpName();if(!n)return;const code=String(($('mpC')||{}).value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==6){toast('Kod 6 karakter olmalı');return}
- Object.assign(MP,{on:true,host:false,guest:true,code,pid:mpPid(),name:n,players:{},scn:'',started:false,me:-1,hostSeen:0});mpWrapUI();mpGuestOn();toast('🔌 Bağlanıyor…');
- mpConnect(code,(ok,why)=>{if(!ok){mpFail(why);return}mpSend('hello',{name:n});hideMenu();mpLobbyUI();if(!MPIV)MPIV=setInterval(mpTick,250);
-  setTimeout(()=>{if(MP.on&&MP.guest&&!MP.hostSeen){toast('⚠ Bu kodla oda bulunamadı');mpLeave();mainMenu()}},9000)})}
-function mpLobbyBroadcast(quiet){if(!MP.host)return;const players={...MP.players};players[MP.pid]={name:MP.name,c:MP.me,host:1};mpSend('lobby',{scn:MP.scn,speed:MP.speed,players,started:MP.started});if(!quiet)mpLobbyUI()}
+ Object.assign(MP,{on:true,host:false,guest:true,code,pid:mpPid(),name:n,players:{},scn:'',started:false,resumed:false,welcomed:false,warned:false,me:-1,hostSeen:0});mpWrapUI();mpGuestOn();toast('🔌 Bağlanıyor…');
+ mpConnect(code,(ok,why)=>{if(!ok){mpFail(why);return}MP.helloAt=Date.now();mpSend('hello',{name:n});hideMenu();mpLobbyUI();if(!MPIV)MPIV=setInterval(mpTick,250);
+  setTimeout(()=>{if(MP.on&&MP.guest&&!MP.hostSeen){mpLeave();showMenu(`<h2>🔍 Oda açık değil</h2><div class="sub">Bu kodla açık bir oda yok. Oyun kurucusu odayı açmadan kimse giremez. Kurucudan odayı açmasını iste, sonra tekrar dene.</div><button class="mb" onclick="mpMenu()">← Geri</button>`)}},10000)})}
+function mpLobbyBroadcast(quiet){if(!MP.host)return;const players={...MP.players};players[MP.pid]={name:MP.name,c:MP.me,host:1};mpSend('lobby',{scn:MP.scn,speed:MP.speed,players,started:MP.started,resumed:!!MP.resumed});if(!quiet)mpLobbyUI()}
 function mpLobbyUI(){let L=$('mpL');if(!L){L=document.createElement('div');L.id='mpL';document.body.appendChild(L)}if(!MP.on||MP.started){L.style.display='none';return}L.style.display='block';
- const all=MP.host?{...MP.players,[MP.pid]:{name:MP.name,c:MP.me,host:1}}:MP.players;const rows=Object.entries(all).map(([pid,p])=>`<div class="drow"><b>${p.host?'👑 ':''}${escH(p.name||'?')}${pid===MP.pid?' (sen)':''}</b><span style="color:#cdbb92">${p.c>=0&&C[p.c]?cname(p.c):'ülke seçmedi'}</span></div>`).join('');
+ const all=MP.host?{...MP.players,[MP.pid]:{name:MP.name,c:MP.me,host:1}}:MP.players;const on=p=>p.host||!MP.host||(p.seen&&Date.now()-p.seen<15000);const rows=Object.entries(all).map(([pid,p])=>`<div class="drow"><b>${MP.resumed?(on(p)?'<span style="color:#6c6">●</span> ':'<span style="color:#777">○</span> '):''}${p.host?'👑 ':''}${escH(p.name||'?')}${pid===MP.pid?' (sen)':''}</b><span style="color:#cdbb92">${p.c>=0&&C[p.c]?cname(p.c):'ülke seçmedi'}</span></div>`).join('');
  const ready=MP.host&&MP.me>=0;
- L.innerHTML=`<div class="mpk"><small>ODA KODU</small><b>${MP.code}</b></div><div class="hint" style="color:#cdbb92;margin:2px 0 6px">${MP.host?'Kodu arkadaşlarına söyle. Herkes haritadan bir ülke seçsin.':'Haritadan oynamak istediğin ülkeye dokun.'}</div>${rows||'<div class="hint">Bağlanılıyor…</div>'}
- ${MP.host?`<button class="mb" style="margin-top:8px" onclick="mpStart()" ${ready?'':'disabled'}>▶ Oyunu başlat</button>`:'<div class="hint" style="margin-top:8px">Kurucunun oyunu başlatması bekleniyor…</div>'}<button class="mb sec" onclick="mpLeave();mainMenu()">✕ Odadan çık</button>`;if(typeof translateTree==='function')translateTree(L)}
+ L.innerHTML=`<div class="mpk"><small>ODA KODU</small><b>${MP.code}</b></div><div class="hint" style="color:#cdbb92;margin:2px 0 6px">${MP.resumed?(MP.host?'Kayıtlı oyun. Sadece bu oyundaki oyuncular girebilir. Herkes gelince devam et.':'Kayıtlı oyun. Kurucunun devam etmesi bekleniyor…'):MP.host?'Kodu arkadaşlarına söyle. Herkes haritadan bir ülke seçsin.':'Haritadan oynamak istediğin ülkeye dokun.'}</div>${rows||'<div class="hint">Bağlanılıyor…</div>'}
+ ${MP.host?`<button class="mb" style="margin-top:8px" onclick="mpStart()" ${ready?'':'disabled'}>${MP.resumed?'▶ Devam et':'▶ Oyunu başlat'}</button>`:'<div class="hint" style="margin-top:8px">Kurucunun oyunu başlatması bekleniyor…</div>'}<button class="mb sec" onclick="mpLeave();mainMenu()">✕ Odadan çık</button>`;if(typeof translateTree==='function')translateTree(L)}
 const _chooseCountry=chooseCountry;
 window.chooseCountry=function(c){if(MP.on&&!MP.started){if(C[c].tribal){toast('Bu topraklar yerli halklara ait, oynanamaz');return}const all=MP.host?MP.players:Object.fromEntries(Object.entries(MP.players).filter(([k])=>k!==MP.pid));if(Object.values(all).some(p=>p.c===c&&!p.host)&&MP.host){toast('⛔ Bu ülke başka oyuncuda');return}
   if(MP.host&&Object.values(MP.players).some(p=>p.c===c)){toast('⛔ Bu ülke başka oyuncuda');return}if(MP.guest&&Object.entries(MP.players).some(([k,p])=>k!==MP.pid&&p.c===c)){toast('⛔ Bu ülke başka oyuncuda');return}
   selC=c;paint();req();$('setup').style.display='none';if(MP.host){MP.me=c;pend.me=c;mpLobbyBroadcast()}else{mpSend('claim',{c});MP.me=c}mpLobbyUI();toast('✔ '+cname(c));return}return _chooseCountry(c)};
-function mpStart(){if(!MP.host||MP.me<0)return;const humans=[MP.me,...Object.values(MP.players).filter(p=>p.c>=0&&p.seen).map(p=>p.c)];
+function mpStart(){if(!MP.host||MP.me<0)return;if(MP.resumed){mpStartResumed();return}const humans=[MP.me,...Object.values(MP.players).filter(p=>p.c>=0&&p.seen).map(p=>p.c)];
  pend.me=MP.me;pend.nofog=false;startGame();game.mpd={humans:[...new Set(humans)],pl:{},names:{},paused:false,left:MP.speed};game.mpd.names[MP.me]=MP.name;for(const [pid,p] of Object.entries(MP.players))if(p.c>=0){game.mpd.names[p.c]=p.name}
- for(const c of game.mpd.humans)if(c!==MP.me)mpInitPlayer(c);mpStoreMe();MP.started=true;MP.next=Date.now()+MP.speed*1000;mpLobbyUI();
- const map={};for(const [pid,p] of Object.entries(MP.players))map[pid]=p.c;mpSend('start',{c:map});mpBroadcastState();toast('▶ Oyun başladı · oda '+MP.code)}
-function mpFail(why){mpLeave();showMenu(`<h2>⚠ Sunucuya bağlanılamadı</h2><div class=\"sub\">İnternet bağlantını kontrol edip tekrar dene. Oyunu tugrion.com adresinden veya uygulamadan açtığından emin ol.</div><div class=\"sub\" style=\"font-size:11px;opacity:.6\">Hata: ${escH(String(why||'?'))}</div><button class=\"mb\" onclick=\"mpMenu()\">↻ Tekrar dene</button><button class=\"mb sec\" onclick=\"mainMenu()\">← Ana menü</button>`)}
-function mpLeave(){if(MP.on){mpSend(MP.host?'end':'bye',{})}setTimeout(mpClose,300);mpGuestOff();Object.assign(MP,{on:false,host:false,guest:false,started:false,code:'',players:{},me:-1});const L=$('mpL');if(L)L.style.display='none';mpHud()}
-addEventListener('beforeunload',()=>{if(MP.on)mpSend(MP.host?'end':'bye',{})});
+ for(const [pid,p] of Object.entries(MP.players))if(!(p.c>=0&&p.seen))delete MP.players[pid];game.mpd.roster={[MP.pid]:{name:MP.name,c:MP.me,host:1}};for(const [pid,p] of Object.entries(MP.players))game.mpd.roster[pid]={name:p.name,c:p.c};game.mpd.code=MP.code;game.mpd.speed=MP.speed;
+ for(const c of game.mpd.humans)if(c!==MP.me)mpInitPlayer(c);mpStoreMe();mpRelSync();MP.started=true;MP.next=Date.now()+MP.speed*1000;mpLobbyUI();
+ const map={};for(const [pid,p] of Object.entries(MP.players))map[pid]=p.c;mpSend('start',{c:map});mpBroadcastState();mpSaveRoom();toast('▶ Oyun başladı · oda '+MP.code)}
+function mpStartResumed(){MP.resumed=false;MP.started=true;MP.paused=false;game.mpd.paused=false;MP.next=Date.now()+MP.speed*1000;mpLobbyUI();hideMenu();
+ const map={};for(const [pid,p] of Object.entries(MP.players))map[pid]=p.c;mpSend('start',{c:map});mpBroadcastState();toast('▶ Oyun devam ediyor · oda '+MP.code)}
+// ---------- saved multiplayer games (host only, one slot per room, overwritten) ----------
+const MPSKEY='atlasAoH.mpsaves.v1';
+const mpSaves=()=>LS.get(MPSKEY,[]);
+function mpSaveRoom(){if(!MP.host||!game||!game.mpd||!game.mpd.roster)return false;try{mpRelSync();mpStoreMe();game.mpd.left=Math.max(1,Math.round((MP.next-Date.now())/1000));const sv=mpSnap();sv.id='mp_'+MP.code;
+ const e={code:MP.code,key:MPKEY,scn:game.scn,speed:MP.speed,pid:MP.pid,name:MP.name,me:game.me,roster:game.mpd.roster,turn:game.turn,time:Date.now(),snap:sv};
+ let all=mpSaves().filter(x=>x.code!==MP.code);all.unshift(e);all=all.slice(0,4);while(!LS.set(MPSKEY,all)){if(all.length<=1)return false;all.pop()}return true}catch(err){console.warn('mp save',err);return false}}
+function mpSavesMenu(){const all=mpSaves().filter(x=>x.pid===mpPid());showMenu(`<h2>📂 Kayıtlı oyunlar</h2><div class="sub">Sadece odayı kuran kişi kayıtlı oyunu açabilir. Aynı oyuncular aynı kodla tekrar girer.</div>${all.length?all.map(e=>`<div class="slot"><span class="flag" style="width:14px;height:34px;border-radius:4px;background:rgb(${CC[e.me]||'120,120,120'})"></span><div style="flex:1"><b>Oda ${e.code}</b> · ${e.scn}<br><small>${Object.values(e.roster||{}).map(p=>escH(p.name)).join(', ')} · ${dateStrScn(e)} </small></div><button onclick="mpResume('${e.code}')">▶</button><button style="background:#6e2e24" onclick="mpDelSave('${e.code}',this)">🗑</button></div>`).join(''):'<div class="sub">Kayıtlı oyun yok.</div>'}<button class="mb sec" onclick="mpMenu()">← Geri</button>`)}
+function dateStrScn(e){try{return new Date(e.time).toLocaleString()}catch(x){return ''}}
+function mpDelSave(code,b){if(!confirmDel(b))return;LS.set(MPSKEY,mpSaves().filter(x=>x.code!==code));mpSavesMenu()}
+function mpResume(code){const e=mpSaves().find(x=>x.code===code);if(!e)return;MP.name=e.name||LS.get('ad_mpname','')||'Kurucu';MPKEY=e.key||'';MP.speed=e.speed||15;
+ Object.assign(MP,{on:true,host:true,guest:false,code:e.code,pid:mpPid(),players:{},scn:e.scn,started:false,resumed:true,paused:false,me:e.me});
+ for(const [pid,p] of Object.entries(e.roster||{}))if(!p.host)MP.players[pid]={name:p.name,c:p.c,seen:0};mpWrapUI();toast('🔌 Bağlanıyor…');
+ mpConnect(MP.code,(ok,why)=>{if(!ok){mpFail(why);return}MPAPPLY=true;try{loadSave(null,e.snap,true)}finally{MPAPPLY=false}game.mpd=e.snap.mpd;game.saveId=null;mpLoad(e.me);game.me=e.me;for(let c=C0;c<C.length;c++)if(owner.includes(c))refreshNb(c);calcEco();
+  hideMenu();enterPlay();const cap=C[e.me]&&C[e.me].cap;if(cap!==undefined&&P[cap])cam={x:P[cap].x,y:P[cap].y,z:Math.max(4,cam.z)};buildBorders();paint();req();updHud();mpLobbyBroadcast();mpLobbyUI();if(!MPIV)MPIV=setInterval(mpTick,250)})}
+function mpFail(why){mpLeave();showMenu(`<h2>⚠ Sunucuya bağlanılamadı</h2><div class=\"sub\">İnternet bağlantını kontrol edip tekrar dene. Oyunu tugrion.com adresinden veya uygulamadan açtığından emin ol.</div><div class=\"sub\" style=\"font-size:11px;opacity:.7;word-break:break-all\">Hata: ${escH(String(why||'?'))}</div><div class=\"sub\" style=\"font-size:11px;opacity:.6\">Bu ekranın fotoğrafını Claude'a gönder.</div><button class=\"mb\" onclick=\"mpMenu()\">↻ Tekrar dene</button><button class=\"mb sec\" onclick=\"mainMenu()\">← Ana menü</button>`)}
+function mpLeave(){if(MP.on){if(MP.host&&MP.started)mpSaveRoom();mpSend(MP.host?'end':'bye',{})}const wasMp=MP.on&&(MP.started||MP.resumed);setTimeout(mpClose,300);mpGuestOff();Object.assign(MP,{on:false,host:false,guest:false,started:false,resumed:false,welcomed:false,warned:false,deadShown:false,code:'',players:{},me:-1});MPKEY='';const L=$('mpL');if(L)L.style.display='none';if(wasMp)game=null;mpHud()}
+addEventListener('beforeunload',()=>{if(MP.on){if(MP.host)mpSaveRoom();mpSend(MP.host?'end':'bye',{})}});addEventListener('pagehide',()=>{if(MP.on&&MP.host)mpSaveRoom()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&MP.on&&MP.host)mpSaveRoom()});
+// more research points per turn in multiplayer (turns are short real-time ticks)
+if(typeof tpGain==='function'){const _tpG=tpGain;window.tpGain=function(){const v=_tpG.apply(this,arguments);return MP.on&&MP.started?Math.round(v*2):v}}
+
+// pause menu in multiplayer: no offline save/exit — leaving the room saves (host)
+if(typeof pauseMenu==='function'){const _pm=pauseMenu;window.pauseMenu=function(){if(!MP.on)return _pm();showMenu(`<h2>👥 Oda ${MP.code}</h2><div class="sub">${cname(game.me)} · Tur ${game.turn}</div><button class="mb" onclick="resume()">↩ Oyuna Dön</button>${MP.host?'<button class="mb sec" onclick="saveGame();resume()">💾 Kaydet</button>':''}<button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button><button class="mb red" onclick="mpLeave();mainMenu()">✕ Odadan çık${MP.host?' (kaydedilir)':''}</button>`)}}
+if(typeof mainMenu==='function'){const _mm=mainMenu;window.mainMenu=function(){if(MP.on&&(MP.started||MP.resumed)&&!game)mpLeave();return _mm.apply(this,arguments)}}
 
 const AY=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 
@@ -4263,9 +4300,10 @@ function dateStr(t){const G=(typeof game!=='undefined'&&game)||{};const d=new Da
 const DIFF=['Kolay','Normal','Zor','Çok Zor'];
 function showMenu(html){mode='menu';if(!game)setTimeout(startTour,30);else stopTour();if($('selBar'))$('selBar').style.display='none';closeNews();closeEco();$('modeRank').style.display='none';$('log').style.display='none';$('menu').style.display='flex';$('mp').innerHTML=html;hud.style.display='none';$('pick').style.display='none';$('setup').style.display='none';card.style.display='none';0}
 function hideMenu(){$('menu').style.display='none';0}
-function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.1.3</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
+function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.2.0</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
  ${!game&&LS.get(LKEY,null)&&saves().some(s=>s.id===LS.get(LKEY,null))?'<button class="mb" onclick="continueGame()">⏯ Kaldığın yerden devam et</button>':''}<button class="mb ${!game&&LS.get(LKEY,null)?'sec':''}" onclick="gameMenu()">▶ Oyun</button><button class="mb sec" onclick="mpMenu()">👥 Arkadaşlarla Oyna</button><button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button>
- <button class="mb sec" onclick="leadersMenu()">👑 Liderler</button><button class="mb sec" onclick="helpMenu()">📖 Nasıl Oynanır</button><button class="mb sec" onclick="aboutMenu()">ℹ Hakkında</button>${game?'<button class="mb sec" onclick="resume()">↩ Oyuna Dön</button>':''}`)}
+ <button class="mb sec" onclick="leadersMenu()">👑 Liderler</button><button class="mb sec" onclick="helpMenu()">📖 Nasıl Oynanır</button><button class="mb sec" onclick="aboutMenu()">ℹ Hakkında</button>${game?'<button class="mb sec" onclick="resume()">↩ Oyuna Dön</button>':''}<button class="mb red" onclick="exitApp()">⏻ Çıkış</button>`)}
+function exitApp(){try{if(game&&!(typeof MP!=='undefined'&&MP.on))saveGame(true);if(typeof MP!=='undefined'&&MP.on)mpLeave()}catch(e){}if(window.AtlasApp&&AtlasApp.exit){AtlasApp.exit();return}try{if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App){Capacitor.Plugins.App.exitApp();return}}catch(e){}try{window.close()}catch(e){}setTimeout(()=>{game=null;showMenu(`<h2>👋 Görüşmek üzere</h2><div class="sub">Oyun kaydedildi. Kapatmak için bu sekmeyi kapatabilirsin.</div><button class="mb sec" onclick="mainMenu()">← Ana menü</button>`)},300)}
 const cleanName=s=>String(s||'').replace(/[<>&"'`\\]/g,'').trim().slice(0,28);
 function saves(){return LS.get(SKEY,[])}
 function gameMenu(){const last=LS.get(LKEY,null),ok=last&&saves().some(s=>s.id===last);
@@ -4326,9 +4364,9 @@ function openNews(t){if(!game)return;if(!t||$('newsP').style.display!=='block')c
  L.forEach(x=>x.read=true);updNewsBtn()}
 function closeNews(){$('newsP').style.display='none'}
 function snapshot(){return{id:game.saveId||('s'+Date.now()),me:game.me,diff:game.diff,aggr:game.aggr,fog:game.fog,turn:game.turn,owner:owner.slice(),pop:pop.map(x=>Math.round(x)),armies,aid,wars:game.wars,allies:game.allies,gold:game.gold,rel:game.rel,imp:game.imp,arel:game.arel,truce:game.truce,dp:game.dp,news:game.news.slice(0,40),envoys:game.envoys,cool:game.cool,aicool:game.aicool,unrest:game.unrest,hap:hap.map(x=>Math.round(x)),bld:[...bld],ecoP:ecoP.map(x=>+x.toFixed(3)),unemp:[...unemp].map(x=>+x.toFixed(2)),ign:[...ign].map(x=>+x.toFixed(2)),inf:[...inf].map(x=>+x.toFixed(3)),dis:[...dis],deaths:[...deaths].map(Math.round),tech:TECH.map(x=>+x.toFixed(3)),fleets,tax:game.tax,inv:game.inv,build:game.build,outb:game.outb,dseq:game.dseq,pact:game.pact,access:game.access,gave:game.gave,mp:game.mp,airCd:game.airCd,gov:game.gov,vas:game.vas,newC:game.newC,flag:game.flag,names:game.names,color:game.color,mprod:game.mprod,aimis:game.aimis,mob:game.mob,missiles:game.missiles,propUntil:game.propUntil,govCd:game.govCd,festCd:game.festCd,caps:C.map(c=>c.cap),tree:game.tree,tp:game.tp,cyberVis:game.cyberVis,cybCd:game.cybCd,tankCd:game.tankCd,dmg:game.dmg,core:[...CORE],formed:game.formed,scn:game.scn,y0:game.y0,m0:game.m0,d0:game.d0,nofog:game.nofog,strait:game.strait,fee:game.fee,proj:game.proj,repub:game.repub,ext:game.ext,mil:MIL.slice(),skeys:game.skeys,bloc:game.bloc,evd:game.evd,v:11,cam:{...cam},time:Date.now()}}
-function saveGame(silent){const sv=snapshot();game.saveId=sv.id;let all=saves().filter(s=>s.id!==sv.id);all.unshift(sv);all=all.slice(0,20);let drop=0;
+function saveGame(silent){if(typeof MP!=='undefined'&&MP.on){if(MP.host){const ok=mpSaveRoom();if(!silent)toast(ok?'💾 Oyun kaydedildi':'⚠ Kaydedilemedi');return ok}if(!silent)toast('💾 Oyunu kurucu kaydeder');return true}if(game&&game.mpd)return false;const sv=snapshot();game.saveId=sv.id;let all=saves().filter(s=>s.id!==sv.id);all.unshift(sv);all=all.slice(0,20);let drop=0;
  while(!LS.set(SKEY,all)){if(all.length<=1){toast('⚠ Kaydedilemedi');return false}all.pop();drop++}if(drop)toast('⚠ Kayıt alanı doldu: en eski '+drop+' kayıt silindi');LS.set(LKEY,sv.id);if(!silent)toast('💾 Oyun kaydedildi');return true}
-function autoSave(){if(game&&!busy)saveGame(true)}
+function autoSave(){if(game&&!busy&&!(typeof MP!=='undefined'&&MP.on)&&!(game&&game.mpd))saveGame(true)}
 setInterval(()=>{if(game&&!busy)autoSave()},30000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)autoSave()});addEventListener('pagehide',autoSave);addEventListener('beforeunload',autoSave);
 function loadSave(id,obj,mpl){const sv=obj||saves().find(s=>s.id===id);if(!sv)return;game={id:sv.id,saveId:sv.id,me:sv.me,diff:sv.diff,aggr:sv.aggr,fog:sv.fog,turn:sv.turn,wars:sv.wars||[],allies:sv.allies||[],gold:sv.gold||0,rel:sv.rel||{},imp:sv.imp||{},arel:sv.arel||{},truce:sv.truce||{},offer:null,dp:sv.dp??10,news:sv.news||[],envoys:sv.envoys||[],cool:sv.cool||{},aicool:sv.aicool||{},unrest:sv.unrest||{}};hap=sv.hap?sv.hap.slice():P.map(()=>70);game.tax=sv.tax??0.2;game.pact=sv.pact||{};game.access=sv.access||{};game.gave=sv.gave||{};game.mp=sv.mp??10;game.airCd=sv.airCd||{};game.gov=sv.gov||{};game.vas=sv.vas||{};game.newC=[];game.flag=sv.flag||{};game.names={};for(const k in (sv.names||{}))game.names[k]=cleanName(sv.names[k]);game.mprod=sv.mprod||[];game.aimis=sv.aimis||{};game.mob=sv.mob||2;game.tree=sv.tree;game.tp=sv.tp||0;game.cyberVis=sv.cyberVis||{};game.cybCd=sv.cybCd||{};game.tankCd=sv.tankCd||{};game.dmg=sv.dmg||{};game.supp={};game.shock={};game.formed=sv.formed;game.scn=sv.scn||'2027';game.y0=sv.y0||2027;game.m0=sv.m0||0;game.d0=sv.d0||1;game.nofog=!!sv.nofog;game.strait=sv.strait||{};game.fee=sv.fee??1;game.proj=sv.proj||[];game.repub=sv.repub;game.ext=sv.ext||{qo:{},nav:{},sp:{r:0,q:[],n:0,ok:0},prest:0};provNames(game.scn);game.skeys=sv.skeys;game.bloc=sv.bloc||{};game.evd=sv.evd||0;if(sv.skeys)SCN_KEY=sv.skeys;setEra(eraOf(game.scn));if(sv.core)for(let i=0;i<N;i++)CORE[i]=sv.core[i];game.missiles=sv.missiles||0;game.propUntil=sv.propUntil;game.govCd=sv.govCd;game.festCd=sv.festCd;
@@ -4370,7 +4408,7 @@ function tipUpd(){TIPR=0;const e=TIPE,tp=$('tip');if(!e||!game||(mode!=='play'&&
  const o=owner[v];const war=atWar(game.me,o),ally=game.allies.includes(o);tp.innerHTML=`<b>${P[v].n}</b><span>${o===game.me?'':`<img src="${flagOf(o)}">`}${cname(o)}${war?' · <i class="w">savaşta</i>':ally?' · <i class="a">müttefik</i>':''}</span><span>👥 ${kfmt(pop[v])}${bld[v]?' · 🏰 '+BINFO.filter((b,k)=>lv(v,k)).length+' bina':''}</span>`;tp.style.display='block';tp.style.left=Math.min(innerWidth-190,e.clientX+16)+'px';tp.style.top=Math.min(innerHeight-80,e.clientY+14)+'px'}
 menuBtn.onclick=()=>{if(game){if(mode==='move')mode='play';pauseMenu()}};
 addEventListener('keydown',e=>{if(e.key==='Escape'){if(mode==='move'||mode==='mmove')cancelMove();else if(mode==='play')pauseMenu()}});
-addEventListener('beforeunload',()=>{if(game&&game.saveId)saveGame(true)});
+addEventListener('beforeunload',()=>{if(game&&game.saveId&&!(typeof MP!=='undefined'&&MP.on)&&!game.mpd)saveGame(true)});
 document.getElementById('cx').onclick=closeBar;
 addEventListener('resize',resize);resize();cam={x:W*0.55,y:H*0.32,z:Math.max(VH/H,2.2)};if(SET.musicV3===undefined){SET.music=true;SET.musicV2=1;SET.musicV3=1;LS.set(SETKEY,SET)}setLang(SET.uiLang||devLang());playIntro(mainMenu);
 </script></body></html>
