@@ -576,13 +576,14 @@ function makePeace(a,b,type,gold){if(a===game.me||b===game.me)QO('peace','Yurtta
   for(const x of armies){if((x.o===a&&owner[x.p]===b)||(x.o===b&&owner[x.p]===a)){const home=provsOf(x.o);if(home.length)x.p=C[x.o].cap!==undefined&&owner[C[x.o].cap]===x.o?C[x.o].cap:home[0];x.path=[]}}}
  for(const x of armies)if((x.o===a||x.o===b))x.path=x.path.filter(()=>false);
  const me=game.me;if(a===me||b===me){const o=a===me?b:a;game.rel[o]=-5;if(gold)game.gold+=gold;news('ulusal',`🕊 ${cname(o)} ile barış antlaşması imzalandı.`);toast(`🕊 ${cname(o)} ile barış!`)}else if(CNB[me].has(a)||CNB[me].has(b))news('ulusal',`🌍 ${cname(a)} ile ${cname(b)} barış yaptı.`)}
-function aiPeace(){for(const w of game.wars.slice()){const [a,b,st]=w;const len=game.turn-st;if(a===game.me||b===game.me){
+function rejectOffer(){game.offer=null;closeBar()}
+function aiPeace(onlyMe){for(const w of game.wars.slice()){const [a,b,st]=w;const len=game.turn-st;if(a===game.me||b===game.me){if(isHum(a)&&isHum(b))continue;
   const o=a===game.me?b:a,ad=adv(game.me,o);if(len>=12&&!game.offer&&Math.random()<0.05){if(ad>0.25)game.offer={c:o,type:'keep',gold:Math.round(incomeOf(o)*3)};else if(ad<-0.35)game.offer={c:o,type:'keep',gold:0}}continue}
-  if(tk19Lock(a,b))continue;if((C[a].n==='Israel'||C[b].n==='Israel')&&Math.random()<0.75)continue;const ad=adv(a,b);if((len>20&&Math.abs(ad)>0.3&&Math.random()<0.1)||(len>45&&Math.random()<0.08))makePeace(a,b,Math.abs(ad)>0.15?'keep':'white')}}
+  if(onlyMe||isHum(a)||isHum(b))continue;if(tk19Lock(a,b))continue;if((C[a].n==='Israel'||C[b].n==='Israel')&&Math.random()<0.75)continue;const ad=adv(a,b);if((len>20&&Math.abs(ad)>0.3&&Math.random()<0.1)||(len>45&&Math.random()<0.08))makePeace(a,b,Math.abs(ad)>0.15?'keep':'white')}}
 function showOffer(){const o=game.offer;if(!o)return;const win=adv(game.me,o.c)>0;
  card.style.display='block';cb.innerHTML=`<h3>🕊 Barış teklifi</h3><div class="ab"><b>${cname(o.c)}</b> barış istiyor.<br>
  Şart: herkes işgal ettiği illeri korur${o.gold?` + sana <b>${fmt(o.gold)} 💰</b> tazminat`:''}.</div>
- <div class="acts"><button style="background:#2e7a4a" onclick="acceptOffer()">✔ Kabul</button><button style="background:#8a2e2e" onclick="game.offer=null;closeBar()">✕ Reddet</button></div>`}
+ <div class="acts"><button style="background:#2e7a4a" onclick="acceptOffer()">✔ Kabul</button><button style="background:#8a2e2e" onclick="rejectOffer()">✕ Reddet</button></div>`}
 function acceptOffer(){const o=game.offer;game.offer=null;makePeace(game.me,o.c,'keep',o.gold);if(dirty){buildBorders();paint();dirty=false}closeBar();updHud();req()}
 function peaceUI(c){const ad=adv(game.me,c),gold=Math.round(incomeOf(c)*4);
  $('sub').innerHTML=`<div class="box"><div style="margin-bottom:6px">Savaş durumu: <b style="color:${ad>0.1?'#7adf8a':ad<-0.1?'#ff7a6a':'#ffd76a'}">${ad>0.25?'Çok iyi':ad>0.1?'Üstünsün':ad>-0.1?'Dengeli':ad>-0.25?'Gerisindesin':'Kaybediyorsun'}</b><br>
@@ -3659,15 +3660,15 @@ const RK=new Array(N),RQ=new Float32Array(N);
   else for(const t of ['elm','pet','alt','bor','tah']){const s=RLIST[t][cn];if(s&&hsh(i,t.charCodeAt(0)+t.charCodeAt(1)*7)<s){k=t;break}}
   RK[i]=k;RQ[i]=(1+2*hsh(i,11))*(0.6+Math.sqrt(P[i].px||1)/8)*(k==='gid'||k==='tah'?Math.min(1.6,0.5+Math.log10(Math.max(10,P[i].pop||1e5))/6):1)}})();
 function resAvail(k){if(ERA==='med'||ERA==='gun')return k!=='pet'&&k!=='bor';if(ERA==='ww1'||ERA==='ww2')return true;return true}
-function rPrice(k){const X=XT(),rp=(X.rp&&X.rp[k])||1;return RES[k].p*rp*((ERA==='med'||ERA==='gun')&&(k==='pet'||k==='bor')?0:(ERA==='ww1'||ERA==='ww2')&&k==='bor'?0.3:1)}
+function rPrice(k){const X=XT(),rp=Math.max(1,(X.rp&&X.rp[k])||1);return RES[k].p*rp*((ERA==='med'||ERA==='gun')&&(k==='pet'||k==='bor')?0:(ERA==='ww1'||ERA==='ww2')&&k==='bor'?0.3:1)}
 const minMul=c=>[1,1.15,1.3,1.5,1.7,1.9,2.2][tl(c,'min')]||1;
 function provRes(i){const o=owner[i];const k=RK[i];let q=RQ[i]*(k==='gid'||k==='tah'?1+0.15*lv(i,B.FARM):minMul(o));q*=1+0.25*((XT().rinv||{})[i]||0);q*=0.5+0.5*stabOf(i)/100;if((game.dmg[i]||0)>game.turn)q*=0.7;if(atWar(o,CORE[i])&&CORE[i]!==o)q*=0.6;return q}
 function rK(){const X=XT();if(X.rK)return X.rK;calcEco();let sv=0;for(let i=0;i<N;i++)sv+=RQ[i]*rPrice(RK[i]);const me=game.me,base=grossOf(me)/Math.max(0.05,game.tax)*0.2/Math.max(1,ECO[me]);let se=0;for(let c=0;c<C.length;c++)se+=ECO[c];X.rK=Math.max(1e-6,0.13*base*se/Math.max(1,sv));return X.rK}
-const provResVal=i=>provRes(i)*rPrice(RK[i])*rK()*(1+0.05*tl(owner[i],'ind'));
+const provResVal=i=>Math.max(0,provRes(i)*rPrice(RK[i])*rK()*(1+0.05*tl(owner[i],'ind')));
 let RIC={t:-1,v:0};function resIncome(c){if(!game)return 0;if(c===game.me&&RIC.t===game.turn&&RIC.g===game.gold)return RIC.v;let v=0;for(let i=0;i<N;i++)if(owner[i]===c)v+=provResVal(i);if(c===game.me)RIC={t:game.turn,g:game.gold,v};return v}
 function resTotals(c){const T={};for(const k in RES)T[k]={q:0,v:0,n:0};for(let i=0;i<N;i++)if(owner[i]===c){const k=RK[i];T[k].q+=provRes(i);T[k].v+=provResVal(i);T[k].n++}return T}
 function resTick(){const X=XT();X.rp=X.rp||{};const oilW=['Saudi Arabia','Iran','Iraq','Russia','Kuwait','United Arab Emirates','Venezuela','Libya'].map(n=>C.findIndex(c=>c.n===n)).filter(c=>c>=0&&owner.includes(c)&&enemiesOf(c).length).length;
- for(const k in RES){const tgt=k==='pet'?Math.min(1.5,1+0.08*oilW):1;let p=X.rp[k]||1;p+=(tgt-p)*0.05+(Math.random()-0.5)*0.06;X.rp[k]=Math.max(0.6,Math.min(1.6,p))}
+ for(const k in RES){const tgt=k==='pet'?Math.min(1.5,1+0.08*oilW):1;let p=X.rp[k]||1;p+=(tgt-p)*0.05+(Math.random()-0.5)*0.06;X.rp[k]=Math.max(1,Math.min(1.6,p))}
  if(game.turn%30===0){const ks=Object.keys(RES).filter(resAvail);const k=ks[(Math.random()*ks.length)|0];const p=X.rp[k];if(p>1.25)news('ulusal',`📈 Dünya piyasasında ${RES[k].n} fiyatı yükseldi (%${Math.round(p*100)}).`);else if(p<0.8)news('ulusal',`📉 Dünya piyasasında ${RES[k].n} fiyatı düştü (%${Math.round(p*100)}).`)}}
 function resLegend(){return `<div class="rleg">${Object.keys(RES).map(k=>`<i><b style="background:rgb(${RES[k].col.map(x=>Math.min(255,x*0.95|0)).join(',')})"></b>${RES[k].n}</i>`).join('')}</div>`}
 function resUI(){const me=game.me,T=resTotals(me),X=XT();let tot=0;let h=inTabs('res')+`<div class="box fa"><div class="hint" style="color:#cdbb92">Şehirlerin doğal kaynak üretir. Gelir dünya fiyatına göre değişir. Madencilik teknolojisi, çiftlikler ve Kaynak haritasındaki yatırım üretimi artırır.</div>`;
@@ -3676,7 +3677,9 @@ function resUI(){const me=game.me,T=resTotals(me),X=XT();let tot=0;let h=inTabs(
 // ---------- economy balance ----------
 function ecoBal(){const X=XT();if(!X.e0||X.e0.length!==N){X.e0=Array.from(ecoP,x=>Math.round(x*10)/10)}const me=game.me,ind=tl(me,'ind');
  for(let i=0;i<N;i++){const cap=Math.max(0.05,X.e0[i])*1.8;if(owner[i]===me&&ind)ecoP[i]*=1+0.00025*ind;if(ecoP[i]>cap)ecoP[i]=cap+(ecoP[i]-cap)*0.96}}
-function grossAdj(c,g){if(!game||c!==game.me)return g;const X=XT();return g*(1+0.03*tl(c,'ind')+0.015*Math.min(8,(X.sp&&X.sp.sat)||0)+(X.uni&&X.uni.m?0.02*Math.min(8,X.uni.m.filter(x=>owner.includes(x)).length):0))}
+// small countries played by a person get a modest boost so they stay playable (modern/ww maps; medieval has its own)
+let WKB={t:-9,s:null};function weakBoost(c){if(!game||isMed(game.scn)||typeof ECO==='undefined')return 1;if(WKB.t!==game.turn||!WKB.s){WKB={t:game.turn,s:C.map((x,i)=>owner.includes(i)&&!x.tribal?ECO[i]||0:0).filter(v=>v>0).sort((a,b)=>b-a)}}const ref=WKB.s[Math.min(19,WKB.s.length-1)]||1,e=Math.max(1,ECO[c]||1);return Math.max(1,Math.min(2,Math.pow(ref/e,0.3)))}
+function grossAdj(c,g){if(!game||c!==game.me)return g;const X=XT();return weakBoost(c)*g*(1+0.03*tl(c,'ind')+0.015*Math.min(8,(X.sp&&X.sp.sat)||0)+(X.uni&&X.uni.m?0.02*Math.min(8,X.uni.m.filter(x=>owner.includes(x)).length):0))}
 function ecoAdjF(c){const e=ECO[c];if(!game||c!==game.me||!game.ext)return e;const X=game.ext;if(!X.E0){X.E0=Math.max(1,e);return e}return e>X.E0?X.E0*Math.pow(e/X.E0,0.65):e}
 // ---------- epidemics & cures ----------
 function CU(){const X=XT();return X.cure||(X.cure={q:0,m:0,h:0,v:{},imm:{}})}
@@ -3974,6 +3977,9 @@ function drawAnims(g,ox,oy,z,now){const PRE=ERA==='med'||ERA==='gun';const S=Mat
 function mpIndep(c){if(game.vas[c]===game.me){delete game.vas[c];toast('Bağımsızlık verildi')}}
 function mpSetMob(v){game.mob=[1,2,3,5].includes(+v)?+v:2}
 
+// army upkeep never eats the whole budget of the starting army: the factor is fixed once per player
+if(typeof upkeep==='function'){const _up=upkeep;window.upkeep=function(){const u=_up.apply(this,arguments)/Math.sqrt(weakBoost(game.me));const X=XT();if(X.upf===undefined){const g=grossOf(game.me)*(1-invTotal());X.upf=u>0.55*g&&u>0?Math.max(0.2,0.55*g/u):1}return u*X.upf}}
+
 // ===== SOUND (synthesized, quiet) =====
 let AC=null,MG=null,MUS=null,MUG=null;
 function applyVol(){if(!AC)return;const sv=(SET.svol??6)/10,mv=(SET.mvol??8)/10;MG.gain.value=0.45*sv*sv;MUG.gain.value=2.8*mv*mv}
@@ -4133,7 +4139,7 @@ async function mpBroadcastState(to){if(!MP.host||!game||MP.pushing)return;mpRelS
  if(!MPKEY)MPKEY=[...crypto.getRandomValues(new Uint8Array(16))].map(x=>x.toString(16).padStart(2,'0')).join('');const lft=MP.paused?(game.mpd.left||MP.speed):Math.max(0,(MP.next-Date.now())/1000);await mpHttp('rpc/mp_put_state2',{method:'POST',body:{p_room:MP.code,p_key:MPKEY,p_body:data,p_left:lft}})}catch(e){console.warn('mp push',e);MP.dirtyAt=Date.now()}finally{MP.pushing=false}}
 // ---------- per-player state ----------
 const PF=['gold','dp','mp','tp','tax','inv','mob','rel','allies','envoys','cool','aicool','unrest','news','pact','access','gave','build','proj','offer','missiles','propUntil','govCd','festCd','cyberVis','cybCd','mprod','vasInc','lastIns'];
-const PFX=['sp','uni','cure','ally','call','prest','E0','g0','qo','vil','evj'];
+const PFX=['sp','uni','cure','ally','call','prest','E0','g0','qo','vil','evj','upf'];
 const clone=o=>o===undefined?undefined:JSON.parse(JSON.stringify(o));
 function mpStoreMe(){if(!game||!game.mpd)return;const c=game.me,pl=game.mpd.pl[c]||(game.mpd.pl[c]={x:{}});for(const k of PF)pl[k]=game[k];pl.x=pl.x||{};for(const k of PFX)pl.x[k]=game.ext?game.ext[k]:undefined}
 function mpLoad(c){const pl=game.mpd.pl[c];if(!pl)return;for(const k of PF)game[k]=pl[k];game.ext=game.ext||{};for(const k of PFX){if(pl.x&&pl.x[k]!==undefined)game.ext[k]=pl.x[k];else delete game.ext[k]}game.me=c}
@@ -4149,12 +4155,12 @@ function mpRelSync(){if(!MP.host||!game||!game.mpd)return;mpStoreMe();const H=mp
  mpLoad(game.me)}
 // ---------- host: run the guests' share of every turn ----------
 function mpPerPlayer(){if(!MP.host||!game||!game.mpd)return;const host=game.me;for(const c of mpHumans()){if(c===host||!owner.includes(c))continue;mpSwap(c);MP.swap=true;
-  try{game.dp=Math.min(50,game.dp+0.5+govF(c,'dp'));processEnvoys();unrestNews();buildTick();debtTick();projTick();spaceTick();allyTick();vassalTick();cureTick();uniTick();spMissionTick();aiDiplomacy();
+  try{game.dp=Math.min(50,game.dp+0.5+govF(c,'dp'));processEnvoys();unrestNews();buildTick();debtTick();projTick();spaceTick();allyTick();vassalTick();cureTick();uniTick();spMissionTick();aiDiplomacy();aiPeace(true);
    for(const q of (game.mprod||[]).slice())if(q.due<=game.turn){game.mprod=game.mprod.filter(x=>x!==q);if(owner[q.p]===c)game.missiles++}
    game.tp+=tpGain();game.mp=Math.min(30,game.mp+Math.min(12,5+Math.floor(provsOf(c).length/40)));MPONLY=c;investTick();MPONLY=-1;calcEco();game.gold+=income()}catch(e){console.error('mpPerPlayer',e)}
-  finally{MPONLY=-1;MP.swap=false;mpSwap(host)}}mpRelSync()}
+  finally{MPONLY=-1;MP.swap=false;mpSwap(host)}}if(game.mpd.offers)game.mpd.offers=game.mpd.offers.filter(o=>game.turn-o.t<=20&&owner.includes(o.from)&&owner.includes(o.to));mpRelSync()}
 // ---------- host: execute a guest command in that player's context ----------
-const MPACT=new Set(['envoyUI','warUI','insultUI','sendAlly','negSend','negSurrender','tryPeace','villageAid','toggleStrait','formHist','doRecruit','doBuild','doCyber','makeMissile','doMissile','doAir','doTank','acceptOffer','stopArmy','askTribute','buyWar','buyVassal','buyCity','sellCity','buyAccess','betrayUI','pactUI','accessUI','giveAccess','doGift','annexVassal','callAllies','renewAlly','unlock','buildRocket','launchRocket','spMission','observe','cureAct','vacStart','vacCamp','uniFound','uniInvite','uniKick','uniDissolve','changeGov','moveCap','festival','propaganda','doSel','mmGo','setTax','setInv','mpSetMob','mpIndep','__pick']);
+const MPACT=new Set(['envoyUI','warUI','insultUI','sendAlly','negSend','negSurrender','tryPeace','villageAid','toggleStrait','formHist','doRecruit','doBuild','doCyber','makeMissile','doMissile','doAir','doTank','acceptOffer','stopArmy','askTribute','buyWar','buyVassal','buyCity','sellCity','buyAccess','betrayUI','pactUI','accessUI','giveAccess','doGift','annexVassal','callAllies','renewAlly','unlock','buildRocket','launchRocket','spMission','observe','cureAct','vacStart','vacCamp','uniFound','uniInvite','uniKick','uniDissolve','changeGov','moveCap','festival','propaganda','doSel','mmGo','setTax','setInv','mpSetMob','mpIndep','mpOfferAns','rejectOffer','__pick']);
 function mpDummy(){const D=new Proxy(function(){},{get:(t,k)=>k===Symbol.toPrimitive?()=>'':k==='value'||k==='textContent'||k==='innerHTML'?'':k==='length'?0:k==='checked'?false:k==='style'||k==='classList'||k==='dataset'?D:D,set:()=>true,apply:()=>D});return D}
 const MPD0=mpDummy();
 function mpDom(id){if(MPDOM&&MPDOM[id]!==undefined)return MPDOM[id];return MPD0}
@@ -4170,7 +4176,9 @@ const MPFN={};
 // UI functions that must stay silent while the host runs another player's command
 const MPUI=['refreshBar','foreignUI','interiorUI','diploUI','relUI','resUI','cureUI','uniUI','govUI','techUI','updHud','showOffer','playReplay','rocketShow','showSpModal','closeSpModal','buildUI','recruitUI','tradeUI','statsUI','cityList','closeBar','closeSide','selectProv','selectFleet','fxLoop','QO','showQuote','sfx','selUI','showModeRank','mmUI','missileUI','airUI','tankUI','straitUI','negotiate','histUI','custUI','ecoRef','refreshPanels','uniEdit','probeUI','galleryUI','observeUI','cancelMove','startMove'];
 const MPORIG={};
-function mpWrapUI(){for(const n of MPUI){const f=window[n];if(typeof f!=='function'||MPORIG[n])continue;MPORIG[n]=f;window[n]=function(){if(MP.swap)return;return f.apply(this,arguments)};}
+function mpHostWrap(){for(const fn of MPACT){if(fn==='__pick'||MPHW[fn])continue;const f=window[fn];if(typeof f!=='function')continue;MPHW[fn]=f;window[fn]=function(){const r=f.apply(this,arguments);if(MP.on&&MP.host&&MP.started&&!MP.swap)MP.dirtyAt=MP.dirtyAt||Date.now();return r}}}
+const MPHW={};
+function mpWrapUI(){if(MP.host)mpHostWrap();for(const n of MPUI){const f=window[n];if(typeof f!=='function'||MPORIG[n])continue;MPORIG[n]=f;window[n]=function(){if(MP.swap)return;return f.apply(this,arguments)};}
  if(!MPORIG.toast){const f=window.toast;MPORIG.toast=f;window.toast=function(t){if(MP.swap){MP.out.push(String(t));return}return f.apply(this,arguments)}}}
 // ---------- guest: send actions to the host instead of running them ----------
 const MPGORIG={};
@@ -4178,7 +4186,7 @@ function mpCtx(){const dom={};document.querySelectorAll('#card input[id],#card s
  return{selP,selF,MAPMODE,SEL:[...SEL],MSEL:[...MSEL],MSELF:[...MSELF],MMP,ARMYPCT,NEG:typeof NEG!=='undefined'?NEG:null,UDR,dom}}
 function mpGuestOn(){for(const fn of MPACT){if(fn==='__pick'||MPGORIG[fn])continue;const f=window[fn];if(typeof f!=='function')continue;MPGORIG[fn]=f;
   const w=function(...a){const ctx=mpCtx();if(fn==='setTax'||fn==='setInv'){try{f.apply(this,a)}catch(e){}clearTimeout(w.t);w.t=setTimeout(()=>mpSend('act',{fn,a,ctx:mpCtx()}),350);return}
-   mpSend('act',{fn,a:a.map(x=>typeof x==='object'?null:x),ctx});if(['tank','air','missile','mmove'].includes(mode)){mode='play';MSEL.clear();MSELF.clear();req()}MP.waitUntil=Date.now()+1500;toast('⏳ Emir gönderildi');};
+   mpSend('act',{fn,a:a.map(x=>typeof x==='object'?null:x),ctx});if(fn==='rejectOffer'||fn==='acceptOffer'){game.offer=null;closeBar()}if(fn==='mpOfferAns'){toast('⏳ Cevap gönderildi');return}if(['tank','air','missile','mmove'].includes(mode)){mode='play';MSEL.clear();MSELF.clear();req()}MP.waitUntil=Date.now()+1500;toast('⏳ Emir gönderildi');};
   window[fn]=w}}
 function mpGuestOff(){for(const fn in MPGORIG){window[fn]=MPGORIG[fn];delete MPGORIG[fn]}}
 function mpGuestPick(w){if(!MP.guest||mode!=='move'||selF)return false;mpSend('act',{fn:'__pick',a:[w.x,w.y],ctx:mpCtx()});mode='play';toast('⏳ Emir gönderildi');req();return true}
@@ -4189,7 +4197,7 @@ function mpApplyState(sv){if(!MP.guest)return;const first=!game||!game.mpd;const
  MPAPPLY=true;try{loadSave(null,sv,true)}finally{MPAPPLY=false}game.mpd=sv.mpd;mpLoad(MP.me);game.me=MP.me;game.saveId=null;for(let c=C0;c<C.length;c++)if(owner.includes(c))refreshNb(c);calcEco();
  if(first){enterPlay();const cap=C[MP.me]&&C[MP.me].cap;if(cap!==undefined&&P[cap])cam={x:P[cap].x,y:P[cap].y,z:Math.max(4,cam.z)}}else{cam=keepCam;mode=['move','tank','air','missile','mmove','tpick'].includes(keepMode)&&Date.now()<(MP.waitUntil||0)?'play':keepMode}
  if(!owner.includes(MP.me)){if(!MP.deadShown){MP.deadShown=true;showMenu(`<h2>💀 Ülken yıkıldı</h2><div class="sub">Oyun devam ediyor. Haritayı izleyebilir veya odadan çıkabilirsin.</div><button class="mb" onclick="hideMenu()">👁 Haritayı izle</button><button class="mb sec" onclick="mpLeave();mainMenu()">✕ Odadan çık</button>`)}selP=-1;card.style.display='none'}
- else{selP=keepSel;selF=keepF}buildBorders();paint();req();updHud();if(cardOpen&&selP>=0&&!$('sub').innerHTML.includes('<input'))refreshBar();if(openPanel&&typeof refreshPanels==='function')refreshPanels();mpHud()}
+ else{selP=keepSel;selF=keepF}buildBorders();paint();req();updHud();if(cardOpen&&selP>=0&&!$('sub').innerHTML.includes('<input'))refreshBar();if(openPanel&&typeof refreshPanels==='function')refreshPanels();const ok=game.offer?JSON.stringify(game.offer):'';if(ok&&ok!==MP.offShown&&card.style.display!=='block')showOffer();MP.offShown=ok;mpHud()}
 // ---------- messages ----------
 function mpOnMsg(m){if(!m||m.from===MP.pid||(m.to&&m.to!==MP.pid))return;const d=m.d||{};
  if(MP.host){const p=MP.players[m.from];
@@ -4237,9 +4245,9 @@ function mpMenu(){const nm=escH(LS.get('ad_mpname','')||'');showMenu(`<h2>👥 A
  <div class="sub" style="font-size:11px;opacity:.6;margin-top:6px">Sohbet yok, sadece oyun. İnternet bağlantısı gerekir.</div><button class="mb sec" onclick="mainMenu()">← Geri</button>`)}
 function mpName(){const n=cleanName(($('mpN')||{}).value||'');if(!n){toast('Önce adını yaz');return null}LS.set('ad_mpname',n);return n}
 function mpHostMenu(){const n=mpName();if(!n)return;MP.name=n;const sc=(y,t)=>`<button class="scn" onclick="mpHost('${y}')"><b>${y}</b><span>${t}</span></button>`;
- showMenu(`<h2>🏠 Oda kur</h2><div class="sub">Zaman hızı</div><div class="opt"><select id="mpS" style="flex:1">${MPSPEEDS.map(([s,t])=>`<option value="${s}" ${s===15?'selected':''}>${t} / tur</option>`).join('')}</select></div><div class="sub">Harita</div>
+ showMenu(`<h2>🏠 Oda kur</h2><div class="sub">Zaman hızı (bir tur kaç saniye)</div><div class="opt"><select id="mpS" style="flex:1" onchange="$('mpSx').style.display=this.value==='c'?'block':'none'">${MPSPEEDS.map(([s,t])=>`<option value="${s}" ${s===15?'selected':''}>${t} / tur</option>`).join('')}<option value="c">Özel süre…</option></select></div><div class="opt" id="mpSx" style="display:none"><span>Saniye (en az 8)</span><input id="mpSn" type="number" min="8" max="300" value="20" style="width:90px;padding:6px;border-radius:6px;border:1px solid #6b5a3e;background:#1a150f;color:#efe6d2;font-size:15px"></div><div class="sub">Harita</div>
  <div class="scnL">${sc('2027','Modern dünya')}${sc('1939','İkinci Dünya Savaşı')}${sc('1919','Kurtuluş Savaşı')}${sc('1914','Birinci Dünya Savaşı')}${sc('1800','Napolyon çağı')}${sc('1650','Barut imparatorlukları')}${sc('1400','Yıldırım ve Timur')}${sc('1350','Orhan Gazi dönemi')}${sc('1300','Beylikler dönemi')}${sc('1200','Selçuklu dönemi')}</div><button class="mb sec" onclick="mpMenu()">← Geri</button>`)}
-function mpHost(scn){MPKEY='';if(!window.MPTEST)mpHttp('rpc/mp_cleanup',{method:'POST',body:{}}).catch(()=>{});MP.speed=+($('mpS')||{}).value||15;Object.assign(MP,{on:true,host:true,guest:false,code:mpCode(),pid:mpPid(),players:{},scn,started:false,resumed:false,paused:false,me:-1});mpWrapUI();
+function mpHost(scn){MPKEY='';if(!window.MPTEST)mpHttp('rpc/mp_cleanup',{method:'POST',body:{}}).catch(()=>{});{const sv=($('mpS')||{}).value;MP.speed=sv==='c'?Math.max(8,Math.min(300,Math.round(+($('mpSn')||{}).value||20))):(+sv||15)}Object.assign(MP,{on:true,host:true,guest:false,code:mpCode(),pid:mpPid(),players:{},scn,started:false,resumed:false,paused:false,me:-1});mpWrapUI();
  toast('🔌 Bağlanıyor…');mpConnect(MP.code,(ok,why)=>{if(!ok){mpFail(why);return}newGame(scn);mpLobbyUI();if(!MPIV)MPIV=setInterval(mpTick,250)})}
 function mpJoin(){const n=mpName();if(!n)return;const code=String(($('mpC')||{}).value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==6){toast('Kod 6 karakter olmalı');return}
  Object.assign(MP,{on:true,host:false,guest:true,code,pid:mpPid(),name:n,players:{},scn:'',started:false,resumed:false,welcomed:false,warned:false,me:-1,hostSeen:0});mpWrapUI();mpGuestOn();toast('🔌 Bağlanıyor…');
@@ -4285,6 +4293,64 @@ if(typeof tpGain==='function'){const _tpG=tpGain;window.tpGain=function(){const 
 // pause menu in multiplayer: no offline save/exit — leaving the room saves (host)
 if(typeof pauseMenu==='function'){const _pm=pauseMenu;window.pauseMenu=function(){if(!MP.on)return _pm();showMenu(`<h2>👥 Oda ${MP.code}</h2><div class="sub">${cname(game.me)} · Tur ${game.turn}</div><button class="mb" onclick="resume()">↩ Oyuna Dön</button>${MP.host?'<button class="mb sec" onclick="saveGame();resume()">💾 Kaydet</button>':''}<button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button><button class="mb red" onclick="mpLeave();mainMenu()">✕ Odadan çık${MP.host?' (kaydedilir)':''}</button>`)}}
 if(typeof mainMenu==='function'){const _mm=mainMenu;window.mainMenu=function(){if(MP.on&&(MP.started||MP.resumed)&&!game)mpLeave();return _mm.apply(this,arguments)}}
+
+// ===================== HUMAN ↔ HUMAN DIPLOMACY =====================
+// Anything one player does to another player becomes either a direct transfer (gold, access) or an
+// offer the other player accepts/declines from the bar at the bottom of the screen.
+const mpOther=c=>!!(MP.on&&MP.started&&game&&game.mpd&&isHum(c)&&c!==game.me);
+function mpWith(c,fn){if(c===game.me)return fn();const back=game.me,sw=MP.swap;mpSwap(c);MP.swap=true;try{return fn()}finally{MP.swap=sw;mpSwap(back)}}
+function mpNews(c,t,bad){mpWith(c,()=>news('ulusal',t,bad))}
+function mpOffer(to,k,d,txt){const O=game.mpd.offers||(game.mpd.offers=[]),me=game.me;if(O.some(o=>o.from===me&&o.to===to&&o.k===k)){toast('⏳ Bu teklif zaten gönderildi, cevap bekleniyor');return false}
+ O.push({id:(game.mpd.oid=(game.mpd.oid||0)+1),from:me,to,k,d:d||{},t:game.turn,txt});mpNews(to,`📨 ${cname(me)}: ${txt} (aşağıdan kabul/red)`);toast(`📨 Teklif ${cname(to)} ülkesine gönderildi`);MP.dirtyAt=MP.dirtyAt||Date.now();return true}
+const MPOFA={
+ ally(o,me,fr){if(atWar(me,fr))return false;if(!game.allies.includes(fr))game.allies.push(fr);allyInfo(fr);game.rel[fr]=Math.min(100,(game.rel[fr]|0)+10);mpWith(fr,()=>{if(!game.allies.includes(me))game.allies.push(me);allyInfo(me)})},
+ renew(o,me,fr){if(!game.allies.includes(fr))return false;const L=typeof ALLY_LEN2!=='undefined'?ALLY_LEN2:ALLY_LEN;const a=allyInfo(fr);a.exp=Math.max(a.exp,game.turn)+L;const exp=a.exp;mpWith(fr,()=>{const b=allyInfo(me);b.exp=exp})},
+ rel(o,me,fr){game.rel[fr]=Math.min(100,(game.rel[fr]|0)+15)},
+ pact(o,me,fr){if(atWar(me,fr))return false;const T=game.turn+30;game.pact[fr]=T;mpWith(fr,()=>{game.pact[me]=T});const k=me<fr?me+'-'+fr:fr+'-'+me;game.truce[k]=T},
+ access(o,me,fr){const pay=o.d.pay|0;if(pay){const has=mpWith(fr,()=>game.gold);if(has<pay)return false;mpWith(fr,()=>{game.gold-=pay});game.gold+=pay}game.gave[fr]=true;mpWith(fr,()=>{game.access[me]=true})},
+ city(o,me,fr){const i=o.d.i,price=o.d.price|0,buyer=o.d.buyer,seller=buyer===me?fr:me;if(owner[i]!==seller||i===C[seller].cap)return false;const has=mpWith(buyer,()=>game.gold);if(has<price)return false;
+  mpWith(buyer,()=>{game.gold-=price});mpWith(seller,()=>{game.gold+=price});transferProv(i,buyer);hap[i]=Math.min(hap[i],50);dirty=true},
+ peace(o,me,fr){if(!atWar(me,fr))return false;const ty=o.d.type||'white';if(ty==='gold'){const g=o.d.g|0;const has=game.gold;if(has<g)return false;game.gold-=g;mpWith(fr,()=>{game.gold+=g})}
+  makePeace(me,fr,ty==='gold'?'keep':ty,0);dirty=true},
+ call(o,me,fr){const e=o.d.e;if(!owner.includes(e)||atWar(me,e)||!atWar(fr,e))return false;if(game.allies.includes(e))game.allies=game.allies.filter(x=>x!==e);game.wars.push([me,e,game.turn]);game.rel[fr]=Math.min(100,(game.rel[fr]|0)+3)},
+ uni(o,me,fr){let ok=false;mpWith(fr,()=>{const u=UNI();if(u){if(!u.m.includes(me))u.m.push(me);if(!game.allies.includes(me))game.allies.push(me);ok=true}});if(!ok)return false;if(!game.allies.includes(fr))game.allies.push(fr);allyInfo(fr)}};
+function mpOfferAns(id,yes){if(!game||!game.mpd)return;const O=game.mpd.offers||[];const o=O.find(x=>x.id===+id&&x.to===game.me);if(!o)return;game.mpd.offers=O.filter(x=>x!==o);const me=game.me,fr=o.from;if(!owner.includes(fr))return;
+ if(!yes){mpNews(fr,`✋ ${cname(me)} teklifimizi reddetti: ${o.txt}`,true);toast('✋ Teklif reddedildi');return}
+ let r;try{r=MPOFA[o.k]?MPOFA[o.k](o,me,fr):false}catch(e){console.error('offer',e);r=false}
+ if(r===false){toast('⚠ Teklif artık geçerli değil');mpNews(fr,`⚠ ${cname(me)} ile anlaşma gerçekleşmedi: ${o.txt}`,true);return}
+ mpNews(fr,`✅ ${cname(me)} teklifimizi kabul etti: ${o.txt}`);news('ulusal',`✅ ${cname(fr)} ile anlaşma: ${o.txt}`);toast('✅ Kabul edildi');if(dirty){buildBorders();dirty=false}calcEco();paint();req();updHud()}
+// interceptors: same functions, other player instead of the AI
+function mpHook(name,fn){const orig=window[name];if(typeof orig!=='function')return;window[name]=function(...a){if(MP.on&&MP.started&&game&&game.mpd){const r=fn(orig,...a);if(r!=='orig')return r}return orig.apply(this,a)}}
+mpHook('doGift',(o,c)=>{if(!mpOther(c))return'orig';const n=Math.floor(+$('gN').value||0);if(n<=0||n>game.gold){toast('💰 Geçersiz miktar');return}const me=game.me;game.gold-=n;mpWith(c,()=>{game.gold+=n;news('ulusal',`💰 ${cname(me)} bize ${fmt(n)} altın gönderdi.`)});game.rel[c]=Math.min(100,(game.rel[c]|0)+5);news('ulusal',`💰 ${cname(c)} ülkesine ${fmt(n)} altın gönderildi.`);toast(`💰 ${fmt(n)} altın ${cname(c)} ülkesine gönderildi`);updHud();refreshBar()});
+mpHook('sendAlly',(o,c)=>{if(!mpOther(c))return'orig';if(atWar(game.me,c)){toast('Savaştayken ittifak olmaz');return}if(game.allies.includes(c)){toast('Zaten müttefiksiniz');return}if(!useDP(3))return;mpOffer(c,'ally',{},'İttifak teklifi');refreshBar()});
+mpHook('envoyUI',(o,c)=>{if(!mpOther(c))return'orig';if(!useDP(2))return;mpOffer(c,'rel',{},'Dostluk elçisi (ilişki +15)');refreshBar()});
+mpHook('pactUI',(o,c)=>{if(!mpOther(c))return'orig';if(!useDP(2))return;mpOffer(c,'pact',{},'30 turluk saldırmazlık paktı');refreshBar()});
+mpHook('accessUI',(o,c)=>{if(!mpOther(c))return'orig';if(!useDP(1))return;mpOffer(c,'access',{},'Askeri geçiş izni isteği');refreshBar()});
+mpHook('buyAccess',(o,c)=>{if(!mpOther(c))return'orig';const pr=accessPrice(c);if(game.gold<pr){toast('💰 Yetersiz altın');return}mpOffer(c,'access',{pay:pr},`${fmt(pr)} altına askeri geçiş izni`);closeBar()});
+mpHook('giveAccess',(o,c)=>{if(!mpOther(c))return'orig';o(c);const me=game.me,v=!!game.gave[c];mpWith(c,()=>{game.access[me]=v;news('ulusal',v?`🛂 ${cname(me)} ordularımıza geçiş izni verdi.`:`🛂 ${cname(me)} geçiş iznini geri aldı.`,!v)})});
+mpHook('buyCity',(o,c)=>{if(!mpOther(c))return'orig';const i=+$('tB').value,off=Math.floor(+$('tO').value||0);if(isNaN(i)||owner[i]!==c){toast('Şehir seç');return}if(i===C[c].cap){toast('Başkent satılamaz');return}if(off<=0||off>game.gold){toast('💰 Yetersiz altın');return}mpOffer(c,'city',{i,price:off,buyer:game.me},`${P[i].n} şehrini ${fmt(off)} altına satın alma teklifi`);closeBar()});
+mpHook('sellCity',(o,c)=>{if(!mpOther(c))return'orig';const i=+$('tS').value;if(isNaN(i)||owner[i]!==game.me){toast('Şehir seç');return}if(i===C[game.me].cap){toast('Başkent satılamaz');return}const pay=Math.round(provValue(i));mpOffer(c,'city',{i,price:pay,buyer:c},`${P[i].n} şehrini ${fmt(pay)} altına satma teklifi`);closeBar()});
+mpHook('tryPeace',(o,c,type)=>{if(!mpOther(c))return'orig';if(!useDP(2))return;const g=type==='gold'?Math.round(incomeOf(c)*4):0;mpOffer(c,'peace',{type,g},type==='white'?'Beyaz barış (topraklar geri verilir)':type==='gold'?`Barış: herkes aldığını korur + bize ${fmt(g)} altın`:'Barış: herkes aldığı topraklarda kalır');refreshBar()});
+mpHook('negSend',o=>{if(typeof NEG==='undefined'||!NEG||!mpOther(NEG.c))return'orig';const c=NEG.c;if(!useDP(2))return;mpOffer(c,'peace',{type:'keep'},'Barış: herkes aldığı topraklarda kalır');closeBar()});
+mpHook('negSurrender',o=>{if(typeof NEG==='undefined'||!NEG||!mpOther(NEG.c))return'orig';const c=NEG.c,me=game.me,g0=game.gold;o();const paid=Math.max(0,g0-game.gold);mpWith(c,()=>{if(paid)game.gold+=paid;news('ulusal',`🏳 ${cname(me)} teslim oldu${paid?` · ${fmt(paid)} altın tazminat aldık`:''}.`)})});
+mpHook('callAllies',(o,c)=>{const H=game.allies.filter(a=>isHum(a)&&a!==game.me&&!atWar(a,c)&&owner.includes(a));if(!H.length)return'orig';const me=game.me;const before=game.ext&&game.ext.call&&game.ext.call[c];
+ const keep=game.allies.slice();game.allies=game.allies.filter(a=>!H.includes(a));try{o(c)}catch(e){console.warn(e)}finally{const extra=game.allies.filter(a=>!keep.includes(a));game.allies=keep.concat(extra)}
+ if(!(game.ext.call&&game.ext.call[c]>game.turn&&game.ext.call[c]!==before))return;for(const h of H)mpOffer(h,'call',{e:c},`${cname(c)} ülkesine karşı savaşa katılma çağrısı`)});
+mpHook('betrayUI',(o,c)=>{if(!mpOther(c))return'orig';const me=game.me;o(c);mpWith(c,()=>{game.allies=game.allies.filter(x=>x!==me);const u=UNI&&UNI();if(u)u.m=u.m.filter(x=>x!==me);news('ulusal',`💔 ${cname(me)} ittifakımızı bozdu!`,true)})});
+mpHook('renewAlly',(o,c)=>{if(!mpOther(c))return'orig';if(!game.allies.includes(c))return;if(!useDP(2))return;mpOffer(c,'renew',{},'İttifakı uzatma teklifi');if(typeof diploUI==='function')diploUI()});
+mpHook('uniInvite',(o,c)=>{if(!mpOther(c))return'orig';const u=UNI();if(!u)return;if((game.rel[c]|0)<50){toast('İlişki +50 olmalı');return}if(u.m.includes(c))return;if(!useDP(2))return;mpOffer(c,'uni',{},`${u.n} birliğine katılma daveti`);uniUI()});
+mpHook('uniKick',(o,c)=>{if(!mpOther(c))return'orig';const me=game.me;o(c);mpNews(c,`🏛 ${cname(me)} bizi birlikten çıkardı.`,true)});
+for(const n of ['askTribute','buyVassal','buyWar','annexVassal'])mpHook(n,(o,c)=>{if(!mpOther(c))return'orig';toast('👥 Bu teklif başka bir oyuncuya yapılamaz');});
+// both sides hear about wars and peace between players
+mpHook('startWar',(o,a,b,f)=>{const was=atWar(a,b);o(a,b,f);if(was||!atWar(a,b))return;for(const [h,x] of [[a,b],[b,a]])if(isHum(h)&&h!==game.me){mpWith(h,()=>{game.allies=game.allies.filter(y=>y!==x);news('ulusal',h===b?`⚔ ${cname(x)} bize savaş açtı!`:`⚔ ${cname(x)} ile savaştayız.`,true)})}if(isHum(a)&&isHum(b)){game.allies=game.allies.filter(y=>y!==(game.me===a?b:a))}});
+mpHook('makePeace',(o,a,b,t,g)=>{o(a,b,t,g);for(const [h,x] of [[a,b],[b,a]])if(isHum(h)&&h!==game.me)mpNews(h,`🕊 ${cname(x)} ile barış yapıldı.`)});
+// offer bar (bottom of the screen)
+const MPOFP=new Set();let MPOFK=null;
+function mpOffersUI(){let E=$('mpOf');const L=(MP.on&&MP.started&&game&&game.mpd&&game.mpd.offers||[]).filter(o=>o.to===(MP.guest?MP.me:game.me)&&!MPOFP.has(o.id));const k=L.map(o=>o.id).join(',');if(k===MPOFK&&E)return;MPOFK=k;
+ if(!E){E=document.createElement('div');E.id='mpOf';E.style.cssText='position:fixed;left:50%;bottom:64px;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:6px;max-width:92vw;width:440px;pointer-events:none';document.body.appendChild(E)}
+ E.innerHTML=L.slice(0,3).map(o=>`<div style="pointer-events:auto;background:rgba(26,21,15,.96);border:1px solid #c9a45c;border-radius:10px;padding:8px 10px;color:#efe6d2;font-size:13px;box-shadow:0 4px 16px #0008"><b>📨 ${escH(cname(o.from))}</b> · ${escH(o.txt)}<div style="display:flex;gap:6px;margin-top:6px"><button style="flex:1;background:#2e7a4a;color:#fff;border:0;border-radius:6px;padding:7px" onclick="mpAns(${o.id},1)">✔ Kabul</button><button style="flex:1;background:#8a2e2e;color:#fff;border:0;border-radius:6px;padding:7px" onclick="mpAns(${o.id},0)">✕ Reddet</button></div></div>`).join('');if(typeof translateTree==='function')translateTree(E)}
+function mpAns(id,y){MPOFP.add(id);MPOFK=null;mpOfferAns(id,!!y);mpOffersUI();refreshBar&&card.style.display==='block'&&refreshBar()}
+{const _h=mpHud;window.mpHud=function(){_h();try{mpOffersUI()}catch(e){}}}
 
 // ===== CLOUD SAVES (v1.3): every save is also kept in Supabase under a 10-letter cloud code =====
 const CLA='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -4340,7 +4406,7 @@ function dateStr(t){const G=(typeof game!=='undefined'&&game)||{};const d=new Da
 const DIFF=['Kolay','Normal','Zor','Çok Zor'];
 function showMenu(html){mode='menu';if(!game)setTimeout(startTour,30);else stopTour();if($('selBar'))$('selBar').style.display='none';closeNews();closeEco();$('modeRank').style.display='none';$('log').style.display='none';$('menu').style.display='flex';$('mp').innerHTML=html;hud.style.display='none';$('pick').style.display='none';$('setup').style.display='none';card.style.display='none';0}
 function hideMenu(){$('menu').style.display='none';0}
-function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.3.0</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
+function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.4.0</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
  ${!game&&LS.get(LKEY,null)&&saves().some(s=>s.id===LS.get(LKEY,null))?'<button class="mb" onclick="continueGame()">⏯ Kaldığın yerden devam et</button>':''}<button class="mb ${!game&&LS.get(LKEY,null)?'sec':''}" onclick="gameMenu()">▶ Oyun</button><button class="mb sec" onclick="mpMenu()">👥 Arkadaşlarla Oyna</button><button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button>
  <button class="mb sec" onclick="leadersMenu()">👑 Liderler</button><button class="mb sec" onclick="helpMenu()">📖 Nasıl Oynanır</button><button class="mb sec" onclick="aboutMenu()">ℹ Hakkında</button>${game?'<button class="mb sec" onclick="resume()">↩ Oyuna Dön</button>':''}<button class="mb red" onclick="exitApp()">⏻ Çıkış</button>`)}
 function exitApp(){try{if(game&&!(typeof MP!=='undefined'&&MP.on))saveGame(true);if(typeof MP!=='undefined'&&MP.on)mpLeave()}catch(e){}if(window.AtlasApp&&AtlasApp.exit){AtlasApp.exit();return}try{if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App){Capacitor.Plugins.App.exitApp();return}}catch(e){}try{window.close()}catch(e){}setTimeout(()=>{game=null;showMenu(`<h2>👋 Görüşmek üzere</h2><div class="sub">Oyun kaydedildi. Kapatmak için bu sekmeyi kapatabilirsin.</div><button class="mb sec" onclick="mainMenu()">← Ana menü</button>`)},300)}
