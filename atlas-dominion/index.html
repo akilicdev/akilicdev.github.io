@@ -4197,7 +4197,7 @@ function mpApplyState(sv){if(!MP.guest)return;const first=!game||!game.mpd;const
  MPAPPLY=true;try{loadSave(null,sv,true)}finally{MPAPPLY=false}game.mpd=sv.mpd;mpLoad(MP.me);game.me=MP.me;game.saveId=null;for(let c=C0;c<C.length;c++)if(owner.includes(c))refreshNb(c);calcEco();
  if(first){enterPlay();const cap=C[MP.me]&&C[MP.me].cap;if(cap!==undefined&&P[cap])cam={x:P[cap].x,y:P[cap].y,z:Math.max(4,cam.z)}}else{cam=keepCam;mode=['move','tank','air','missile','mmove','tpick'].includes(keepMode)&&Date.now()<(MP.waitUntil||0)?'play':keepMode}
  if(!owner.includes(MP.me)){if(!MP.deadShown){MP.deadShown=true;showMenu(`<h2>💀 Ülken yıkıldı</h2><div class="sub">Oyun devam ediyor. Haritayı izleyebilir veya odadan çıkabilirsin.</div><button class="mb" onclick="hideMenu()">👁 Haritayı izle</button><button class="mb sec" onclick="mpLeave();mainMenu()">✕ Odadan çık</button>`)}selP=-1;card.style.display='none'}
- else{selP=keepSel;selF=keepF}buildBorders();paint();req();updHud();if(cardOpen&&selP>=0&&!$('sub').innerHTML.includes('<input'))refreshBar();if(openPanel&&typeof refreshPanels==='function')refreshPanels();const ok=game.offer?JSON.stringify(game.offer):'';if(ok&&ok!==MP.offShown&&card.style.display!=='block')showOffer();MP.offShown=ok;mpHud()}
+ else{selP=keepSel;selF=keepF}buildBorders();paint();req();updHud();MP.ticking=true;try{if(cardOpen&&selP>=0)refreshBar();if(typeof refreshPanels==='function')refreshPanels()}finally{MP.ticking=false}const ok=game.offer?JSON.stringify(game.offer):'';if(ok&&ok!==MP.offShown&&card.style.display!=='block')showOffer();MP.offShown=ok;mpHud()}
 // ---------- messages ----------
 function mpOnMsg(m){if(!m||m.from===MP.pid||(m.to&&m.to!==MP.pid))return;const d=m.d||{};
  if(MP.host){const p=MP.players[m.from];
@@ -4352,6 +4352,24 @@ function mpOffersUI(){let E=$('mpOf');const L=(MP.on&&MP.started&&game&&game.mpd
 function mpAns(id,y){MPOFP.add(id);MPOFK=null;mpOfferAns(id,!!y);mpOffersUI();refreshBar&&card.style.display==='block'&&refreshBar()}
 {const _h=mpHud;window.mpHud=function(){_h();try{mpOffersUI()}catch(e){}}}
 
+// ===================== keep the screen the player is working on =====================
+// In multiplayer the turn ticks on its own. A tick used to rebuild the open card and side panel,
+// throwing the player back to the first view, dropping typed numbers and stopping slider drags.
+// Now a screen the player has touched since it was last drawn is left exactly as it is.
+const UIK={card:{r:0,t:0,h:''}},UIP=['ecoP','techP','warsP','rankP','newsP','cityP'];for(const id of UIP)UIK[id]={r:0,t:0,h:''};
+const uiEl=k=>k==='card'?card:$(k);
+function uiTouch(k){UIK[k].t=Date.now()}
+function uiWatch(){const add=(el,k)=>{if(!el||el.dataset.uiw)return;el.dataset.uiw=1;for(const ev of ['pointerdown','input','change','focusin','wheel','keydown','touchstart'])el.addEventListener(ev,()=>uiTouch(k),true);el.addEventListener('scroll',()=>uiTouch(k),true)};add(card,'card');for(const id of UIP)add($(id),id)}
+// remember what a refresh drew; the screen is "untouched" only while it still shows exactly that
+function uiMark(k){const el=uiEl(k);if(!el)return;const U=UIK[k],st=Date.now();U.r=st;U.t=0;U.h=el.innerHTML;setTimeout(()=>{if(U.r===st&&!U.t)U.h=el.innerHTML},60)}
+const uiFresh=k=>{const U=UIK[k],el=uiEl(k);if(k==='card'&&$('sub')&&$('sub').innerHTML.trim())return false;return !!el&&U.t<=U.r&&el.innerHTML===U.h&&!(el.contains(document.activeElement)&&/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))};
+const uiTick=()=>MP.on&&MP.started&&MP.ticking;
+{const _rb=refreshBar;window.refreshBar=function(){uiWatch();if(uiTick()&&card.style.display==='block'&&!uiFresh('card'))return;const r=_rb.apply(this,arguments);uiMark('card');return r}}
+{const _rp=refreshPanels;window.refreshPanels=function(){uiWatch();if(uiTick()){const open=UIP.find(id=>$(id)&&$(id).style.display==='block');if(open&&!uiFresh(open)){try{showModeRank();selUI();if(MAPMODE!=='pol')paint();req()}catch(e){}return}}const r=_rp.apply(this,arguments);for(const id of UIP)if($(id)&&$(id).style.display==='block')uiMark(id);return r}}
+for(const [fn,id] of [['openEco','ecoP'],['ecoUI','ecoP'],['techUI','techP'],['warsUI','warsP'],['openRank','rankP'],['openNews','newsP'],['cityList','cityP']]){const f=window[fn];if(typeof f!=='function')continue;window[fn]=function(){uiWatch();const r=f.apply(this,arguments);if(!uiTick())uiMark(id);return r}}
+// the AI peace offer replaces the card only when the player isn't in the middle of something
+if(typeof showOffer==='function'){const _so=showOffer;window.showOffer=function(){if(uiTick()&&card.style.display==='block'&&!uiFresh('card'))return;return _so.apply(this,arguments)}}
+
 // ===== CLOUD SAVES (v1.3): every save is also kept in Supabase under a 10-letter cloud code =====
 const CLA='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function cloudCode(){let c=LS.get('ad_cloud',null);if(!c||!/^[A-Z0-9]{10}$/.test(c)){c='';const r=crypto.getRandomValues(new Uint8Array(10));for(const x of r)c+=CLA[x%CLA.length];LS.set('ad_cloud',c)}return c}
@@ -4463,7 +4481,7 @@ function dateStr(t){const G=(typeof game!=='undefined'&&game)||{};const d=new Da
 const DIFF=['Kolay','Normal','Zor','Çok Zor'];
 function showMenu(html){mode='menu';if(!game)setTimeout(startTour,30);else stopTour();if($('selBar'))$('selBar').style.display='none';closeNews();closeEco();$('modeRank').style.display='none';$('log').style.display='none';$('menu').style.display='flex';$('mp').innerHTML=html;hud.style.display='none';$('pick').style.display='none';$('setup').style.display='none';card.style.display='none';0}
 function hideMenu(){$('menu').style.display='none';0}
-function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.5.0</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
+function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.5.1</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
  ${!game&&LS.get(LKEY,null)&&saves().some(s=>s.id===LS.get(LKEY,null))?'<button class="mb" onclick="continueGame()">⏯ Kaldığın yerden devam et</button>':''}<button class="mb ${!game&&LS.get(LKEY,null)?'sec':''}" onclick="gameMenu()">▶ Oyun</button><button class="mb sec" onclick="mpMenu()">👥 Arkadaşlarla Oyna</button><button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button>
  <button class="mb sec" onclick="leadersMenu()">👑 Liderler</button><button class="mb sec" onclick="helpMenu()">📖 Nasıl Oynanır</button><button class="mb sec" onclick="aboutMenu()">ℹ Hakkında</button>${game?'<button class="mb sec" onclick="resume()">↩ Oyuna Dön</button>':''}<button class="mb red" onclick="exitApp()">⏻ Çıkış</button>`)}
 function exitApp(){try{if(game&&!(typeof MP!=='undefined'&&MP.on))saveGame(true);if(typeof MP!=='undefined'&&MP.on)mpLeave()}catch(e){}if(window.AtlasApp&&AtlasApp.exit){AtlasApp.exit();return}try{if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App){Capacitor.Plugins.App.exitApp();return}}catch(e){}try{window.close()}catch(e){}setTimeout(()=>{game=null;showMenu(`<h2>👋 Görüşmek üzere</h2><div class="sub">Oyun kaydedildi. Kapatmak için bu sekmeyi kapatabilirsin.</div><button class="mb sec" onclick="mainMenu()">← Ana menü</button>`)},300)}
