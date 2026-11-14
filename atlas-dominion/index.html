@@ -602,7 +602,7 @@ function endTurnNow(){if(!game||busy)return;busy=true;sfx('turn');dirty=false;ca
  if(fighters.size&&enemiesOf(game.me).length){const first=order.find(c=>c===game.me||atWar(c,game.me));game.firstMove=first}
  for(const c of order){if(c===game.me||isHum(c))moveAll(c);else{aiTurn(c);aiAir(c)}}seaQueue();moveFleets();navalBattles();aiWars();aiDiplomacy();aiPeace();aiPeaceRecruit();
  for(let i=0;i<N;i++){const cap=BASEPOP[i]*1.05;if(pop[i]<cap)pop[i]=Math.min(cap,pop[i]*1.001+1);const o=owner[i];const tgt=(CORE[i]===o?72:48)-Math.min(15,enemiesOf(o).length*6*(gov(o)==='dem'?1.5:1))-(unemp[i]-7)*0.8+govF(o,'hap')+(tl(o,'med')>=3?2:0)+(tl(o,'med')>=6?3:0)-((game.dmg[i]||0)>game.turn?6:0)+(o===game.me?(0.2-game.tax)*60-Math.max(0,(game.mob||2)-2)*4:0);hap[i]+=(tgt-hap[i])*0.03}
- game.dp=Math.min(50,game.dp+0.5+govF(game.me,'dp'));processEnvoys();unrestNews();buildTick();debtTick();coupTick();straitTick();projTick();spaceTick();stabTick();allyTick();extTick();aiColonize();vassalTick();missileTick();aiBuild();aiCyber();game.tp+=tpGain();if(game.turn%10===0)aiTreeTick();game.mp=Math.min(30,game.mp+Math.min(12,5+Math.floor(provsOf(game.me).length/40)));const anyDis=diseaseTick();investTick();
+ game.dp=Math.min(50,game.dp+0.5+govF(game.me,'dp'));processEnvoys();unrestNews();buildTick();debtTick();coupTick();straitTick();projTick();spaceTick();stabTick();allyTick();extTick();aiColonize();vassalTick();missileTick();navyTick();aiBuild();aiCyber();game.tp+=tpGain();if(game.turn%10===0)aiTreeTick();game.mp=Math.min(30,game.mp+Math.min(12,5+Math.floor(provsOf(game.me).length/40)));const anyDis=diseaseTick();investTick();
  if(typeof mpPerPlayer==='function')mpPerPlayer();consolidate();calcEco();game.gold+=income();game.turn++;if(!isModern(game.scn)&&typeof scenTick==='function')scenTick();if(!owner.includes(game.me)){busy=false;if(typeof MP!=='undefined'&&MP.on&&MP.host){if(!MP.deadShown){MP.deadShown=true;toast('💀 Ülken yıkıldı · oda açık kalır')}}else{gameOver();return}}
  const cq=BLOG.filter(e=>e.now!==undefined);if(cq.length&&!(typeof MP!=='undefined'&&MP.on)){VOWN=owner.slice();for(let k=cq.length-1;k>=0;k--)VOWN[cq[k].p]=cq[k].prev}
  if(dirty){buildBorders();paint()}else if(MAPMODE!=='pol')paint();refreshBar();updHud();req();autoSave();busy=false;refreshPanels();if(game.offer)showOffer();if(BLOG.length&&!(typeof MP!=='undefined'&&MP.on))playReplay()}
@@ -620,7 +620,7 @@ function processEnvoys(){for(const e of game.envoys.slice()){if(e.due>game.turn)
   else{game.rel[c]=(game.rel[c]|0)-5;news('ulusal',`✉ ${cname(c)} elçimizi geri çevirdi. İlişkiler -5.`,true);toast(`✉ ${cname(c)} elçiyi reddetti`)}}
  else if(e.type==='ally'){if(!atWar(game.me,c)&&Math.random()<allyChance(c)){game.allies.push(c);game.rel[c]=Math.min(100,(game.rel[c]|0)+10);news('ulusal',`🤝 ${cname(c)} ittifak teklifimizi kabul etti!`);toast(`🤝 ${cname(c)} müttefikin oldu`)}
   else{game.rel[c]=(game.rel[c]|0)-3;news('ulusal',`🤝 ${cname(c)} ittifak teklifimizi reddetti.`,true);toast(`✋ ${cname(c)} ittifakı reddetti`)}}}}
-function newGameState(me){fleets=[];game.ext={qo:{},nav:{},sp:{r:0,q:[],n:0,ok:0},prest:0};game.supp={};game.shock={};game.airCd={};game.cyberVis={};game.cybCd={};game.tankCd={};game.dmg={};game.gov={};game.vas={};game.newC=[];game.flag={};game.names={};game.mprod=[];game.aimis={};game.mob=2;game.missiles=0;STARCUT=null;game.pact={};game.access={};game.gave={};game.mp=10;initProvStats();if(isMed(game.scn))scenPost();else if(SCNDEF[game.scn])wwPost();game.tax=0.2;game.inv={e:0.1,p:0.1,t:0.1};game.build=[];game.outb={};game.dseq=0;game.wars=[];game.allies=[];game.rel={};game.imp={};game.arel={};game.truce={};game.offer=null;game.dp=10;game.news=[];game.envoys=[];game.cool={};game.aicool={};game.unrest={};hap=P.map(()=>70);
+function newGameState(me){fleets=[];game.ext={qo:{},nav:{},sp:{r:0,q:[],n:0,ok:0},prest:0};game.supp={};game.shock={};game.airCd={};game.cyberVis={};game.cybCd={};game.tankCd={};game.dmg={};game.gov={};game.vas={};game.newC=[];game.flag={};game.names={};game.mprod=[];game.nav=null;game.nprod=[];game.navCd={};game.wfl=[];game.aimis={};game.mob=2;game.missiles=0;STARCUT=null;game.pact={};game.access={};game.gave={};game.mp=10;initProvStats();if(isMed(game.scn))scenPost();else if(SCNDEF[game.scn])wwPost();game.tax=0.2;game.inv={e:0.1,p:0.1,t:0.1};game.build=[];game.outb={};game.dseq=0;game.wars=[];game.allies=[];game.rel={};game.imp={};game.arel={};game.truce={};game.offer=null;game.dp=10;game.news=[];game.envoys=[];game.cool={};game.aicool={};game.unrest={};hap=P.map(()=>70);
  calcEco();game.gold=Math.round(grossOf(me)*10);initTree();scenTree();deployStart();for(let c=0;c<C.length;c++)if(has(C[c].cap,B.SILO))game.aimis[c]=3;game.missiles=has(C[me].cap,B.SILO)?3:0;
  C.forEach((c,i)=>{if(i===me)return;const h=((i*2654435761+me*40503)>>>0)%41;game.rel[i]=(CNB[me].has(i)?-20:-5)+h});
  const tr=C.findIndex(c=>c.n==='Turkey'),ky=C.findIndex(c=>c.n==='Northern Cyprus');if(me===tr&&ky>=0&&owner.includes(ky)&&owner.includes(tr)){game.allies.push(ky);game.rel[ky]=90}if(me===ky&&tr>=0&&owner.includes(ky)&&owner.includes(tr)){game.allies.push(tr);game.rel[tr]=90}}
@@ -647,12 +647,12 @@ function pickAt(w){const x=((Math.floor(w.x)%W)+W)%W,y=Math.floor(w.y);if(y<0||y
   let mv=a;if(n0<a.n){a.n-=n0;mv={id:aid++,o:a.o,p:a.p,n:n0,path:[]};armies.push(mv)}
   mv.path=pth;mode='play';updHud();toast(`➜ ${kfmt(n0)} asker ${P[v].n} hedefine yola çıktı (${Math.ceil(pth.length/2)} tur)`);selectProv(selP);return}
  if(mode==='mmove'){mmPick(v,w);return}
- if(mode==='air'){if(v===OCEAN){toast('Bir şehir seç');return}doAir(v);return}
- if(mode==='missile'){if(v===OCEAN){toast('Bir şehir seç');return}doMissile(v);return}
- if(mode==='tank'){if(v===OCEAN){toast('Bir şehir seç');return}doTank(v);return}
+ if(mode==='air'){if(v===OCEAN){const sf=wflAt(w.x,w.y,true);if(sf&&sf.o!==game.me){doAirSea(sf.id);return}toast('Bir şehir seç');return}doAir(v);return}
+ if(mode==='missile'){if(v===OCEAN){const sf=wflAt(w.x,w.y,true);if(sf&&sf.o!==game.me){doMisSea(sf.id);return}toast('Bir şehir seç');return}doMissile(v);return}
+ if(mode==='naval'){if(v===OCEAN){const sf=wflAt(w.x,w.y,true);if(sf&&sf.o!==game.me){doNavSea(sf.id,NAVF);return}toast('Bir şehir seç');return}doNaval(v,NAVF);return}  if(mode==='wmove'){wflPick(v,w);return}  if(mode==='navmove'){if(v===OCEAN){toast('Bir şehir seç');return}doNavMove(v);return}  if(mode==='tank'){if(v===OCEAN){toast('Bir şehir seç');return}doTank(v);return}
  if(mode==='play'&&SELMODES[MAPMODE]&&(MAPMODE!=='army'||SELON)&&v!==OCEAN&&owner[v]===game.me){selToggle(v);return}
  if(mode!=='play')return;
- if(v===OCEAN){const f=fleetAt(w.x,w.y);if(f){selectFleet(f.id);return}closeBar();return}
+ if(v===OCEAN){const sf=wflAt(w.x,w.y,true);if(sf){selectWfl(sf.id);return}const f=fleetAt(w.x,w.y);if(f){selectFleet(f.id);return}closeBar();return}
  selectProv(v)}
 let selF=0;
 function nearestPort(o,from){const prev=new Int32Array(N).fill(-2);prev[from]=-1;const q=[from];for(let h=0;h<q.length;h++){const u=q[h];if(u!==from&&owner[u]===o&&has(u,B.PORT)&&PCELL[u].length){const path=[];let x=u;while(x!==from){path.push(x);x=prev[x]}return {p:u,path:path.reverse()}}for(const v of P[u].nb){if(prev[v]!==-2||owner[v]!==o)continue;prev[v]=u;q.push(v)}}return null}
@@ -673,10 +673,10 @@ function refreshBar(){if(selF&&game){selectFleet(selF);return}if(selP<0||!game){
  const flag=`<span class="flag" style="background:rgb(${CC[o]})"></span>`;
  if(o===me){const here=armies.filter(a=>a.p===v&&a.o===me),tot=here.reduce((s,a)=>s+a.n,0),home=homeArmy(v,me);const cmd=tot&&game.scn==='1919'&&game.skeys&&me===game.skeys.tbm?tkCommander(v):null;
   cb.innerHTML=`<h3>${P[v].n}</h3><div class="ab">${flag}${cname(o)}${tot?` · 🪖 ${fmt(tot)}`:''}${stabOf(v)<100?` · 🏛 İstikrar <b style="color:${stabOf(v)<40?'#e0806a':stabOf(v)<70?'#d9b86a':'#9fc48a'}">%${Math.round(stabOf(v))}</b>`:''}</div>
-  <div class="acts g2"><button onclick="recruitUI()">⚔ Yetiştir</button><button onclick="startMove()" ${home?'':'disabled'}>➜ Hareket</button><button onclick="buildUI()">🏗 İnşa</button><button onclick="statsUI()">📊 İstatistik</button>${home&&tl(me,'tank')>=1?`<button class="b-red" style="grid-column:span 2" onclick="tankUI()">Tank saldırısı${(game.tankCd[v]||0)>game.turn?' ('+(game.tankCd[v]-game.turn)+' tur)':''}</button>`:''}${cmd?`<div class="cmdl" style="grid-column:span 2">🎖 <b>${cmd.n}</b>${cmd.r?' · '+cmd.r:''}</div>`:''}<button class="b-blue" style="grid-column:span 2" onclick="interiorUI()">🏛 İçişleri</button>${strOf(v)?`<button class="b-blue" style="grid-column:span 2" onclick="straitUI()">⚓ ${STR[strOf(v)].n}${game.strait&&game.strait[strOf(v)]&&enemiesOf(me).length?' (kapalı)':''}</button>`:''}${has(v,B.SILO)?`<button class="b-red" style="grid-column:span 2" onclick="missileUI()">🚀 Füze (${game.missiles})</button>`:''}${has(v,B.AIR)?`<button class="b-red" style="grid-column:span 2" onclick="airUI()">✈ Hava saldırısı${(game.airCd[v]||0)>game.turn?' ('+((game.airCd[v])-game.turn)+' tur)':''}</button>`:''}</div><div id="sub"></div>`}
+  <div class="acts g2"><button onclick="recruitUI()">⚔ Yetiştir</button><button onclick="startMove()" ${home?'':'disabled'}>➜ Hareket</button><button onclick="buildUI()">🏗 İnşa</button><button onclick="statsUI()">📊 İstatistik</button>${home&&tl(me,'tank')>=1?`<button class="b-red" style="grid-column:span 2" onclick="tankUI()">Tank saldırısı${(game.tankCd[v]||0)>game.turn?' ('+(game.tankCd[v]-game.turn)+' tur)':''}</button>`:''}${cmd?`<div class="cmdl" style="grid-column:span 2">🎖 <b>${cmd.n}</b>${cmd.r?' · '+cmd.r:''}</div>`:''}<button class="b-blue" style="grid-column:span 2" onclick="interiorUI()">🏛 İçişleri</button>${strOf(v)?`<button class="b-blue" style="grid-column:span 2" onclick="straitUI()">⚓ ${STR[strOf(v)].n}${game.strait&&game.strait[strOf(v)]&&enemiesOf(me).length?' (kapalı)':''}</button>`:''}${warBtns(v)}</div><div id="sub"></div>`}
  else{const r=game.rel[o]|0,w=atWar(me,o),al=game.allies.includes(o),tr=truce(me,o);
   cb.innerHTML=`<h3>${fimg(o,18)} ${cname(o)}</h3><div class="ab">${game.vas[o]===me?'👑 Vasal · ':''}${P[v].n} · İlişki: <b style="color:${r<=-10?'#d9826e':r>=30?'#9fc48a':'#d9b86a'}">${r}</b>${w?' · <b style="color:#d9654f">SAVAŞTA</b>':''}${al?' · <b style="color:#9fc48a">MÜTTEFİK</b>':''}${tr&&!w?' · 🕊 Ateşkes':''}${game.access[o]?' · 🛂':''}</div>
-  ${warLine(o)}${(()=>{const ha=homeArmy(v,me);if(!ha||atWar(me,o))return'';const n=armies.filter(a=>a.p===v&&a.o===me).reduce((s,a)=>s+a.n,0);return `<div class="ab" style="margin-top:4px">🪖 <span>Ordun burada</span>: <b>${fmt(n)}</b></div><div class="acts g2"><button onclick="startMove()">➜ Hareket</button>${tl(me,'tank')>=1?`<button class="b-red" onclick="tankUI()">Tank saldırısı${(game.tankCd[v]||0)>game.turn?' ('+(game.tankCd[v]-game.turn)+' tur)':''}</button>`:`<button onclick="mmStart()">👥 Toplu hareket</button>`}</div>`})()}
+  ${warLine(o)}${navEnemyLine(v,o)}${(()=>{const ha=homeArmy(v,me);if(!ha||atWar(me,o))return'';const n=armies.filter(a=>a.p===v&&a.o===me).reduce((s,a)=>s+a.n,0);return `<div class="ab" style="margin-top:4px">🪖 <span>Ordun burada</span>: <b>${fmt(n)}</b></div><div class="acts g2"><button onclick="startMove()">➜ Hareket</button>${tl(me,'tank')>=1?`<button class="b-red" onclick="tankUI()">Tank saldırısı${(game.tankCd[v]||0)>game.turn?' ('+(game.tankCd[v]-game.turn)+' tur)':''}</button>`:`<button onclick="mmStart()">👥 Toplu hareket</button>`}</div>`})()}
   <div class="acts sm"><button class="b-blue" onclick="foreignUI(${o})">🏛 Dış İşleri</button><button class="sec2" onclick="statsUI()">📊 İstatistik</button></div><div id="sub"></div>`}
  card.style.display='block'}
 
@@ -1042,9 +1042,9 @@ function airStrike(base,tgt,o){if(o===game.me||owner[tgt]===game.me)sfx('air');c
  const here=armies.filter(a=>a.p===tgt&&atWar(o,a.o));let killed=0;
  if(here.length){let left=pw;for(const a of here){const k=Math.min(a.n,Math.round(left/Math.max(0.3,Q[a.o])));a.n-=k;killed+=k;left-=k*Q[a.o];if(a.n<=0)armies=armies.filter(x=>x!==a);if(left<=0)break}}
  else{ecoP[tgt]*=0.98;hap[tgt]=Math.max(0,hap[tgt]-6);pop[tgt]=Math.max(10,pop[tgt]-pw*0.05)}
- if(o===game.me||owner[tgt]===game.me)bev(tgt,`✈ ${cname(o)} hava saldırısı → ${P[tgt].n}: ${killed?kfmt(killed)+' asker öldü':'şehir bombalandı, ekonomi zarar gördü'}`,o===game.me,o);return true}
+ if(o===game.me||owner[tgt]===game.me)bev(tgt,`✈ ${cname(o)} hava saldırısı → ${P[tgt].n}: ${killed?kfmt(killed)+' asker öldü':'şehir bombalandı, ekonomi zarar gördü'}${shipHit(tgt,o,'air')}`,o===game.me,o);return true}
 function aiAir(c){const en=enemiesOf(c);if(!en.length)return;for(const b of provsOf(c)){if(!has(b,B.AIR)||(game.airCd[b]||0)>game.turn||Math.random()>0.6)continue;const R=airRange(b);let best=null,bn=0;
- for(const a of armies){if(!en.includes(a.o)||wrapD(b,a.p)>R)continue;if(a.n>bn){bn=a.n;best=a.p}}if(best!==null)airStrike(b,best,c)}}
+ for(const a of armies){if(!en.includes(a.o)||wrapD(b,a.p)>R)continue;if(a.n>bn){bn=a.n;best=a.p}}if(best===null)best=navTarget(c,b,R);if(best!==null)airStrike(b,best,c)}}
 function airUI(){const v=selP;const cd=(game.airCd[v]||0)-game.turn;const cost=2500*lv(v,B.AIR);const info='<div class="winfo"><b>Hava saldırısı</b> · Ordulara ağır kayıp verdirir · Şehri ele geçiremez · O tur hedefin savunmasını %20 düşürür · Tekrar kullanılır</div>';
  if(cd>0){$('sub').innerHTML=`<div class="box">${info}✈ Uçaklar hazırlanıyor: ${cd} tur</div>`;return}
  mode='air';$('sub').innerHTML=`<div class="box">${info}✈ Hava saldırısı · menzil ${airRange(v)} · maliyet ${kfmt(cost)} 💰 + 1🏃<br>🎯 Savaştığın bir ülkenin şehrine dokun<br><button class="sec2" onclick="mode='play';refreshBar();req()">İptal</button></div>`;req()}
@@ -1216,7 +1216,7 @@ function negDraw(){const n=NEG,c=n.c,me=game.me,cost=negCost(),ok=cost<=Math.max
  const row=(i,set,f)=>`<label class="ng"><input type="checkbox" ${set.has(i)?'checked':''} onchange="NEG.${f}.has(${i})?NEG.${f}.delete(${i}):NEG.${f}.add(${i});negDraw()"> ${P[i].n} <span>${'★'.repeat(stars(i))}</span></label>`;
  $('negP').innerHTML=`<div class="np-h"><b>📜 Barış Müzakeresi</b><button class="x2" onclick="closeSide()">✕</button></div><div style="padding:8px 14px">
  <div class="ab">${fimg(me,16)} ${cname(me)} – ${fimg(c,16)} ${cname(c)} · Savaş skoru: <b style="color:${n.ws>0?'#9fc48a':'#e0806a'}">${n.ws>0?'+':''}${n.ws}%</b></div>
- <div style="margin:6px 0">Antlaşma adı: <input id="negName" value="${n.name||capN+' Antlaşması'}" oninput="NEG.name=this.value" style="width:60%"></div>
+ <div style="margin:6px 0">Antlaşma adı: <input id="negName" value="${escH(n.name||capN+' Antlaşması')}" oninput="NEG.name=cleanName(this.value)" style="width:60%"></div>
  <div class="ngh">🚩 İşgal ettiğin şehirler (işaretliler sende kalır)</div><div class="ngl">${n.occ.length?n.occ.map(i=>row(i,n.sel,'sel')).join(''):'<i>Yok</i>'}</div>
  <div class="ngh">↩ Kaybettiğin şehirleri geri iste</div><div class="ngl">${n.lost.length?n.lost.map(i=>row(i,n.ret,'ret')).join(''):'<i>Yok</i>'}</div>
  <label class="ng"><input type="checkbox" ${n.vas?'checked':''} onchange="NEG.vas=!NEG.vas;negDraw()"> 👑 Vasallaştır <span>60 puan</span></label>
@@ -1247,7 +1247,7 @@ function fireMissile(from,t,o){const me=game.me;if(o===me||owner[t]===me)sfx('mi
  if(Math.random()<Math.min(0.9,0.25*ad*(M>=3?0.5:1)+(tl(owner[t],'mis')>=6?0.3:0)))txt=`🚀 ${cname(o)} füzesi → ${P[t].n}: hava savunması füzeyi düşürdü`;
  else{const bl=[];for(let k=0;k<BINFO.length;k++)if(lv(t,k))bl.push(k);let hit='';if(bl.length){const k=bl[(Math.random()*bl.length)|0];setLv(t,k,Math.max(0,lv(t,k)-(M>=2?2:1)));hit=`, ${BINFO[k].n} hasar gördü`}
   const dm2=dm*(M>=5?1.4:1);ecoP[t]*=1-0.1*dm2;game.shock[t]=game.turn+3;pop[t]=Math.max(10,pop[t]*(1-0.01*dm));hap[t]=Math.max(0,hap[t]-12);game.dmg[t]=game.turn+6;let k2=0;for(const a of armies)if(a.p===t&&a.o!==o){const d=Math.min(a.n,Math.round((a.n*0.18+(isMed(game.scn)?150:1500))*dm));a.n-=d;k2+=d}armies=armies.filter(x=>x.n>0);
-  txt=`🚀 ${cname(o)} füzesi → ${P[t].n}: isabet${hit}${k2?`, ${kfmt(k2)} asker öldü`:''}. Şehir 6 tur hasarlı, halk direnişi 3 tur yarıda.`}
+  txt=`🚀 ${cname(o)} füzesi → ${P[t].n}: isabet${hit}${k2?`, ${kfmt(k2)} asker öldü`:''}. Şehir 6 tur hasarlı, halk direnişi 3 tur yarıda.`+shipHit(t,o,'mis')}
  if(o===me||owner[t]===me)bev(t,txt,o===me,o);FXL={a:from,b:t,t0:performance.now()}}
 function doMissile(t){const v=selP;mode='play';if(!atWar(game.me,owner[t])){toast('⛔ Sadece savaştığın ülkeyi vurabilirsin');refreshBar();return}if(wrapD(v,t)>misRange(v)){toast('⛔ Menzil dışında');refreshBar();return}
  if(game.mp<1){toast('🏃 Yetersiz hareket puanı');return}game.mp-=1;game.missiles--;BLOG=[];fireMissile(v,t,game.me);updHud();refreshBar();playReplay()}
@@ -1291,7 +1291,7 @@ function custUI(){closeSide();const me=game.me,p=$('custP');p.style.display='blo
  <button class="b-green" onclick="saveName()">✔ Adı kaydet</button></div>`}
 function custDone(){updHud();custUI()}
 function setMyColor(h){const c=[1,3,5].map(k=>parseInt(h.substr(k,2),16));CC[game.me]=c;game.color=c;paint();req();updHud();toast('🎨 Renk değişti')}
-function saveName(){const v=$('cName').value.trim();if(!v)return;game.names[game.me]=v;calcLabels();req();updHud();toast('✔ Ülke adı: '+v)}
+function saveName(){const v=cleanName($('cName').value);if(!v)return;game.names[game.me]=v;calcLabels();req();updHud();toast('✔ Ülke adı: '+v)}
 let FXL=null;
 
 // ===== TECH TREE / CYBER / TANKS / MAP SELECTION / ICONS =====
@@ -3765,8 +3765,8 @@ function uFP(){const e=$('uFP');if(e)e.innerHTML=uniFlag(UDR.f,54)}
 function uniEdit(){const u=UNI();if(!u)return uniUI();if(!UDR)UDR={n:u.n,f:JSON.parse(JSON.stringify(u.f))};$('sub').innerHTML=inTabs('uni')+`<div class="box fa"><div class="ngh">Birlik adı</div><input id="uN" maxlength="30" value="${escH(UDR.n)}" oninput="UDR.n=this.value" style="padding:6px;border-radius:6px;border:1px solid #6b5a3e;background:#1a150f;color:#efe6d2">
  <div id="uFP" style="text-align:center;margin:4px 0">${uniFlag(UDR.f,54)}</div><div class="fg"><select onchange="UDR.f.p=this.value;uFP()">${Object.entries(UPAT).map(([k,v])=>`<option value="${k}" ${k===UDR.f.p?'selected':''}>${v}</option>`).join('')}</select><select onchange="UDR.f.s=this.value;uFP()">${Object.entries(USYM).map(([k,v])=>`<option value="${k}" ${k===UDR.f.s?'selected':''}>${v}</option>`).join('')}</select></div>
  <div class="ucol"><span>Renkler</span>${[0,1,2].map(k=>`<input type="color" value="${UDR.f.c[k]}" oninput="UDR.f.c[${k}]=this.value;uFP()">`).join('')}<span>Sembol</span><input type="color" value="${UDR.f.sc}" oninput="UDR.f.sc=this.value;uFP()"></div>
- <div class="fg"><button class="b-green" onclick="const n=(UDR.n||'').trim();if(!n){toast('Bir ad yaz');return}UNI().n=n.slice(0,30);UNI().f=UDR.f;toast('✔ Kaydedildi');uniUI()">✔ Kaydet</button><button class="sec2" onclick="uniUI()">Geri</button></div></div>`}
-function uniFound(){const n=(UDR&&UDR.n||'').trim();if(!n){toast('Önce birliğe bir ad ver');return}const cost=Math.round(Math.max(15000,grossOf(game.me)*3));if(game.gold<cost){toast('💰 Yetersiz altın');return}if(!useDP(5))return;game.gold-=cost;
+ <div class="fg"><button class="b-green" onclick="const n=(UDR.n||'').trim();if(!n){toast('Bir ad yaz');return}UNI().n=cleanName(n).slice(0,30);UNI().f=UDR.f;toast('✔ Kaydedildi');uniUI()">✔ Kaydet</button><button class="sec2" onclick="uniUI()">Geri</button></div></div>`}
+function uniFound(){const n=cleanName(UDR&&UDR.n||'');if(!n){toast('Önce birliğe bir ad ver');return}const cost=Math.round(Math.max(15000,grossOf(game.me)*3));if(game.gold<cost){toast('💰 Yetersiz altın');return}if(!useDP(5))return;game.gold-=cost;
  XT().uni={n:n.slice(0,30),f:UDR.f,m:[],t:game.turn};UDR=null;news('ulusal',`🏛 ${n.slice(0,30)} kuruldu! Artık müttefik ülkeleri birliğe davet edebilirsin.`);updHud();uniUI()}
 function uniInvite(c){const u=UNI();if(!u)return;const r=game.rel[c]|0;if(r<50){toast('İlişki +50 olmalı');return}if(!useDP(2))return;
  if(Math.random()<Math.min(0.95,0.5+(r-50)/80)){u.m.push(c);if(!game.allies.includes(c))game.allies.push(c);game.rel[c]=Math.min(100,r+5);news('ulusal',`🏛 ${cname(c)}, ${u.n} birliğine katıldı!`);toast(`🏛 ${cname(c)} birliğe katıldı`)}
@@ -4108,6 +4108,7 @@ const MPSPEEDS=[[30,'Yavaş · 30 sn'],[15,'Normal · 15 sn'],[8,'Hızlı · 8 s
 // ---------- transport: plain HTTPS (Supabase REST) — works where WebSockets are blocked ----------
 const MPBASES=['https://api.tugrion.com/rest/v1/','https://atlas-dominion-api.vercel.app/rest/v1/','https://lhhwltdrmptjkjdkwgfq.supabase.co/rest/v1/'];let MPREST=MPBASES[0],MPBI=0;
 let MPCH=null,MPPOLL=null,MPLAST=0,MPSV=0,MPKEY='',MPERR={};
+const mpSan=o=>{if(typeof o==='string')return o.replace(/[<>`]/g,'').replace(/'/g,'’').replace(/"/g,'”');if(Array.isArray(o)){for(let i=0;i<o.length;i++)o[i]=mpSan(o[i]);return o}if(o&&typeof o==='object'){for(const k of Object.keys(o)){if(k==='__proto__'||k==='constructor'||k==='prototype'){delete o[k];continue}o[k]=mpSan(o[k])}}return o};
 async function mpHttp(path,opt,base){opt=opt||{};const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),opt.timeout||9000);try{const r=await fetch((base||MPREST)+path,{method:opt.method||'GET',headers:Object.assign({apikey:MPCFG.key,Authorization:'Bearer '+MPCFG.key,'Content-Type':'application/json'},opt.headers||{}),body:opt.body?JSON.stringify(opt.body):undefined,cache:'no-store',signal:ac.signal});if(!r.ok)throw new Error('HTTP '+r.status+' '+(await r.text()).slice(0,120));const t=await r.text();return t?JSON.parse(t):null}catch(e){if(e&&e.name==='AbortError')throw new Error('zaman aşımı');throw e}finally{clearTimeout(tm)}}
 // try every route (own domain → relay → direct) and keep the first that answers
 async function mpPickBase(code){MPERR={};for(let i=0;i<MPBASES.length;i++){const b=MPBASES[(MPBI+i)%MPBASES.length];try{const r=await mpHttp('rpc/mp_last',{method:'POST',body:{p_room:code},timeout:7000},b);MPBI=(MPBI+i)%MPBASES.length;MPREST=b;return typeof r==='number'?r:+r||0}catch(e){MPERR[b.split('/')[2]]=String(e.message||e).slice(0,60)}}throw new Error('Hiçbir sunucuya ulaşılamadı')}
@@ -4122,7 +4123,7 @@ let MPBUSY=false,MPFAILS=0;
 async function mpPoll(){if(MPBUSY||!MP.on)return;MPBUSY=true;const t0=Date.now();try{
   const want=MP.guest&&MP.welcomed;
   const r=await mpHttp('rpc/mp_poll',{method:'POST',body:{p_room:MP.code,p_after:MPLAST,p_sv:want?MPSV:9e15}});const rtt=Date.now()-t0;
-  for(const x of (r&&r.msgs)||[]){MPLAST=Math.max(MPLAST,x.id);if(x.sender===MP.pid||(x.target&&x.target!==MP.pid))continue;let m;try{m=JSON.parse(x.body)}catch(e){continue}m.from=x.sender;try{mpOnMsg(m)}catch(e){console.error(e)}}
+  for(const x of (r&&r.msgs)||[]){MPLAST=Math.max(MPLAST,x.id);if(x.sender===MP.pid||(x.target&&x.target!==MP.pid))continue;let m;try{m=mpSan(JSON.parse(x.body))}catch(e){continue}m.from=x.sender;try{mpOnMsg(m)}catch(e){console.error(e)}}
   if(want&&r&&r.v){if(r.upd&&r.now){const left=(r.lft||0)-(r.now-r.upd)/1000;MP.next=Date.now()-rtt/2+Math.max(0,left)*1000}
    if(r.v>MPSV&&r.body){MPSV=r.v;MP.hostSeen=Date.now();const sv=await mpUnpack(r.body);mpGotState(sv)}}
   if(MPFAILS>=3)toast('✔ Bağlantı geri geldi');MPFAILS=0}catch(e){MPFAILS++;console.warn('mp poll',e);
@@ -4131,7 +4132,7 @@ async function mpPoll(){if(MPBUSY||!MP.on)return;MPBUSY=true;const t0=Date.now()
 function mpClose(){if(MPPOLL)clearInterval(MPPOLL);MPPOLL=null;MPCH=null}
 function mpSend(t,d,to){if(!MPCH)return;MPCH.send({t,d,from:MP.pid,to:to||'',code:MP.code})}
 async function mpPackState(){const s=JSON.stringify(mpSnap());const cs=new CompressionStream('gzip'),w=cs.writable.getWriter();w.write(new TextEncoder().encode(s));w.close();const b=new Uint8Array(await new Response(cs.readable).arrayBuffer());let bin='';for(let i=0;i<b.length;i+=0x8000)bin+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(bin)}
-async function mpUnpack(b64){const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);const ds=new DecompressionStream('gzip'),w=ds.writable.getWriter();w.write(u);w.close();return JSON.parse(await new Response(ds.readable).text())}
+async function mpUnpack(b64){const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);const ds=new DecompressionStream('gzip'),w=ds.writable.getWriter();w.write(u);w.close();return mpSan(JSON.parse(await new Response(ds.readable).text()))}
 function mpGotState(sv){if(!MP.guest||!MP.welcomed)return;MP.started=true;if(MP.me<0)return;MP.paused=!!(sv.mpd&&sv.mpd.paused);if(window.MPTEST)MP.next=Date.now()+((sv.mpd&&sv.mpd.left)||0)*1000;mpApplyState(sv);const L=$('mpL');if(L)L.style.display='none'}
 let MPSID=0;
 async function mpBroadcastState(to){if(!MP.host||!game||MP.pushing)return;mpRelSync();mpStoreMe();MP.pushing=true;MP.lastSync=Date.now();MP.dirtyAt=0;try{const data=await mpPackState();
@@ -4160,7 +4161,7 @@ function mpPerPlayer(){if(!MP.host||!game||!game.mpd)return;const host=game.me;f
    game.tp+=tpGain();game.mp=Math.min(30,game.mp+Math.min(12,5+Math.floor(provsOf(c).length/40)));MPONLY=c;investTick();MPONLY=-1;calcEco();game.gold+=income()}catch(e){console.error('mpPerPlayer',e)}
   finally{MPONLY=-1;MP.swap=false;mpSwap(host)}}if(game.mpd.offers)game.mpd.offers=game.mpd.offers.filter(o=>game.turn-o.t<=20&&owner.includes(o.from)&&owner.includes(o.to));mpRelSync()}
 // ---------- host: execute a guest command in that player's context ----------
-const MPACT=new Set(['envoyUI','warUI','insultUI','sendAlly','negSend','negSurrender','tryPeace','villageAid','toggleStrait','formHist','doRecruit','doBuild','doCyber','makeMissile','doMissile','doAir','doTank','acceptOffer','stopArmy','askTribute','buyWar','buyVassal','buyCity','sellCity','buyAccess','betrayUI','pactUI','accessUI','giveAccess','doGift','annexVassal','callAllies','renewAlly','unlock','buildRocket','launchRocket','spMission','observe','cureAct','vacStart','vacCamp','uniFound','uniInvite','uniKick','uniDissolve','changeGov','moveCap','festival','propaganda','doSel','mmGo','setTax','setInv','mpSetMob','mpIndep','mpOfferAns','rejectOffer','__pick']);
+const MPACT=new Set(['envoyUI','warUI','insultUI','sendAlly','negSend','negSurrender','tryPeace','villageAid','toggleStrait','formHist','doRecruit','doBuild','doCyber','makeMissile','doMissile','doAir','doTank','doNaval','doNavMove','makeShip','wflGo','wflHome','doAirSea','doMisSea','doNavSea','acceptOffer','stopArmy','askTribute','buyWar','buyVassal','buyCity','sellCity','buyAccess','betrayUI','pactUI','accessUI','giveAccess','doGift','annexVassal','callAllies','renewAlly','unlock','buildRocket','launchRocket','spMission','observe','cureAct','vacStart','vacCamp','uniFound','uniInvite','uniKick','uniDissolve','changeGov','moveCap','festival','propaganda','doSel','mmGo','setTax','setInv','mpSetMob','mpIndep','mpOfferAns','rejectOffer','__pick']);
 function mpDummy(){const D=new Proxy(function(){},{get:(t,k)=>k===Symbol.toPrimitive?()=>'':k==='value'||k==='textContent'||k==='innerHTML'?'':k==='length'?0:k==='checked'?false:k==='style'||k==='classList'||k==='dataset'?D:D,set:()=>true,apply:()=>D});return D}
 const MPD0=mpDummy();
 function mpDom(id){if(MPDOM&&MPDOM[id]!==undefined)return MPDOM[id];return MPD0}
@@ -4467,6 +4468,248 @@ if(typeof mainMenu==='function'){const _mm2=mainMenu;window.mainMenu=function(){
 if(typeof settingsMenu==='function'){const _sm=settingsMenu;window.settingsMenu=function(){const r=_sm.apply(this,arguments);try{if(isNative()&&AtlasApp.privacyOptionsRequired&&AtlasApp.privacyOptionsRequired()){const bk=[...$('menu').querySelectorAll('button')].pop();bk&&bk.insertAdjacentHTML('beforebegin','<button class="mb sec" onclick="AtlasApp.showPrivacyOptions()">🔒 Reklam gizlilik ayarları</button>')}}catch(e){}return r}}
 if(typeof pauseMenu==='function'){const _pm2=pauseMenu;window.pauseMenu=function(){const r=_pm2.apply(this,arguments);try{if(!(typeof MP!=='undefined'&&MP.on)&&(isNative()||isPrem())){const f=$('menu').querySelector('button');f&&f.insertAdjacentHTML('afterend','<button class="mb sec" onclick="rewardMenu()">🎁 Ödül Merkezi</button>')}}catch(e){}return r}}
 
+// ===== NAVY & STRIKES FROM ANY CITY (v1.4) =====
+// Warships and submarines are stationed in port cities (game.nav[province]={o,w,s}).
+// Air strikes, missiles and naval strikes can be ordered from any city: the nearest ready
+// air base / missile silo / port in range is used automatically.
+const SHIP={w:{n:'Savaş gemisi',i:'🚢',cost:6000,t:2},s:{n:'Denizaltı',i:'🌊',cost:9000,t:3}};
+const subOk=()=>!(ERA==='med'||ERA==='gun');
+const shipCostF=()=>({med:0.25,gun:0.4,ww1:0.6,ww2:0.8}[ERA]||1);
+const navRange=p=>Math.round((180+40*lv(p,B.PORT))*({med:0.4,gun:0.55,ww1:0.75,ww2:0.9}[ERA]||1));
+const shipTxt=(w,s)=>[w?w+' savaş gemisi':'',s?s+' denizaltı':''].filter(Boolean).join(' ve ');
+const nvMul=o=>navMul(o)*(o===game.me||isHum(o)?1:MULT[game.diff]);
+function NV(){if(!game.nav)navInit();if(!game.wfl)game.wfl=[];if(!game.nprod)game.nprod=[];if(!game.navCd)game.navCd={};return game.nav}
+function navInit(){game.nav={};const div=isMed(game.scn)?3000:15000;
+ for(let c=0;c<C.length;c++){if(C[c].tribal)continue;const ports=provsOf(c).filter(i=>has(i,B.PORT)).sort((a,b)=>pop[b]-pop[a]);if(!ports.length)continue;
+  const w=Math.min(18,Math.round(Math.sqrt(armyTotal(c)/div)));if(w<1)continue;const s=subOk()&&armyTotal(c)>150000?Math.max(1,Math.round(w*0.4)):0;
+  const w1=ports.length>1?Math.ceil(w*0.6):w,s1=ports.length>1?Math.ceil(s*0.6):s;game.nav[ports[0]]={o:c,w:w1,s:s1};
+  if(ports.length>1&&(w-w1||s-s1))game.nav[ports[1]]={o:c,w:w-w1,s:s-s1}}}
+function navClean(){for(const ps in game.nav){const p=+ps,e=game.nav[p];if(!e||e.w+e.s<=0){delete game.nav[p];continue}if(owner[p]===e.o)continue;
+  // port captured: ships escape to the nearest own port in range, otherwise they are lost
+  const to=provsOf(e.o).filter(i=>has(i,B.PORT)&&i!==p&&wrapD(i,p)<=navRange(p)*2).sort((a,b)=>wrapD(a,p)-wrapD(b,p))[0];delete game.nav[p];
+  if(to!==undefined){const d=game.nav[to]||(game.nav[to]={o:e.o,w:0,s:0});d.w+=e.w;d.s+=e.s;if(e.o===game.me)news('yerel',`⚓ ${P[p].n} düştü, gemiler ${P[to].n} limanına çekildi.`)}
+  else if(e.o===game.me)news('yerel',`⚓ ${P[p].n} düştü, oradaki gemiler kaybedildi.`,true)}}
+function myShips(o){o=o??game.me;return Object.entries(NV()).filter(([p,e])=>e.o===o&&owner[+p]===o&&e.w+e.s>0).map(([p,e])=>[+p,e])}
+// enemy ships at a port hit by an air strike or missile
+function shipHit(t,o,k){const e=game.nav&&game.nav[t];if(!e||e.o===o||!atWar(o,e.o)||e.w+e.s<=0)return '';let w=0,s=0;
+ if(k==='air'){w=Math.min(e.w,1+(Math.random()<0.5?1:0)+(tl(o,'air')>=2?1:0));if(e.s&&Math.random()<0.25)s=1}
+ else{w=Math.min(e.w,1+(Math.random()<0.4?1:0));if(!w&&e.s)s=1}
+ e.w-=w;e.s-=s;if(e.w+e.s<=0)delete game.nav[t];const x=shipTxt(w,s);return x?', ⚓ '+x+' batırıldı':''}
+function navTarget(c,from,R){const en=enemiesOf(c);let best=null,bs=0;for(const ps in (game.nav||{})){const q=+ps,f=game.nav[q];if(!en.includes(f.o)||f.w+f.s<=0||wrapD(from,q)>R)continue;if(f.w+f.s>bs){bs=f.w+f.s;best=q}}return best}
+// generic ship battle: attacker group A vs defender group D ({o,w,s}); returns losses
+function fight(A,D,dBonus){const a=(A.w+A.s*1.6)*nvMul(A.o)*(0.85+Math.random()*0.3),d=(D.w+D.s*0.9)*nvMul(D.o)*(dBonus||1)*(0.85+Math.random()*0.3),r=a/(a+d);
+ const kd=Math.max(1,Math.round((D.w+D.s)*Math.min(0.85,r*0.9))),ka=Math.round((A.w+A.s)*Math.min(0.7,(1-r)*0.6));
+ const dw=Math.min(D.w,kd),ds=Math.min(D.s,kd-dw);D.w-=dw;D.s-=ds;const aw=Math.min(A.w,ka),as=Math.min(A.s,ka-aw);A.w-=aw;A.s-=as;return {dw,ds,aw,as}}
+const isSea=x=>typeof x==='object'&&x!==null;
+const grpOf=src=>isSea(src)?src:game.nav[src];
+function grpPos(src){return isSea(src)?cellXY(src.cell):P[src]}
+function dPt(a,b){let dx=Math.abs(a.x-b.x);dx=Math.min(dx,W-dx);return Math.hypot(dx,a.y-b.y)}
+function nearP(pt){let b=0,bd=1e18;for(let i=0;i<N;i++){const d=dPt(P[i],pt);if(d<bd){bd=d;b=i}}return b}
+function grpGone(src){const g=grpOf(src);if(!g||g.w+g.s>0)return;if(isSea(src))game.wfl=game.wfl.filter(f=>f!==src);else delete game.nav[src]}
+function setCd(src){if(isSea(src))src.cd=game.turn+1;else game.navCd[src]=game.turn+1}
+function grpReady(src){return isSea(src)?(src.cd||0)<=game.turn:(game.navCd[src]||0)<=game.turn}
+function navalStrike(src,tgt,o){const S=grpOf(src);if(!S||S.o!==o||S.w+S.s<=0)return false;setCd(src);const me=game.me;if(o===me||owner[tgt]===me)sfx('missile');FXL={a:isSea(src)?nearP(grpPos(src)):src,b:tgt,t0:performance.now()};
+ const m=nvMul(o);let txt;const D=game.nav[tgt];
+ if(D&&D.o!==o&&atWar(o,D.o)&&D.w+D.s>0){const r=fight(S,D,1+0.15*lv(tgt,B.FORT));grpGone(tgt);grpGone(src);
+  const sunk=shipTxt(r.dw,r.ds),lost=shipTxt(r.aw,r.as);txt=`⚓ ${cname(o)} donanması → ${P[tgt].n}: ${sunk?sunk+' batırıldı':'düşman gemileri kaçtı'}${lost?' · kayıp: '+lost:''}`}
+ else if(S.w>0){const pw=1200*S.w*m*(isMed(game.scn)?(ERA==='gun'?0.2:0.12):1);let killed=0,left=pw;
+  for(const a of armies.filter(a=>a.p===tgt&&atWar(o,a.o))){const k=Math.min(a.n,Math.round(left/Math.max(0.3,Q[a.o])));a.n-=k;killed+=k;left-=k*Q[a.o];if(left<=0)break}armies=armies.filter(x=>x.n>0);
+  if(!killed){ecoP[tgt]*=0.98;hap[tgt]=Math.max(0,hap[tgt]-4)}game.supp[tgt]=game.turn+1;txt=`⚓ ${cname(o)} savaş gemileri → ${P[tgt].n} kıyısını bombaladı: ${killed?kfmt(killed)+' asker öldü':'ekonomi zarar gördü'}`}
+ else{ecoP[tgt]*=0.97;txt=`🌊 ${cname(o)} denizaltıları ${P[tgt].n} limanını abluka altına aldı: ekonomi %3 düştü`}
+ if(o===me||owner[tgt]===me)bev(tgt,txt,o===me,o);return true}
+// strike an enemy fleet at sea: k = 'air' | 'mis' | 'nav'
+function strikeSea(k,src,F,o){const me=game.me,pt=cellXY(F.cell),np=nearP(pt);let w=0,s=0,lost='';
+ if(k==='air'){game.airCd[src]=game.turn+2;if(tl(o,'air')>=4)game.airCd[src]=game.turn+1;w=Math.min(F.w,1+(Math.random()<0.5?1:0)+(tl(o,'air')>=2?1:0));if(F.s&&Math.random()<0.25)s=1;F.w-=w;F.s-=s;if(o===me||F.o===me)sfx('air');ANIM.push({k:'air',a:src,b:np,t0:performance.now(),d:2600,o});fxLoop()}
+ else if(k==='mis'){w=Math.min(F.w,1+(Math.random()<0.4?1:0));if(!w&&F.s)s=1;F.w-=w;F.s-=s;if(o===me||F.o===me)sfx('missile');FXL={a:src,b:np,t0:performance.now()}}
+ else{const S=grpOf(src);if(!S)return false;setCd(src);const r=fight(S,F);w=r.dw;s=r.ds;lost=shipTxt(r.aw,r.as);grpGone(src);if(o===me||F.o===me)sfx('missile');FXL={a:isSea(src)?nearP(grpPos(src)):src,b:np,t0:performance.now()}}
+ if(F.w+F.s<=0)game.wfl=game.wfl.filter(x=>x!==F);const x=shipTxt(w,s);
+ const ic=k==='air'?'✈':k==='mis'?'🚀':'⚓';if(o===me||F.o===me)bev(np,`${ic} ${cname(o)} → ${cname(F.o)} denizdeki filosu: ${x?x+' batırıldı':'isabet yok'}${lost?' · kayıp: '+lost:''}`,o===me,o);return true}
+function navSrc(o,t,force){const tp=P[t];if(force)return force;let best=-1,bp=0;
+ for(const [p,e] of myShips(o)){if(!grpReady(p)||wrapD(p,t)>navRange(p))continue;const pw=e.w+e.s*1.6;if(pw>bp){bp=pw;best=p}}
+ for(const f of (game.wfl||[])){if(f.o!==o||f.w+f.s<=0||!grpReady(f)||dPt(cellXY(f.cell),tp)>seaRange())continue;const pw=f.w+f.s*1.6;if(pw>bp){bp=pw;best=f}}return best}
+const seaRange=()=>Math.round(140*({med:0.4,gun:0.55,ww1:0.75,ww2:0.9}[ERA]||1));
+function navyTick(){NV();navClean();seaTick();
+ for(const q of game.nprod.slice())if(q.due<=game.turn){game.nprod.splice(game.nprod.indexOf(q),1);if(owner[q.p]!==q.o)continue;const e=game.nav[q.p]||(game.nav[q.p]={o:q.o,w:0,s:0});e[q.k]++;if(q.o===game.me)toast(`${SHIP[q.k].i} ${P[q.p].n}: yeni ${SHIP[q.k].n.toLowerCase()} hazır`)}
+ for(let c=0;c<C.length;c++){if(c===game.me||isHum(c)||C[c].tribal)continue;const en=enemiesOf(c);if(!en.length)continue;const mine=myShips(c);
+  if(Math.random()<0.15&&mine.reduce((s,[,e])=>s+e.w+e.s,0)<8+provsOf(c).length/4){const ports=provsOf(c).filter(i=>has(i,B.PORT));if(ports.length){const k=subOk()&&Math.random()<0.35?'s':'w';game.nprod.push({p:ports[(Math.random()*ports.length)|0],o:c,k,due:game.turn+SHIP[k].t})}}
+  for(const [p,e] of mine){if((game.navCd[p]||0)>game.turn||Math.random()>0.5)continue;const R=navRange(p);let best=navTarget(c,p,R);
+   if(best===null&&e.w>0){let bn=0;for(const a of armies){if(!en.includes(a.o)||a.p<0||!P[a.p].co||wrapD(p,a.p)>R)continue;if(a.n>bn){bn=a.n;best=a.p}}}
+   if(best!==null){navalStrike(p,best,c);continue}
+   const F=game.wfl.find(f=>en.includes(f.o)&&f.w+f.s>0&&dPt(cellXY(f.cell),P[p])<=R);if(F)strikeSea('nav',p,F,c)}
+  for(const b of airBases(c)){if((game.airCd[b]||0)>game.turn||Math.random()>0.5)continue;const F=game.wfl.find(f=>en.includes(f.o)&&f.w+f.s>0&&dPt(cellXY(f.cell),P[b])<=airRange(b));if(F)strikeSea('air',b,F,c)}}}
+// ---------- UI ----------
+const airBases=o=>provsOf(o).filter(i=>has(i,B.AIR));
+const misSilos=o=>provsOf(o).filter(i=>has(i,B.SILO));
+const CANCEL=`<button class="sec2" onclick="mode='play';refreshBar();req()">İptal</button>`;
+function warBtns(v){const me=game.me,ab=airBases(me),rd=ab.filter(b=>(game.airCd[b]||0)<=game.turn).length;let ships=0;for(const [,e] of myShips(me))ships+=e.w+e.s;
+ return `<button class="b-red" style="grid-column:span 2" onclick="missileUI()">🚀 Füze (${game.missiles})</button><button class="b-red" onclick="airUI()">✈ Hava saldırısı${ab.length?` (${rd}/${ab.length})`:''}</button><button class="b-red" onclick="navyUI()">⚓ Donanma (${ships})</button>`}
+function warQuick(){const me=game.me;return `<div class="ngh" style="margin-top:8px">⚔ Savaş envanteri</div><div class="acts g2"><button class="b-red" onclick="airUI()">✈ Hava saldırısı</button><button class="b-red" onclick="missileUI()">🚀 Füze (${game.missiles})</button><button class="b-red" onclick="navyUI()">⚓ Donanma</button>${tl(me,'tank')>=1&&homeArmy(selP,me)?`<button class="b-red" onclick="tankUI()">Tank saldırısı</button>`:''}</div>`}
+function navEnemyLine(v,o){const me=game.me,e=game.nav&&game.nav[v];let h='';
+ if(e&&e.o===o&&e.w+e.s>0&&armyVisible({o,p:v,n:0}))h+=`<div class="ab" style="margin-top:4px">⚓ Limanda: 🚢 ${e.w} savaş gemisi${e.s?` · 🌊 ${e.s} denizaltı`:''}</div>`;
+ if(atWar(me,o))h+=`<div class="acts g2" style="margin-top:6px"><button class="b-red" onclick="doAir(${v})">✈ Hava saldırısı</button><button class="b-red" onclick="doMissile(${v})">🚀 Füze (${game.missiles})</button>${P[v].co||(e&&e.o===o)?`<button class="b-red" style="grid-column:span 2" onclick="doNaval(${v})">⚓ Deniz saldırısı</button>`:''}</div>`;
+ return h}
+// air strike: from any city, the nearest ready air base in range flies the mission
+function airUI(){const me=game.me,bs=airBases(me);const info='<div class="winfo"><b>Hava saldırısı</b> · Ordulara ağır kayıp verdirir · Şehri ele geçiremez · O tur hedefin savunmasını %20 düşürür · Limandaki gemileri batırabilir · Tekrar kullanılır</div>';
+ if(!bs.length){$('sub').innerHTML=`<div class="box">${info}✈ Hava üssün yok. Bir şehirde 🏗 İnşa → Hava Üssü kur.</div>`;return}
+ const rd=bs.filter(b=>(game.airCd[b]||0)<=game.turn);if(!rd.length){$('sub').innerHTML=`<div class="box">${info}✈ Uçaklar hazırlanıyor: ${Math.min(...bs.map(b=>game.airCd[b]-game.turn))} tur</div>`;return}
+ mode='air';$('sub').innerHTML=`<div class="box">${info}✈ ${rd.length}/${bs.length} hava üssü hazır · menzil en fazla ${Math.max(...rd.map(airRange))} · maliyet ${kfmt(2500)}+ 💰 + 1🏃<br>🎯 Savaştığın bir ülkenin şehrine dokun. Uçaklar hedefe en yakın hazır üsten kalkar.<br>${CANCEL}</div>`;req()}
+function doAir(t){const me=game.me;mode='play';if(!atWar(me,owner[t])){toast('⛔ Sadece savaştığın ülkeyi bombalayabilirsin');refreshBar();return}const bs=airBases(me);
+ const b=bs.filter(x=>(game.airCd[x]||0)<=game.turn&&wrapD(x,t)<=airRange(x)).sort((a,c)=>wrapD(a,t)-wrapD(c,t))[0];
+ if(b===undefined){toast(!bs.length?'⛔ Hava üssün yok':bs.some(x=>wrapD(x,t)<=airRange(x))?'✈ Menzildeki uçaklar hazırlanıyor':'⛔ Menzil dışında');refreshBar();return}
+ const cost=2500*lv(b,B.AIR);if(game.gold<cost){toast('💰 Yetersiz altın');return}if(game.mp<1){toast('🏃 Yetersiz hareket puanı');return}game.gold-=cost;game.mp-=1;BLOG=[];airStrike(b,t,me);updHud();refreshBar();playReplay()}
+// missiles: one national stock, fired from the nearest silo in range
+function missileUI(){const me=game.me,sl=misSilos(me),q=game.mprod.length;const info='<div class="winfo"><b>Füze</b> · Çok uzun menzil · Binaları yıkar, ekonomiyi %10 vurur · Limandaki gemileri batırabilir · Halk direnişini 3 tur yarıya indirir · Askerlere az etki · Tek kullanımlık</div>';
+ if(!sl.length&&game.missiles<1){$('sub').innerHTML=`<div class="box">${info}🚀 Füze silon yok. Bir şehirde 🏗 İnşa → Füze Silosu kur.</div>`;return}
+ $('sub').innerHTML=`<div class="box">${info}🚀 Füze stoğu: <b>${game.missiles}</b> · ${sl.length} silo${sl.length?' · menzil en fazla '+Math.max(...sl.map(misRange)):''}
+ <div style="display:flex;gap:6px;margin-top:6px"><button onclick="makeMissile()" ${sl.length?'':'disabled'}>🏭 Füze üret · ${kfmt(MISCOST)}💰 (2 tur)</button><button class="b-red" onclick="aimMissile()" ${game.missiles<1?'disabled':''}>🚀 Fırlat · 1🏃</button></div>${q?`<div class="hint" style="color:#cdbb92">Üretimde: ${q}</div>`:''}<div class="hint">Hedefe en yakın silodan fırlatılır.</div></div>`}
+function makeMissile(){const me=game.me,sl=misSilos(me);if(!sl.length){toast('⛔ Füze silon yok');return}if(game.gold<MISCOST){toast('💰 Yetersiz altın');return}game.gold-=MISCOST;game.mprod.push({p:owner[selP]===me&&has(selP,B.SILO)?selP:sl[0],due:game.turn+2});updHud();missileUI()}
+function doMissile(t){const me=game.me;mode='play';if(!atWar(me,owner[t])){toast('⛔ Sadece savaştığın ülkeyi vurabilirsin');refreshBar();return}if(game.missiles<1){toast('🚀 Füze stoğun yok');refreshBar();return}
+ const sl=misSilos(me),s=sl.filter(i=>wrapD(i,t)<=misRange(i)).sort((a,b)=>wrapD(a,t)-wrapD(b,t))[0];if(s===undefined){toast(sl.length?'⛔ Menzil dışında':'⛔ Füze silon yok');refreshBar();return}
+ if(game.mp<1){toast('🏃 Yetersiz hareket puanı');return}game.mp-=1;game.missiles--;BLOG=[];fireMissile(s,t,me);updHud();refreshBar();playReplay()}
+// navy panel: available from every city; ships are built in port cities
+function navyUI(){const me=game.me,v=selP,mine=myShips(me);let W_=0,S_=0;for(const [,e] of mine){W_+=e.w;S_+=e.s}const q=game.nprod.filter(x=>x.o===me),f=shipCostF(),sea=(game.wfl||[]).filter(x=>x.o===me);for(const x of sea){W_+=x.w;S_+=x.s}
+ let h=`<div class="box"><div class="winfo"><b>⚓ Donanma</b> · Savaş gemileri kıyı şehirlerini bombalar ve düşman gemilerini batırır · Denizaltılar düşman gemilerine karşı çok güçlüdür, limanları abluka altına alır · Hava saldırısı ve füzeler de limandaki gemileri batırabilir</div>
+ <div class="row"><span>🚢 Savaş gemisi</span><b>${W_}</b></div>${subOk()?`<div class="row"><span>🌊 Denizaltı</span><b>${S_}</b></div>`:''}`;
+ if(sea.length)h+=`<div class="hint">⛵ Denizde ${sea.length} filo: ${sea.map(x=>'🚢'+x.w+(x.s?' 🌊'+x.s:'')).join(' · ')} (haritada filoya dokunarak yönet)</div>`;
+ if(mine.length)h+=`<div class="hint">${mine.map(([p,e])=>`${P[p].n}: 🚢${e.w}${subOk()?' 🌊'+e.s:''}${(game.navCd[p]||0)>game.turn?' ⏳':''}`).join(' · ')}</div>`;
+ if(q.length)h+=`<div class="hint" style="color:#cdbb92">Üretimde: ${q.map(x=>SHIP[x.k].i+' '+P[x.p].n+' ('+Math.max(1,x.due-game.turn)+' tur)').join(' · ')}</div>`;
+ h+=`<div class="acts" style="margin-top:6px"><button class="b-red" onclick="navAim()" ${mine.length||sea.length?'':'disabled'}>⚔ Deniz saldırısı · ${kfmt(1500)}💰 + 1🏃</button></div>`;
+ if(owner[v]===me&&has(v,B.PORT)){h+=`<div class="ngh">${P[v].n} limanında üret</div><div class="acts"><button onclick="makeShip('w')">🚢 Savaş gemisi üret · ${kfmt(SHIP.w.cost*f)}💰 (${SHIP.w.t} tur)</button>${subOk()?`<button onclick="makeShip('s')">🌊 Denizaltı üret · ${kfmt(SHIP.s.cost*f)}💰 (${SHIP.s.t} tur)</button>`:''}</div>`;
+  if(game.nav[v]&&game.nav[v].o===me)h+=`<div class="acts g2"><button onclick="wSendUI(${v})">⛵ Gemileri denize gönder</button><button class="sec2" onclick="navMoveUI()">➜ Gemileri başka limana gönder</button></div>`}
+ else h+=`<div class="hint">Gemi üretmek için limanı olan bir kıyı şehrine dokun (🏗 İnşa → Liman).</div>`;
+ $('sub').innerHTML=h+'</div>'}
+function navAim(){mode='naval';$('sub').innerHTML=`<div class="box">⚓ Deniz saldırısı<br>🎯 Savaştığın ülkenin kıyı şehrine veya gemilerinin olduğu limana dokun. Hedefe en yakın hazır donanma saldırır.<br>${CANCEL}</div>`;req()}
+function makeShip(k){const v=selP,me=game.me;if(!SHIP[k]||(k==='s'&&!subOk()))return;if(owner[v]!==me||!has(v,B.PORT)){toast('⚓ Limanı olan kendi kıyı şehrini seç');return}NV();
+ const c=Math.round(SHIP[k].cost*shipCostF());if(game.gold<c){toast('💰 Yetersiz altın');return}game.gold-=c;game.nprod.push({p:v,o:me,k,due:game.turn+SHIP[k].t});toast(`${SHIP[k].i} ${SHIP[k].n} üretime girdi (${SHIP[k].t} tur)`);updHud();navyUI()}
+function doNaval(t,fid){const me=game.me;mode='play';NV();const D=game.nav[t],ships=D&&D.o!==me&&D.w+D.s>0;NAVF=0;
+ if(!atWar(me,owner[t])&&!(ships&&atWar(me,D.o))){toast('⛔ Sadece savaştığın ülkeye saldırabilirsin');refreshBar();return}
+ if(!P[t].co&&!ships){toast('⛔ Hedef bir kıyı şehri olmalı');refreshBar();return}
+ let force=null;if(fid){force=wflById(fid);if(!force||force.o!==me){refreshBar();return}if(!grpReady(force)){toast('⏳ Bu filo bu tur saldırdı');refreshBar();return}if(dPt(cellXY(force.cell),P[t])>seaRange()){toast('⛔ Filonun menzili dışında');refreshBar();return}}
+ const src=navSrc(me,t,force);if(src===-1){toast(myShips(me).length||(game.wfl||[]).some(f=>f.o===me)?'⛔ Menzilde hazır donanma yok':'⛔ Donanman yok');refreshBar();return}
+ if(game.gold<1500){toast('💰 Yetersiz altın');return}if(game.mp<1){toast('🏃 Yetersiz hareket puanı');return}game.gold-=1500;game.mp-=1;BLOG=[];navalStrike(src,t,me);updHud();refreshBar();playReplay();req()}
+function navMoveUI(){mode='navmove';$('sub').innerHTML=`<div class="box">➜ Gemilerin gideceği limanı seç (kendi kıyı şehrin)<br>${CANCEL}</div>`;req()}
+function doNavMove(t){const v=selP,me=game.me;mode='play';const e=game.nav&&game.nav[v];if(!e||e.o!==me){refreshBar();return}
+ if(owner[t]!==me||!has(t,B.PORT)||t===v){toast('⛔ Limanı olan kendi şehrini seç');refreshBar();return}if(wrapD(v,t)>navRange(v)*2){toast('⛔ Çok uzak');refreshBar();return}
+ if(game.mp<1){toast('🏃 Yetersiz hareket puanı');return}game.mp-=1;const d=game.nav[t]||(game.nav[t]={o:me,w:0,s:0});d.w+=e.w;d.s+=e.s;delete game.nav[v];game.navCd[t]=Math.max(game.navCd[t]||0,game.turn+1);
+ toast(`⚓ Gemiler ${P[t].n} limanına gitti`);updHud();refreshBar();req()}
+// ship badges above port cities
+function drawNavy(z,ox,oy){if(!game||!game.nav)return;const me=game.me,fs=z>=6?12:11;cx.font=`800 ${fs}px "Segoe UI",system-ui,Arial,sans-serif`;cx.textAlign='center';cx.textBaseline='middle';
+ for(const ps in game.nav){const p=+ps,e=game.nav[p];if(!e||e.w+e.s<=0||!P[p])continue;if(z<2&&e.o!==me&&!atWar(me,e.o))continue;if(!armyVisible({o:e.o,p,n:0}))continue;
+  const t=[e.w?'⚓'+e.w:'',e.s?'🌊'+e.s:''].filter(Boolean).join(' '),tw=cx.measureText(t).width+12,h=fs+7;
+  for(let k=-1;k<=1;k++){const sx=ox+(P[p].x+k*W)*z,sy=oy+P[p].y*z-(z>=6?18:14)-h/2;if(sx<-60||sx>VW+60||sy<-30||sy>VH+30)continue;
+   cx.fillStyle='rgba(8,26,52,.9)';cx.beginPath();cx.roundRect(sx-tw/2,sy-h/2,tw,h,5);cx.fill();const c=CC[e.o];cx.strokeStyle=e.o===me?'#7fd0ff':atWar(me,e.o)?'#ff5a4a':`rgb(${c[0]},${c[1]},${c[2]})`;cx.lineWidth=1.8;cx.stroke();cx.fillStyle='#eaf4ff';cx.fillText(t,sx,sy+1)}}}
+{const _da=drawArmies;drawArmies=function(z,ox,oy){_da(z,ox,oy);try{drawNavy(z,ox,oy)}catch(e){console.error(e)}}}
+// war inventory under the move panel
+{const _sm=startMove;startMove=function(){_sm();try{const b=typeof document!=='undefined'&&document.querySelector('#sub .mvbox');if(b&&!(typeof MP!=='undefined'&&MP.swap))b.insertAdjacentHTML('beforeend',warQuick())}catch(e){}}}
+// translations and era words
+ERAW.med&&Object.assign(ERAW.med,{'Savaş gemisi':'Kadırga','savaş gemisi':'kadırga','Savaş gemileri':'Kadırgalar','savaş gemileri':'kadırgalar'});
+ERAW.gun&&Object.assign(ERAW.gun,{'Savaş gemisi':'Kalyon','savaş gemisi':'kalyon','Savaş gemileri':'Kalyonlar','savaş gemileri':'kalyonlar'});
+DICT.push(
+['Deniz saldırısı','Naval strike','ضربة بحرية','海上打击','Attacco navale','Ataque naval','Seeangriff','Frappe navale','Морской удар'],
+['Donanma','Navy','البحرية','海军','Marina','Armada','Marine','Marine','Флот'],
+['Savaş envanteri','War arsenal','الترسانة الحربية','战争装备','Arsenale','Arsenal de guerra','Kriegsarsenal','Arsenal de guerre','Военный арсенал'],
+['Savaş gemileri','Warships','السفن الحربية','战舰','Navi da guerra','Buques de guerra','Kriegsschiffe','Navires de guerre','Военные корабли'],
+['savaş gemileri','warships','السفن الحربية','战舰','navi da guerra','buques de guerra','Kriegsschiffe','navires de guerre','военные корабли'],
+['Savaş gemisi','Warship','سفينة حربية','战舰','Nave da guerra','Buque de guerra','Kriegsschiff','Navire de guerre','Военный корабль'],
+['savaş gemisi','warship','سفينة حربية','战舰','nave da guerra','buque de guerra','Kriegsschiff','navire de guerre','военный корабль'],
+['Denizaltı','Submarine','غواصة','潜艇','Sottomarino','Submarino','U-Boot','Sous-marin','Подводная лодка'],
+['denizaltı','submarine','غواصة','潜艇','sottomarino','submarino','U-Boot','sous-marin','подводная лодка'],
+['denizaltıları','submarines','غواصات','潜艇','sottomarini','submarinos','U-Boote','sous-marins','подводные лодки'],
+['Kadırga','Galley','قادس','桨帆船','Galea','Galera','Galeere','Galère','Галера'],['kadırga','galley','قادس','桨帆船','galea','galera','Galeere','galère','галера'],
+['Kalyon','Galleon','غليون','盖伦船','Galeone','Galeón','Galeone','Galion','Галеон'],['kalyon','galleon','غليون','盖伦船','galeone','galeón','Galeone','galion','галеон'],
+['donanması','navy','بحرية','海军','marina','armada','Marine','marine','флот'],
+['batırıldı','sunk','أُغرقت','被击沉','affondate','hundidos','versenkt','coulés','потоплены'],
+['Limanda','In port','في الميناء','港内','In porto','En puerto','Im Hafen','Au port','В порту'],
+['üret','build','بناء','建造','costruisci','construir','bauen','construire','построить'],
+['Üretimde','In production','قيد الإنتاج','生产中','In produzione','En producción','In Produktion','En production','В производстве'],
+['Gemileri başka limana gönder','Send ships to another port','أرسل السفن إلى ميناء آخر','派船去另一港口','Invia le navi in un altro porto','Enviar barcos a otro puerto','Schiffe in einen anderen Hafen schicken','Envoyer les navires vers un autre port','Отправить корабли в другой порт'],
+['Gemilerin gideceği limanı seç (kendi kıyı şehrin)','Pick the port your ships should sail to (your own coastal city)','اختر الميناء الذي ستبحر إليه سفنك','选择舰船要前往的港口（你的沿海城市）','Scegli il porto di destinazione (tua città costiera)','Elige el puerto de destino (tu ciudad costera)','Wähle den Zielhafen (eigene Küstenstadt)','Choisis le port de destination (ta ville côtière)','Выберите порт назначения (ваш прибрежный город)'],
+['Savaştığın ülkenin kıyı şehrine veya gemilerinin olduğu limana dokun. Hedefe en yakın hazır donanma saldırır.','Tap a coastal city or a port with ships of a country you are at war with. The nearest ready fleet attacks.','اضغط على مدينة ساحلية أو ميناء لدولة في حرب معك. يهاجم أقرب أسطول جاهز.','点击交战国的沿海城市或有舰船的港口。最近的待命舰队将发起攻击。','Tocca una città costiera o un porto con navi di un paese in guerra con te. Attacca la flotta pronta più vicina.','Toca una ciudad costera o un puerto con barcos de un país en guerra contigo. Ataca la flota lista más cercana.','Tippe auf eine Küstenstadt oder einen Hafen mit Schiffen eines Kriegsgegners. Die nächste bereite Flotte greift an.','Touche une ville côtière ou un port avec des navires d\'un pays en guerre contre toi. La flotte prête la plus proche attaque.','Нажмите на прибрежный город или порт с кораблями противника. Атакует ближайший готовый флот.'],
+['Savaştığın bir ülkenin şehrine dokun. Uçaklar hedefe en yakın hazır üsten kalkar.','Tap a city of a country you are at war with. Planes take off from the nearest ready base.','اضغط على مدينة لدولة في حرب معك. تقلع الطائرات من أقرب قاعدة جاهزة.','点击交战国的城市。飞机从最近的待命基地起飞。','Tocca una città di un paese in guerra con te. Gli aerei decollano dalla base pronta più vicina.','Toca una ciudad de un país en guerra contigo. Los aviones despegan de la base lista más cercana.','Tippe auf eine Stadt eines Kriegsgegners. Die Flugzeuge starten vom nächsten bereiten Stützpunkt.','Touche une ville d\'un pays en guerre contre toi. Les avions décollent de la base prête la plus proche.','Нажмите на город противника. Самолёты взлетают с ближайшей готовой базы.'],
+['Hedefe en yakın silodan fırlatılır.','Launched from the silo nearest to the target.','يُطلق من أقرب صومعة إلى الهدف.','从离目标最近的发射井发射。','Lanciato dal silo più vicino al bersaglio.','Se lanza desde el silo más cercano al objetivo.','Wird vom Silo abgefeuert, das dem Ziel am nächsten ist.','Lancé depuis le silo le plus proche de la cible.','Запускается из ближайшей к цели шахты.'],
+['Gemi üretmek için limanı olan bir kıyı şehrine dokun','To build ships, tap a coastal city with a port','لبناء السفن، اضغط على مدينة ساحلية بها ميناء','要建造舰船，请点击有港口的沿海城市','Per costruire navi, tocca una città costiera con un porto','Para construir barcos, toca una ciudad costera con puerto','Um Schiffe zu bauen, tippe auf eine Küstenstadt mit Hafen','Pour construire des navires, touche une ville côtière avec un port','Чтобы строить корабли, нажмите на прибрежный город с портом'],
+['Savaş gemileri kıyı şehirlerini bombalar ve düşman gemilerini batırır','Warships shell coastal cities and sink enemy ships','السفن الحربية تقصف المدن الساحلية وتغرق سفن العدو','战舰炮击沿海城市并击沉敌舰','Le navi da guerra bombardano le città costiere e affondano le navi nemiche','Los buques de guerra bombardean ciudades costeras y hunden barcos enemigos','Kriegsschiffe beschießen Küstenstädte und versenken feindliche Schiffe','Les navires de guerre bombardent les villes côtières et coulent les navires ennemis','Военные корабли обстреливают прибрежные города и топят вражеские корабли'],
+['Denizaltılar düşman gemilerine karşı çok güçlüdür, limanları abluka altına alır','Submarines are very strong against enemy ships and blockade ports','الغواصات قوية جدًا ضد سفن العدو وتحاصر الموانئ','潜艇对敌舰极具威胁，并可封锁港口','I sottomarini sono molto forti contro le navi nemiche e bloccano i porti','Los submarinos son muy fuertes contra barcos enemigos y bloquean puertos','U-Boote sind stark gegen feindliche Schiffe und blockieren Häfen','Les sous-marins sont redoutables contre les navires ennemis et bloquent les ports','Подлодки очень сильны против кораблей и блокируют порты'],
+['Hava saldırısı ve füzeler de limandaki gemileri batırabilir','Air strikes and missiles can also sink ships in port','يمكن للغارات الجوية والصواريخ أيضًا إغراق السفن في الميناء','空袭和导弹也能击沉港内舰船','Anche attacchi aerei e missili possono affondare le navi in porto','Los ataques aéreos y misiles también pueden hundir barcos en puerto','Auch Luftangriffe und Raketen können Schiffe im Hafen versenken','Les frappes aériennes et les missiles peuvent aussi couler les navires au port','Авиаудары и ракеты тоже могут топить корабли в порту'],
+['Limandaki gemileri batırabilir','Can sink ships in port','يمكنها إغراق السفن في الميناء','可击沉港内舰船','Può affondare le navi in porto','Puede hundir barcos en puerto','Kann Schiffe im Hafen versenken','Peut couler les navires au port','Может топить корабли в порту']);
+
+// ===== SEA FLEETS: warships / submarines sent out of port, moved anywhere at sea =====
+let selW=0,NAVF=0,WSEND=null;
+const wflById=id=>(game.wfl||[]).find(f=>f.id===id);
+function wflAt(wx,wy,any){let best=null,bd=(34/cam.z)**2;for(const f of (game.wfl||[])){if(!any&&f.o!==game.me)continue;if(f.o!==game.me&&!fleetVisible(f))continue;const q=cellXY(f.cell);let dx=Math.abs(q.x-wx);dx=Math.min(dx,W-dx);const d=Math.min(dx*dx+(q.y-wy)**2,dx*dx+(q.y-(wy+20/cam.z))**2);if(d<bd){bd=d;best=f}}return best}
+function seaTick(){const me=game.me;
+ for(const f of game.wfl.slice()){if(!f.route.length)continue;let k=Math.min(f.spd||14,f.route.length);const blk=straitMask(f.o);
+  if(blk){for(let s=0;s<k;s++)if(blk[f.route[s]]&&!blk[f.cell]){k=s;f.route=[];f.dest=-1;if(f.o===me)toast('⛓ Boğaz kapalı: filo boğaz ağzında bekliyor');break}}
+  if(k>0){f.cell=f.route[k-1];f.route=f.route.slice(k)}if(f.route.length||f.dest<0)continue;const d=f.dest;f.dest=-1;
+  if(owner[d]===f.o&&has(d,B.PORT)){const e=game.nav[d]||(game.nav[d]={o:f.o,w:0,s:0});e.w+=f.w;e.s+=f.s;game.wfl=game.wfl.filter(x=>x!==f);if(f.o===me)toast(`⚓ Filo ${P[d].n} limanına girdi`)}
+  else if(atWar(f.o,owner[d])||(game.nav[d]&&atWar(f.o,game.nav[d].o))){if(grpReady(f))navalStrike(f,d,f.o)}
+  else if(f.o===me)toast(`🚢 Filo ${P[d].n} açıklarında bekliyor`)}
+ // battles at sea: war fleets meet enemy war fleets or troop transports
+ for(let i=0;i<game.wfl.length;i++){const A=game.wfl[i];if(!A||A.w+A.s<=0)continue;const qa=cellXY(A.cell);
+  for(let j=i+1;j<game.wfl.length;j++){const D=game.wfl[j];if(!D||D.w+D.s<=0||!atWar(A.o,D.o))continue;if(dPt(qa,cellXY(D.cell))>18)continue;const r=fight(A,D),np=nearP(qa);
+   if(A.o===me||D.o===me)bev(np,`⚓ Deniz savaşı: ${cname(A.o)} ${shipTxt(r.dw,r.ds)||'gemi'} batırdı · ${cname(D.o)} ${shipTxt(r.aw,r.as)||'gemi'} batırdı`,A.o===me?r.dw+r.ds>=r.aw+r.as:r.aw+r.as>r.dw+r.ds,A.o)}
+  for(const T of fleets.slice()){if(!atWar(A.o,T.o)||dPt(qa,cellXY(T.cell))>18)continue;fleets=fleets.filter(x=>x!==T);if(A.o===me||T.o===me)bev(nearP(qa),`⚓ ${cname(A.o)} savaş gemileri ${cname(T.o)} asker gemilerini batırdı (${kfmt(T.n)} asker)`,A.o===me,A.o)}}
+ game.wfl=game.wfl.filter(f=>f.w+f.s>0)}
+// send ships: from a port (from>=0) or from a sea fleet (from=-id); cnt = warships*1000 + submarines
+function wflGo(from,cnt,tc,tp){const me=game.me;NV();let w=Math.floor(cnt/1000),s=cnt%1000;let G,starts;
+ if(from>=0){G=game.nav[from];if(!G||G.o!==me||owner[from]!==me)return;starts=PCELL[from]}else{G=wflById(-from);if(!G||G.o!==me)return;starts=[G.cell]}
+ w=Math.max(0,Math.min(G.w,w));s=Math.max(0,Math.min(G.s,s));if(w+s<1){toast('Gönderilecek gemi seç');return}
+ const t=tp>=0?{prov:tp}:{cell:tc};if(tp>=0&&!PCELL[tp].length){toast('⛔ Kıyı şehri seç');return}const r=routeFor(starts,t,me);if(!r){toast('⛔ Deniz yolu bulunamadı');return}
+ if(game.mp<1){toast('🏃 Yetersiz hareket puanı');return}game.mp-=1;let F;
+ if(from<0&&w===G.w&&s===G.s){F=G}else{G.w-=w;G.s-=s;F={id:aid++,o:me,w,s,cell:from>=0?r[0]:G.cell,route:[],dest:-1,spd:14+2*tl(me,'nav'),cd:0};game.wfl.push(F);grpGone(from>=0?from:G)}
+ F.route=(from>=0&&F!==G)?r.slice(1):r.slice(1);F.dest=tp>=0?tp:-1;
+ toast(tp>=0?(owner[tp]===me?`🚢 Filo ${P[tp].n} limanına gidiyor`:`🚢 Filo ${P[tp].n} hedefine gidiyor`):'🚢 Filo denizde hedefe ilerliyor');mode='play';WSEND=null;updHud();selW=F.id;selF=0;selP=-1;refreshBar();req()}
+function wSendUI(from){const G=from>=0?game.nav[from]:wflById(-from);if(!G)return;WSEND={from};
+ $('sub').innerHTML=`<div class="box mvbox"><div class="mvh">🎯 Denizde bir noktaya, bir limana veya kıyı şehrine dokun</div>
+ <div class="row"><span>🚢 Savaş gemisi</span><b><input type="number" id="wW" min="0" max="${G.w}" value="${G.w}" style="width:70px"> / ${G.w}</b></div>
+ ${G.s||subOk()?`<div class="row"><span>🌊 Denizaltı</span><b><input type="number" id="wS" min="0" max="${G.s}" value="${G.s}" style="width:70px"> / ${G.s}</b></div>`:''}
+ <div class="hint">Kendi limanına gönderirsen gemiler limana girer. Düşman kıyısına gönderirsen varınca saldırır. Denizde bir noktaya gönderirsen orada bekler.</div>
+ <div class="acts"><button class="sec2" onclick="WSEND=null;mode='play';refreshBar();req()">İptal</button></div></div>`;mode='wmove';req()}
+function wflPick(v,w){if(!WSEND)return;const nW=Math.max(0,Math.floor(+(($('wW')||{}).value)||0)),nS=Math.max(0,Math.floor(+(($('wS')||{}).value)||0));
+ if(v===OCEAN){const c=worldCell(w.x,w.y);if(c<0){toast('Bir deniz noktası seç');return}wflGo(WSEND.from,nW*1000+nS,c,-1)}else wflGo(WSEND.from,nW*1000+nS,-1,v)}
+function wflHome(id){const f=wflById(id),me=game.me;if(!f||f.o!==me)return;const ps=provsOf(me).filter(i=>has(i,B.PORT)&&PCELL[i].length).sort((a,b)=>dPt(cellXY(f.cell),P[a])-dPt(cellXY(f.cell),P[b]));
+ let bp=-1,br=null;for(const p of ps.slice(0,8)){const r=routeFor([f.cell],{prov:p},me);if(r&&(!br||r.length<br.length)){br=r;bp=p}}
+ if(!br){toast('⛔ Ulaşılabilir liman yok');return}if(game.mp<1){toast('🏃 Yetersiz hareket puanı');return}game.mp-=1;f.route=br.slice(1);f.dest=bp;toast(`⚓ Filo ${P[bp].n} limanına dönüyor`);updHud();refreshBar();req()}
+function selectWfl(id){const f=wflById(id);if(!f){selW=0;closeBar();return}selW=id;selF=0;selP=-1;if(sel>=0){sel=-1;paint()}const me=game.me,mine=f.o===me;
+ cb.innerHTML=`<h3>${mine?'🚢 Savaş filon':`${fimg(f.o,18)} ${cname(f.o)} savaş filosu`}</h3><div class="ab">🚢 ${f.w} savaş gemisi${f.s?` · 🌊 ${f.s} denizaltı`:''} · ${f.route.length?'yolda':'denizde bekliyor'}${mine&&!grpReady(f)?' · ⏳':''}</div>
+ ${mine?`<div class="acts g2"><button onclick="wSendUI(-${f.id})">➜ Hareket · 1🏃</button><button class="b-red" onclick="NAVF=${f.id};navAim()">⚔ Saldır</button><button class="sec2" style="grid-column:span 2" onclick="wflHome(${f.id})">⚓ En yakın limana dön</button></div>`
+ :atWar(me,f.o)?`<div class="acts g2"><button class="b-red" onclick="doAirSea(${f.id})">✈ Hava saldırısı</button><button class="b-red" onclick="doMisSea(${f.id})">🚀 Füze (${game.missiles})</button><button class="b-red" style="grid-column:span 2" onclick="doNavSea(${f.id},0)">⚓ Deniz saldırısı</button></div>`:''}<div id="sub"></div>`;card.style.display='block';req()}
+// strikes on fleets at sea, from the nearest ready base / silo / fleet in range
+function seaTargetOk(F){if(!F||!atWar(game.me,F.o)){toast('⛔ Sadece savaştığın ülkenin gemilerine saldırabilirsin');return false}return true}
+function doAirSea(id){const me=game.me,F=wflById(id);mode='play';if(!seaTargetOk(F))return;const pt=cellXY(F.cell),bs=airBases(me);
+ const b=bs.filter(x=>(game.airCd[x]||0)<=game.turn&&dPt(P[x],pt)<=airRange(x)).sort((a,c)=>dPt(P[a],pt)-dPt(P[c],pt))[0];if(b===undefined){toast(!bs.length?'⛔ Hava üssün yok':'⛔ Menzilde hazır hava üssü yok');return}
+ const cost=2500*lv(b,B.AIR);if(game.gold<cost){toast('💰 Yetersiz altın');return}if(game.mp<1){toast('🏃 Yetersiz hareket puanı');return}game.gold-=cost;game.mp-=1;BLOG=[];strikeSea('air',b,F,me);updHud();selW&&!wflById(selW)?closeBar():refreshBar();playReplay();req()}
+function doMisSea(id){const me=game.me,F=wflById(id);mode='play';if(!seaTargetOk(F))return;if(game.missiles<1){toast('🚀 Füze stoğun yok');return}const pt=cellXY(F.cell),sl=misSilos(me);
+ const s=sl.filter(i=>dPt(P[i],pt)<=misRange(i)).sort((a,b)=>dPt(P[a],pt)-dPt(P[b],pt))[0];if(s===undefined){toast(sl.length?'⛔ Menzil dışında':'⛔ Füze silon yok');return}
+ if(game.mp<1){toast('🏃 Yetersiz hareket puanı');return}game.mp-=1;game.missiles--;BLOG=[];strikeSea('mis',s,F,me);updHud();selW&&!wflById(selW)?closeBar():refreshBar();playReplay();req()}
+function doNavSea(id,fid){const me=game.me,F=wflById(id);mode='play';NAVF=0;if(!seaTargetOk(F))return;const pt=cellXY(F.cell);let src=-1;
+ if(fid){const g=wflById(fid);if(g&&g.o===me&&grpReady(g)&&dPt(cellXY(g.cell),pt)<=seaRange())src=g}
+ else{let bp=0;for(const [p,e] of myShips(me)){if(!grpReady(p)||dPt(P[p],pt)>navRange(p))continue;const pw=e.w+e.s*1.6;if(pw>bp){bp=pw;src=p}}for(const g of game.wfl){if(g.o!==me||!grpReady(g)||dPt(cellXY(g.cell),pt)>seaRange())continue;const pw=g.w+g.s*1.6;if(pw>bp){bp=pw;src=g}}}
+ if(src===-1){toast('⛔ Menzilde hazır donanma yok');return}if(game.gold<1500){toast('💰 Yetersiz altın');return}if(game.mp<1){toast('🏃 Yetersiz hareket puanı');return}game.gold-=1500;game.mp-=1;BLOG=[];strikeSea('nav',src,F,me);updHud();selW&&!wflById(selW)?closeBar():refreshBar();playReplay();req()}
+// map: sea fleets with their route
+function drawSea(z,ox,oy){if(!game||!game.wfl)return;const me=game.me,fs=z>=6?12:11;cx.font=`800 ${fs}px "Segoe UI",system-ui,Arial,sans-serif`;cx.textAlign='center';cx.textBaseline='middle';
+ for(const f of game.wfl){if(f.w+f.s<=0)continue;if(f.o!==me&&!fleetVisible(f))continue;const q=cellXY(f.cell);
+  if(f.o===me&&f.route.length){cx.setLineDash([3,5]);cx.lineWidth=2;cx.strokeStyle='rgba(127,208,255,.8)';cx.beginPath();let px=q.x;cx.moveTo(ox+q.x*z,oy+q.y*z);for(let k=1;k<f.route.length;k+=2){const r=cellXY(f.route[k]);let x=r.x;if(x-px>W/2)x-=W;if(px-x>W/2)x+=W;cx.lineTo(ox+x*z,oy+r.y*z);px=x}const l=cellXY(f.route[f.route.length-1]);cx.lineTo(ox+(l.x+(px-l.x>W/2?W:l.x-px>W/2?-W:0))*z,oy+l.y*z);cx.stroke();cx.setLineDash([])}
+  const t=['🚢'+(f.w||''),f.s?'🌊'+f.s:''].filter(x=>x&&x!=='🚢').join(' ')||'🚢',tw=cx.measureText(t).width+12,h=fs+8;
+  for(let k=-1;k<=1;k++){const sx=ox+(q.x+k*W)*z,sy=oy+q.y*z;if(sx<-60||sx>VW+60||sy<-30||sy>VH+30)continue;
+   cx.fillStyle='rgba(8,26,52,.92)';cx.beginPath();cx.roundRect(sx-tw/2,sy-h/2,tw,h,6);cx.fill();const c=CC[f.o];cx.strokeStyle=selW===f.id?'#ffe27a':f.o===me?'#7fd0ff':atWar(me,f.o)?'#ff5a4a':`rgb(${c[0]},${c[1]},${c[2]})`;cx.lineWidth=selW===f.id?3:2;cx.stroke();cx.fillStyle='#eaf4ff';cx.fillText(t,sx,sy+1)}}}
+{const _dn=drawNavy;drawNavy=function(z,ox,oy){_dn(z,ox,oy);drawSea(z,ox,oy)}}
+{const _rb=refreshBar;refreshBar=function(){if(selW&&game&&!selF&&selP<0){selectWfl(selW);return}_rb()}}
+{const _sp=selectProv;selectProv=function(v){selW=0;_sp(v)}}
+{const _cb=closeBar;closeBar=function(){selW=0;_cb()}}
+{const _sf=selectFleet;selectFleet=function(id){selW=0;_sf(id)}}
+DICT.push(
+['Savaş filon','Your war fleet','أسطولك الحربي','你的作战舰队','La tua flotta da guerra','Tu flota de guerra','Deine Kriegsflotte','Ta flotte de guerre','Ваш военный флот'],
+['savaş filosu','war fleet','الأسطول الحربي','作战舰队','flotta da guerra','flota de guerra','Kriegsflotte','flotte de guerre','военный флот'],
+['denizdeki filosu','fleet at sea','الأسطول في البحر','海上舰队','flotta in mare','flota en el mar','Flotte auf See','flotte en mer','флот в море'],
+['Gemileri denize gönder','Send ships to sea','أرسل السفن إلى البحر','派舰出海','Manda le navi in mare','Enviar barcos al mar','Schiffe auslaufen lassen','Envoyer les navires en mer','Отправить корабли в море'],
+['En yakın limana dön','Return to nearest port','العودة إلى أقرب ميناء','返回最近港口','Torna al porto più vicino','Volver al puerto más cercano','Zum nächsten Hafen zurück','Retour au port le plus proche','Вернуться в ближайший порт'],
+['Denizde bir noktaya, bir limana veya kıyı şehrine dokun','Tap a point at sea, a port or a coastal city','اضغط على نقطة في البحر أو ميناء أو مدينة ساحلية','点击海上一点、港口或沿海城市','Tocca un punto in mare, un porto o una città costiera','Toca un punto en el mar, un puerto o una ciudad costera','Tippe auf einen Punkt auf See, einen Hafen oder eine Küstenstadt','Touche un point en mer, un port ou une ville côtière','Нажмите на точку в море, порт или прибрежный город'],
+['Kendi limanına gönderirsen gemiler limana girer. Düşman kıyısına gönderirsen varınca saldırır. Denizde bir noktaya gönderirsen orada bekler.','Send them to your own port to dock. Send them to an enemy coast and they attack on arrival. Send them to a point at sea and they wait there.','أرسلها إلى ميناءك لترسو. أرسلها إلى ساحل العدو فتهاجم عند الوصول. أرسلها إلى نقطة في البحر فتنتظر هناك.','派往己方港口即入港；派往敌方海岸则抵达后进攻；派往海上某点则在那里待命。','Mandale in un tuo porto per attraccare. Su una costa nemica attaccano all\'arrivo. In un punto in mare restano lì.','Envíalos a tu puerto para atracar. A una costa enemiga atacan al llegar. A un punto en el mar esperan allí.','In den eigenen Hafen: sie legen an. An eine feindliche Küste: Angriff bei Ankunft. Auf einen Punkt auf See: sie warten dort.','Vers ton port : ils accostent. Vers une côte ennemie : ils attaquent à l\'arrivée. Vers un point en mer : ils y attendent.','В свой порт — корабли войдут в порт. К вражескому берегу — атакуют по прибытии. В точку в море — будут ждать там.'],
+['denizde bekliyor','waiting at sea','ينتظر في البحر','在海上待命','in attesa in mare','esperando en el mar','wartet auf See','en attente en mer','ждёт в море'],
+['yolda','under way','في الطريق','航行中','in navigazione','en camino','unterwegs','en route','в пути'],
+['Saldır','Attack','هجوم','攻击','Attacca','Atacar','Angreifen','Attaquer','Атаковать']);
+
 const AY=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 
 
@@ -4544,7 +4787,7 @@ function openNews(t){if(!game)return;if(!t||$('newsP').style.display!=='block')c
  const L=game.news.filter(x=>x.cat===newsTab);$('nl').innerHTML=L.length?L.map((x,k)=>`<div class="ni go ${x.bad?'bad':''} ${x.read?'':'new'}" onclick="newsGo(${k})"><span>${dateStr(x.turn)}</span>${x.t}</div>`).join(''):'<div class="ni" style="opacity:.6">Henüz haber yok.</div>';
  L.forEach(x=>x.read=true);updNewsBtn()}
 function closeNews(){$('newsP').style.display='none'}
-function snapshot(){return{id:game.saveId||('s'+Date.now()),me:game.me,diff:game.diff,aggr:game.aggr,fog:game.fog,turn:game.turn,owner:owner.slice(),pop:pop.map(x=>Math.round(x)),armies,aid,wars:game.wars,allies:game.allies,gold:game.gold,rel:game.rel,imp:game.imp,arel:game.arel,truce:game.truce,dp:game.dp,news:game.news.slice(0,40),envoys:game.envoys,cool:game.cool,aicool:game.aicool,unrest:game.unrest,hap:hap.map(x=>Math.round(x)),bld:[...bld],ecoP:ecoP.map(x=>+x.toFixed(3)),unemp:[...unemp].map(x=>+x.toFixed(2)),ign:[...ign].map(x=>+x.toFixed(2)),inf:[...inf].map(x=>+x.toFixed(3)),dis:[...dis],deaths:[...deaths].map(Math.round),tech:TECH.map(x=>+x.toFixed(3)),fleets,tax:game.tax,inv:game.inv,build:game.build,outb:game.outb,dseq:game.dseq,pact:game.pact,access:game.access,gave:game.gave,mp:game.mp,airCd:game.airCd,gov:game.gov,vas:game.vas,newC:game.newC,flag:game.flag,names:game.names,color:game.color,mprod:game.mprod,aimis:game.aimis,mob:game.mob,missiles:game.missiles,propUntil:game.propUntil,govCd:game.govCd,festCd:game.festCd,caps:C.map(c=>c.cap),tree:game.tree,tp:game.tp,cyberVis:game.cyberVis,cybCd:game.cybCd,tankCd:game.tankCd,dmg:game.dmg,core:[...CORE],formed:game.formed,scn:game.scn,y0:game.y0,m0:game.m0,d0:game.d0,nofog:game.nofog,strait:game.strait,fee:game.fee,proj:game.proj,repub:game.repub,ext:game.ext,mil:MIL.slice(),skeys:game.skeys,bloc:game.bloc,evd:game.evd,v:11,cam:{...cam},time:Date.now(),nm:C[game.me]&&C[game.me].n==='Turkey'?'Türkiye':cname(game.me),col:CC[game.me],gid:game.gid||game.id}}
+function snapshot(){return{id:game.saveId||('s'+Date.now()),me:game.me,diff:game.diff,aggr:game.aggr,fog:game.fog,turn:game.turn,owner:owner.slice(),pop:pop.map(x=>Math.round(x)),armies,aid,wars:game.wars,allies:game.allies,gold:game.gold,rel:game.rel,imp:game.imp,arel:game.arel,truce:game.truce,dp:game.dp,news:game.news.slice(0,40),envoys:game.envoys,cool:game.cool,aicool:game.aicool,unrest:game.unrest,hap:hap.map(x=>Math.round(x)),bld:[...bld],ecoP:ecoP.map(x=>+x.toFixed(3)),unemp:[...unemp].map(x=>+x.toFixed(2)),ign:[...ign].map(x=>+x.toFixed(2)),inf:[...inf].map(x=>+x.toFixed(3)),dis:[...dis],deaths:[...deaths].map(Math.round),tech:TECH.map(x=>+x.toFixed(3)),fleets,tax:game.tax,inv:game.inv,build:game.build,outb:game.outb,dseq:game.dseq,pact:game.pact,access:game.access,gave:game.gave,mp:game.mp,airCd:game.airCd,gov:game.gov,vas:game.vas,newC:game.newC,flag:game.flag,names:game.names,color:game.color,mprod:game.mprod,nav:game.nav,nprod:game.nprod,navCd:game.navCd,wfl:game.wfl,aimis:game.aimis,mob:game.mob,missiles:game.missiles,propUntil:game.propUntil,govCd:game.govCd,festCd:game.festCd,caps:C.map(c=>c.cap),tree:game.tree,tp:game.tp,cyberVis:game.cyberVis,cybCd:game.cybCd,tankCd:game.tankCd,dmg:game.dmg,core:[...CORE],formed:game.formed,scn:game.scn,y0:game.y0,m0:game.m0,d0:game.d0,nofog:game.nofog,strait:game.strait,fee:game.fee,proj:game.proj,repub:game.repub,ext:game.ext,mil:MIL.slice(),skeys:game.skeys,bloc:game.bloc,evd:game.evd,v:11,cam:{...cam},time:Date.now(),nm:C[game.me]&&C[game.me].n==='Turkey'?'Türkiye':cname(game.me),col:CC[game.me],gid:game.gid||game.id}}
 function saveDate(s){const d=new Date(2027,s.m0||0,(s.d0||1)+((s.turn||1)-1)*7);d.setFullYear(d.getFullYear()-2027+(s.y0||+s.scn||2027));return d.getDate()+' '+AY[d.getMonth()]+' '+d.getFullYear()}
 function saveName(s){if(s.nm)return s.nm;if(!s.scn||s.scn==='2027')return C[s.me]?(C[s.me].n==='Turkey'?'Türkiye':cname(s.me)):'?';return s.scn+' oyunu'}
 function saveGame(silent){if(game&&!game.saveId&&!(typeof MP!=='undefined'&&MP.on)&&!game.mpd){const g=game.gid||game.id;const old=g&&saves().find(s=>s.gid===g);if(old)game.saveId=old.id}if(typeof MP!=='undefined'&&MP.on){if(MP.host){const ok=mpSaveRoom();if(!silent)toast(ok?'💾 Oyun kaydedildi':'⚠ Kaydedilemedi');return ok}if(!silent)toast('💾 Oyunu kurucu kaydeder');return true}if(game&&game.mpd)return false;const sv=snapshot();game.saveId=sv.id;let all=saves().filter(s=>s.id!==sv.id);all.unshift(sv);all=all.slice(0,20);let drop=0;
@@ -4552,7 +4795,7 @@ function saveGame(silent){if(game&&!game.saveId&&!(typeof MP!=='undefined'&&MP.o
 function autoSave(){if(game&&!busy&&!(typeof MP!=='undefined'&&MP.on)&&!(game&&game.mpd))saveGame(true)}
 setInterval(()=>{if(game&&!busy)autoSave()},30000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)autoSave()});addEventListener('pagehide',autoSave);addEventListener('beforeunload',autoSave);
-function loadSave(id,obj,mpl){const sv=obj||saves().find(s=>s.id===id);if(!sv)return;game={id:sv.id,gid:sv.gid||sv.id,saveId:sv.id,me:sv.me,diff:sv.diff,aggr:sv.aggr,fog:sv.fog,turn:sv.turn,wars:sv.wars||[],allies:sv.allies||[],gold:sv.gold||0,rel:sv.rel||{},imp:sv.imp||{},arel:sv.arel||{},truce:sv.truce||{},offer:null,dp:sv.dp??10,news:sv.news||[],envoys:sv.envoys||[],cool:sv.cool||{},aicool:sv.aicool||{},unrest:sv.unrest||{}};hap=sv.hap?sv.hap.slice():P.map(()=>70);game.tax=sv.tax??0.2;game.pact=sv.pact||{};game.access=sv.access||{};game.gave=sv.gave||{};game.mp=sv.mp??10;game.airCd=sv.airCd||{};game.gov=sv.gov||{};game.vas=sv.vas||{};game.newC=[];game.flag=sv.flag||{};game.names={};for(const k in (sv.names||{}))game.names[k]=cleanName(sv.names[k]);game.mprod=sv.mprod||[];game.aimis=sv.aimis||{};game.mob=sv.mob||2;game.tree=sv.tree;game.tp=sv.tp||0;game.cyberVis=sv.cyberVis||{};game.cybCd=sv.cybCd||{};game.tankCd=sv.tankCd||{};game.dmg=sv.dmg||{};game.supp={};game.shock={};game.formed=sv.formed;game.scn=sv.scn||'2027';game.y0=sv.y0||2027;game.m0=sv.m0||0;game.d0=sv.d0||1;game.nofog=!!sv.nofog;game.strait=sv.strait||{};game.fee=sv.fee??1;game.proj=sv.proj||[];game.repub=sv.repub;game.ext=sv.ext||{qo:{},nav:{},sp:{r:0,q:[],n:0,ok:0},prest:0};provNames(game.scn);game.skeys=sv.skeys;game.bloc=sv.bloc||{};game.evd=sv.evd||0;if(sv.skeys)SCN_KEY=sv.skeys;setEra(eraOf(game.scn));if(sv.core)for(let i=0;i<N;i++)CORE[i]=sv.core[i];game.missiles=sv.missiles||0;game.propUntil=sv.propUntil;game.govCd=sv.govCd;game.festCd=sv.festCd;
+function loadSave(id,obj,mpl){const sv=obj||saves().find(s=>s.id===id);if(!sv)return;game={id:sv.id,gid:sv.gid||sv.id,saveId:sv.id,me:sv.me,diff:sv.diff,aggr:sv.aggr,fog:sv.fog,turn:sv.turn,wars:sv.wars||[],allies:sv.allies||[],gold:sv.gold||0,rel:sv.rel||{},imp:sv.imp||{},arel:sv.arel||{},truce:sv.truce||{},offer:null,dp:sv.dp??10,news:sv.news||[],envoys:sv.envoys||[],cool:sv.cool||{},aicool:sv.aicool||{},unrest:sv.unrest||{}};hap=sv.hap?sv.hap.slice():P.map(()=>70);game.tax=sv.tax??0.2;game.pact=sv.pact||{};game.access=sv.access||{};game.gave=sv.gave||{};game.mp=sv.mp??10;game.airCd=sv.airCd||{};game.gov=sv.gov||{};game.vas=sv.vas||{};game.newC=[];game.flag=sv.flag||{};game.names={};for(const k in (sv.names||{}))game.names[k]=cleanName(sv.names[k]);game.mprod=sv.mprod||[];game.nav=sv.nav||null;game.nprod=sv.nprod||[];game.navCd=sv.navCd||{};game.wfl=sv.wfl||[];game.aimis=sv.aimis||{};game.mob=sv.mob||2;game.tree=sv.tree;game.tp=sv.tp||0;game.cyberVis=sv.cyberVis||{};game.cybCd=sv.cybCd||{};game.tankCd=sv.tankCd||{};game.dmg=sv.dmg||{};game.supp={};game.shock={};game.formed=sv.formed;game.scn=sv.scn||'2027';game.y0=sv.y0||2027;game.m0=sv.m0||0;game.d0=sv.d0||1;game.nofog=!!sv.nofog;game.strait=sv.strait||{};game.fee=sv.fee??1;game.proj=sv.proj||[];game.repub=sv.repub;game.ext=sv.ext||{qo:{},nav:{},sp:{r:0,q:[],n:0,ok:0},prest:0};provNames(game.scn);game.skeys=sv.skeys;game.bloc=sv.bloc||{};game.evd=sv.evd||0;if(sv.skeys)SCN_KEY=sv.skeys;setEra(eraOf(game.scn));if(sv.core)for(let i=0;i<N;i++)CORE[i]=sv.core[i];game.missiles=sv.missiles||0;game.propUntil=sv.propUntil;game.govCd=sv.govCd;game.festCd=sv.festCd;
  resetCountries();for(const d of (sv.newC||[])){addCountryRaw(d);game.newC.push(d)}if(sv.caps)sv.caps.forEach((x,i)=>{if(C[i])C[i].cap=x});if(sv.color){game.color=sv.color;CC[game.me]=sv.color}game.inv=sv.inv||{e:0.1,p:0.1,t:0.1};game.build=sv.build||[];game.outb=sv.outb||{};game.dseq=sv.dseq||0;
  owner=sv.owner.slice();pop=sv.pop?sv.pop.slice():BASEPOP.slice();armies=(sv.armies||[]).map(a=>({...a,path:a.path||[]}));aid=sv.aid||1;events=sv.events||[];
  if(sv.v===11){if(isMed(game.scn)){for(let i=0;i<N;i++)BASEPOP[i]=POP0[i]*MEDPOP[game.scn];for(let c=0;c<C0;c++)MIL[c]=0;for(let c=C0;c<C.length;c++){let p=0;for(let i=0;i<N;i++)if(sv.owner[i]===c)p+=sv.pop[i];MIL[c]=C[c].tribal?0:Math.round(p*0.03)}}else if(SCNDEF[game.scn]){restoreModern();const def=SCNDEF[game.scn];for(let i=0;i<N;i++)BASEPOP[i]=POP0[i]*scnPF(def,i,'p');for(let c=0;c<C.length;c++){C[c].pop=0;C[c].gdp=0}for(let i=0;i<N;i++){const o=sv.owner[i];if(o>=0&&C[o]){C[o].pop+=sv.pop[i];C[o].gdp+=P[i].eco*scnPF(def,i,'e')}}}else restoreModern();if(sv.mil)sv.mil.forEach((m,i)=>{if(i<MIL.length)MIL[i]=m});if(game.repub&&game.skeys&&game.skeys.tbm!==undefined&&C[game.skeys.tbm])C[game.skeys.tbm].hist={tr:'Türkiye Cumhuriyeti',en:'Republic of Türkiye'};if(isModern(game.scn)){const wb=C.findIndex(c=>c.n==='West Bank');if(wb>=0)C[wb].hist={tr:'Filistin',en:'Palestine'}}if(game.formed&&HIST[game.formed])C[game.me].hist={tr:HIST[game.formed].n,en:HISTEN[game.formed]};bld=Int32Array.from(sv.bld);ecoP=sv.ecoP.slice();unemp=Float32Array.from(sv.unemp);ign=Float32Array.from(sv.ign);inf=Float32Array.from(sv.inf);dis=Int32Array.from(sv.dis);deaths=Float32Array.from(sv.deaths);TECH=sv.tech.slice();updQ();fleets=sv.fleets||[]}
