@@ -115,6 +115,55 @@
   }
 
   /* ---------- Ads (Google AdSense) ---------- */
+    // ---- hero slider (swipe, arrows, dots, autoplay; pauses on hover/focus) ----
+  function setupSlider() {
+    var root = document.querySelector("[data-slider]");
+    if (!root) return;
+    var track = root.querySelector(".slides"), slides = [].slice.call(root.querySelectorAll(".slide")),
+        dots = root.querySelector(".slider-dots"), n = slides.length, i = 0, timer = null,
+        reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!track || n < 2) return;
+    slides.forEach(function (s, k) {
+      s.setAttribute("aria-label", (k + 1) + " / " + n);
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "dot"; b.setAttribute("aria-label", "Slide " + (k + 1));
+      b.addEventListener("click", function () { go(k, true); });
+      dots.appendChild(b);
+    });
+    function go(k, user) {
+      i = (k + n) % n;
+      track.style.transform = "translateX(" + (-100 * i) + "%)";
+      slides.forEach(function (s, j) {
+        var on = j === i;
+        s.setAttribute("aria-hidden", on ? "false" : "true");
+        [].forEach.call(s.querySelectorAll("a,button"), function (el) { el.tabIndex = on ? 0 : -1; });
+      });
+      [].forEach.call(dots.children, function (d, j) { d.setAttribute("aria-current", j === i ? "true" : "false"); });
+      if (user) start();
+    }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+    function start() { stop(); if (!reduce) timer = setInterval(function () { go(i + 1); }, 6500); }
+    root.querySelector(".sl-prev").addEventListener("click", function () { go(i - 1, true); });
+    root.querySelector(".sl-next").addEventListener("click", function () { go(i + 1, true); });
+    root.addEventListener("mouseenter", stop);
+    root.addEventListener("mouseleave", start);
+    root.addEventListener("focusin", stop);
+    root.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowLeft") go(i - 1, true);
+      else if (e.key === "ArrowRight") go(i + 1, true);
+    });
+    var x0 = null, y0 = 0;
+    track.addEventListener("pointerdown", function (e) { x0 = e.clientX; y0 = e.clientY; });
+    track.addEventListener("pointerup", function (e) {
+      if (x0 === null) return;
+      var dx = e.clientX - x0, dy = e.clientY - y0; x0 = null;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) go(i + (dx < 0 ? 1 : -1), true);
+    });
+    track.addEventListener("pointercancel", function () { x0 = null; });
+    document.addEventListener("visibilitychange", function () { if (document.hidden) stop(); else start(); });
+    go(0); start();
+  }
+
   function setupAds() {
     var client = CONFIG.adsenseClient;
     if (!/^ca-pub-\d{10,20}$/.test(client)) return; // not configured: leave slots hidden
@@ -149,6 +198,7 @@
     applyLang(detectLang());
     loadCounter();
     setupAds();
+    setupSlider();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
   else start();
