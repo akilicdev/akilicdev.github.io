@@ -142,12 +142,9 @@
       if (user) start();
     }
     function stop() { if (timer) { clearInterval(timer); timer = null; } }
-    function start() { stop(); if (!reduce) timer = setInterval(function () { go(i + 1); }, 6500); }
+    function start() { stop(); if (!reduce) timer = setInterval(function () { go(i + 1); }, 5000); }
     root.querySelector(".sl-prev").addEventListener("click", function () { go(i - 1, true); });
     root.querySelector(".sl-next").addEventListener("click", function () { go(i + 1, true); });
-    root.addEventListener("mouseenter", stop);
-    root.addEventListener("mouseleave", start);
-    root.addEventListener("focusin", stop);
     root.addEventListener("keydown", function (e) {
       if (e.key === "ArrowLeft") go(i - 1, true);
       else if (e.key === "ArrowRight") go(i + 1, true);
