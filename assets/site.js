@@ -7,8 +7,9 @@
     // Fill these in after Google AdSense approves the site. While empty, no ad code loads and ad slots stay hidden.
     adsenseClient: "ca-pub-4908057275713944",
     adsenseSlots: { top: "", middle: "", article: "" }, // ad unit IDs from AdSense
-    counterUrl: "https://abacus.jasoncameron.dev",
-    counterKey: "tugrion.com/visits"
+    // Visitor counter: our own Supabase function (unique visitors per day, no raw IPs stored).
+    counterUrl: "https://lhhwltdrmptjkjdkwgfq.supabase.co/rest/v1/rpc/site_hit",
+    counterKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoaHdsdGRybXB0amtqZGt3Z2ZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQyNDg0MjksImV4cCI6MjEwOTgyNDQyOX0.IfeFWsZcBAKkQ9laPiX8bBJ0sGVamzkxA3b20bGIs0g" // public anon key: it can only call site_hit()
   };
 
   var DICT = window.TUGRION_I18N || {};
@@ -95,23 +96,29 @@
   function loadCounter() {
     var el = document.getElementById("visit-count");
     if (!el || !window.fetch) { hideCounter(); return; }
-    // Count each browser at most once per day, so refreshing does not inflate the number.
-    var today = new Date().toISOString().slice(0, 10);
-    var counted = safeGet("tg_counted") === today;
-    var url = CONFIG.counterUrl + (counted ? "/get/" : "/hit/") + CONFIG.counterKey;
+    // Show the last known number at once, then refresh it from the server.
+    var cached = Number(safeGet("tg_visits"));
+    if (isFinite(cached) && cached > 0) { visitCount = Math.floor(cached); renderCount(); }
     var ctrl = window.AbortController ? new AbortController() : null;
-    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 6000);
-    fetch(url, { method: "GET", mode: "cors", credentials: "omit", referrerPolicy: "no-referrer", cache: "no-store", signal: ctrl ? ctrl.signal : undefined })
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 8000);
+    fetch(CONFIG.counterUrl, {
+      method: "POST", mode: "cors", credentials: "omit", referrerPolicy: "no-referrer", cache: "no-store",
+      headers: { "apikey": CONFIG.counterKey, "Authorization": "Bearer " + CONFIG.counterKey, "Content-Type": "application/json" },
+      body: "{}", signal: ctrl ? ctrl.signal : undefined
+    })
       .then(function (r) { if (!r.ok) throw new Error("bad status"); return r.json(); })
       .then(function (data) {
         clearTimeout(timer);
-        var n = Number(data && data.value);
-        if (!isFinite(n) || n < 0 || n > 1e12) throw new Error("bad value");
+        var n = Number(data);
+        if (!isFinite(n) || n < 1 || n > 1e12) throw new Error("bad value");
         visitCount = Math.floor(n);
-        if (!counted) safeSet("tg_counted", today);
+        safeSet("tg_visits", String(visitCount));
         renderCount();
       })
-      .catch(function () { clearTimeout(timer); hideCounter(); });
+      .catch(function () {
+        clearTimeout(timer);
+        if (!(visitCount > 0)) hideCounter();
+      });
   }
 
   /* ---------- Ads (Google AdSense) ---------- */
