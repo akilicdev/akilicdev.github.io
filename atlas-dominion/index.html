@@ -4209,14 +4209,14 @@ function mpOnMsg(m){if(!m||m.from===MP.pid||(m.to&&m.to!==MP.pid))return;const d
   if(m.t==='hb')return;
   if(m.t==='bye'){p.seen=0;mpLobbyUI();return}return}
  if(MP.guest){if(m.t==='lobby'||m.t==='st'||m.t==='welcome'||m.t==='toast'||m.t==='pause')MP.hostSeen=Date.now();
-  if(m.t==='lobby'){MP.players=d.players||{};MP.speed=d.speed||15;MP.resumed=!!d.resumed;const me=MP.players[MP.pid];if(!me&&(d.started||d.resumed)&&MP.helloAt&&Date.now()-MP.helloAt>6000){mpDenied();return}if(d.scn&&d.scn!==MP.scn&&!d.started&&!d.resumed){MP.scn=d.scn;newGame(d.scn);mode='pick';$('setup').style.display='none'}MP.scn=d.scn;if(me){MP.me=me.c;if(!d.started&&me.c>=0){selC=me.c;paint();req()}}mpLobbyUI();return}
+  if(m.t==='lobby'){if(MP.started&&d.resumed&&!MP.resWait){MP.resWait=true;toast('✔ Kurucu geri döndü · devam etmesi bekleniyor')}if(!d.resumed)MP.resWait=false;MP.players=d.players||{};MP.speed=d.speed||15;MP.resumed=!!d.resumed;const me=MP.players[MP.pid];if(!me&&(d.started||d.resumed)&&MP.helloAt&&Date.now()-MP.helloAt>6000){mpDenied();return}if(d.scn&&d.scn!==MP.scn&&!d.started&&!d.resumed){MP.scn=d.scn;newGame(d.scn);mode='pick';$('setup').style.display='none'}MP.scn=d.scn;if(me){MP.me=me.c;if(!d.started&&me.c>=0){selC=me.c;paint();req()}}mpLobbyUI();return}
   if(m.t==='deny'){if(d.why==='roster'){mpDenied();return}toast('⛔ Bu ülke başka oyuncuda');return}
   if(m.t==='welcome'){MPSV=0;MP.welcomed=true;MP.me=d.c;MP.speed=d.speed||15;MP.started=true;mpLobbyUI();return}
   if(m.t==='start'){if(d.c[MP.pid]===undefined){mpDenied();return}MP.started=true;MP.welcomed=true;MPSV=0;MP.me=d.c[MP.pid];toast('▶ Oyun başlıyor…');return}
   if(m.t==='st'){const k=d.id;const b=MP.chunks[k]||(MP.chunks[k]={n:d.n,p:[],got:0});if(!b.p[d.i]){b.p[d.i]=d.x;b.got++}
    if(b.got===b.n){const all=b.p.join('');delete MP.chunks[k];for(const x in MP.chunks)if(x<k)delete MP.chunks[x];mpUnpack(all).then(mpGotState).catch(e=>console.error(e))}return}
   if(m.t==='toast'){for(const t of (d.t||[]).slice(0,3))setTimeout(()=>toast(t),0);return}
-  if(m.t==='end'){mpLeave();showMenu(`<h2>🏁 Kurucu oyundan çıktı</h2><div class="sub">Oyun kaydedildi. Kurucu odayı tekrar açınca aynı kodla yine katılabilirsin.</div><button class="mb" onclick="mainMenu()">← Ana menü</button>`);return}}}
+  if(m.t==='end'){MP.warned=true;MP.hostSeen=Date.now()-60000;showMenu(`<h2>⏳ Kurucu oyundan çıktı</h2><div class="sub">Oyun kurucunun cihazına kaydedildi. Kurucu oyunu tekrar açınca kaldığınız yerden devam edersiniz — bu ekranda bekleyebilirsin.</div><div class="sub" style="color:#e8c66a">🔑 Oda kodu: <b>${MP.code}</b></div><button class="mb sec" onclick="mpLeave();mainMenu()">✕ Odadan çık</button>`);return}}}
 function mpDenied(){mpLeave();showMenu(`<h2>⛔ Bu oyuna katılamazsın</h2><div class="sub">Bu oda daha önce başka oyuncularla başladı. Sadece ilk baştaki oyuncular girebilir.</div><button class="mb" onclick="mpMenu()">← Geri</button>`)}
 // ---------- host clock ----------
 let MPIV=null;
@@ -4224,7 +4224,7 @@ function mpTick(){if(!MP.on)return;const now=Date.now();
  if(MP.host&&MP.started&&game){if(!MP.paused&&now>=MP.next&&!busy){MP.ticking=true;try{closeReplay&&closeReplay();endTurnNow()}finally{MP.ticking=false}MP.next=Date.now()+MP.speed*1000;game.mpd.paused=false;game.mpd.left=MP.speed;mpBroadcastState()}
   else if(MP.dirtyAt&&now-MP.lastSync>(window.MPTEST?700:1500)&&now-MP.dirtyAt>300){game.mpd.left=Math.max(0,(MP.next-now)/1000);mpBroadcastState()}
   if(now-(MP.lastHb||0)>4000){MP.lastHb=now;mpLobbyBroadcast(true)}
-  if(now-(MP.lastSave||0)>60000){MP.lastSave=now;mpSaveRoom()}}
+  if(now-(MP.lastSave||0)>20000){MP.lastSave=now;mpSaveRoom()}}
  if(MP.host&&MP.resumed&&!MP.started&&now-(MP.lastHb||0)>4000){MP.lastHb=now;mpLobbyBroadcast(true)}
  if(MP.guest&&now-(MP.lastHb||0)>5000){MP.lastHb=now;mpSend('hb',{})}
  if(MP.guest&&MP.started&&MP.hostSeen&&now-MP.hostSeen>20000&&!MP.warned){MP.warned=true;showMenu(`<h2>⏳ Kurucu bağlı değil</h2><div class="sub">Oyun kurucusu olmadan oyun devam edemez. Kurucu geri gelince oyun kendiliğinden devam eder.</div><button class="mb sec" onclick="mpLeave();mainMenu()">✕ Odadan çık</button>`)}
@@ -4238,12 +4238,15 @@ window.endTurnNow=function(){if(MP.on&&MP.started){if(MP.ticking)return _endTurn
 // ---------- lobby ----------
 function mpCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';const r=crypto.getRandomValues(new Uint8Array(6));for(const x of r)s+=A[x%A.length];return s}
 function mpPid(){let p=LS.get('ad_pid',null);if(!p){p='p'+[...crypto.getRandomValues(new Uint8Array(8))].map(x=>x.toString(16).padStart(2,'0')).join('');LS.set('ad_pid',p)}return p}
-function mpMenu(){const nm=escH(LS.get('ad_mpname','')||'');showMenu(`<h2>👥 Arkadaşlarla Oyna</h2><div class="sub">Oda kur, kodu arkadaşına söyle. Zaman akar, herkes aynı anda oynar.</div>
- <div class="opt" style="flex-direction:column;align-items:stretch;gap:6px"><span>Adın</span><input id="mpN" maxlength="16" value="${nm}" placeholder="Örn. Kadir" style="padding:8px;border-radius:6px;border:1px solid #6b5a3e;background:#1a150f;color:#efe6d2;font-size:15px"></div>
- <button class="mb" onclick="mpHostMenu()">🏠 Oda kur</button>
- <div class="opt" style="flex-direction:column;align-items:stretch;gap:6px;margin-top:8px"><span>Oda kodu</span><input id="mpC" maxlength="6" placeholder="ABC123" style="padding:8px;border-radius:6px;border:1px solid #6b5a3e;background:#1a150f;color:#efe6d2;font-size:18px;letter-spacing:4px;text-transform:uppercase;text-align:center"></div>
- <button class="mb sec" onclick="mpJoin()">🔑 Odaya katıl</button>${mpSaves().some(x=>x.pid===mpPid())?'<button class="mb sec" onclick="mpSavesMenu()">📂 Kayıtlı oyuna devam et</button>':''}
- <div class="sub" style="font-size:11px;opacity:.6;margin-top:6px">Sohbet yok, sadece oyun. İnternet bağlantısı gerekir.</div><button class="mb sec" onclick="mainMenu()">← Geri</button>`)}
+function mpMenu(){const nm=escH(LS.get('ad_mpname','')||''),ns=mpSaves().filter(x=>x.pid===mpPid()).length;const inp='padding:8px;border-radius:6px;border:1px solid #6b5a3e;background:#1a150f;color:#efe6d2;';showMenu(`<h2>👥 Arkadaşlarla Oyna</h2><div class="sub">Oda kur, kodu arkadaşına söyle. Zaman akar, herkes aynı anda oynar.</div>
+ <div class="opt" style="flex-direction:column;align-items:stretch;gap:6px"><span>Adın</span><input id="mpN" maxlength="16" value="${nm}" placeholder="Örn. Kadir" style="${inp}font-size:15px"></div>
+ <button class="mb" onclick="mpHostMenu()">🆕 Yeni Oyun <small style="opacity:.7">(oda kur)</small></button>
+ <button class="mb" onclick="mpSavesMenu()">📂 Oyun Yükle${ns?` <small style="opacity:.7">(${ns})</small>`:''}</button>
+ <div class="sub" style="margin-top:12px;opacity:.8">— Arkadaşının odasına katıl —</div>
+ <div class="opt" style="flex-direction:column;align-items:stretch;gap:6px"><span>Oda kodu</span><input id="mpC" maxlength="6" placeholder="ABC123" style="${inp}font-size:18px;letter-spacing:4px;text-transform:uppercase;text-align:center"></div>
+ <button class="mb sec" onclick="mpJoin()">🔑 Odaya Katıl</button>
+ <div class="sub" style="font-size:11px;opacity:.6;margin-top:6px">Arkadaş oyunları sadece odayı kuranın cihazına kaydedilir. İnternet bağlantısı gerekir.</div><button class="mb sec" onclick="mainMenu()">← Geri</button>`)}
+
 function mpName(){const n=cleanName(($('mpN')||{}).value||'');if(!n){toast('Önce adını yaz');return null}LS.set('ad_mpname',n);return n}
 function mpHostMenu(){const n=mpName();if(!n)return;MP.name=n;const sc=(y,t)=>`<button class="scn" onclick="mpHost('${y}')"><b>${y}</b><span>${t}</span></button>`;
  showMenu(`<h2>🏠 Oda kur</h2><div class="sub">Zaman hızı (bir tur kaç saniye)</div><div class="opt"><select id="mpS" style="flex:1" onchange="$('mpSx').style.display=this.value==='c'?'block':'none'">${MPSPEEDS.map(([s,t])=>`<option value="${s}" ${s===15?'selected':''}>${t} / tur</option>`).join('')}<option value="c">Özel süre…</option></select></div><div class="opt" id="mpSx" style="display:none"><span>Saniye (en az 8)</span><input id="mpSn" type="number" min="8" max="300" value="20" style="width:90px;padding:6px;border-radius:6px;border:1px solid #6b5a3e;background:#1a150f;color:#efe6d2;font-size:15px"></div><div class="sub">Harita</div>
@@ -4251,6 +4254,7 @@ function mpHostMenu(){const n=mpName();if(!n)return;MP.name=n;const sc=(y,t)=>`<
 function mpHost(scn){MPKEY='';if(!window.MPTEST)mpHttp('rpc/mp_cleanup',{method:'POST',body:{}}).catch(()=>{});{const sv=($('mpS')||{}).value;MP.speed=sv==='c'?Math.max(8,Math.min(300,Math.round(+($('mpSn')||{}).value||20))):(+sv||15)}Object.assign(MP,{on:true,host:true,guest:false,code:mpCode(),pid:mpPid(),players:{},scn,started:false,resumed:false,paused:false,me:-1});mpWrapUI();
  toast('🔌 Bağlanıyor…');mpConnect(MP.code,(ok,why)=>{if(!ok){mpFail(why);return}newGame(scn);mpLobbyUI();if(!MPIV)MPIV=setInterval(mpTick,250)})}
 function mpJoin(){const n=mpName();if(!n)return;const code=String(($('mpC')||{}).value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==6){toast('Kod 6 karakter olmalı');return}
+ if(mpSaves().some(x=>x.code===code&&x.pid===mpPid())){toast('👑 Bu odayı sen kurmuştun · kayıtlı oyun açılıyor');mpResume(code);return}
  Object.assign(MP,{on:true,host:false,guest:true,code,pid:mpPid(),name:n,players:{},scn:'',started:false,resumed:false,welcomed:false,warned:false,me:-1,hostSeen:0});mpWrapUI();mpGuestOn();toast('🔌 Bağlanıyor…');
  mpConnect(code,(ok,why)=>{if(!ok){mpFail(why);return}MP.helloAt=Date.now();mpSend('hello',{name:n});hideMenu();mpLobbyUI();if(!MPIV)MPIV=setInterval(mpTick,250);
   setTimeout(()=>{if(MP.on&&MP.guest&&!MP.hostSeen){mpLeave();showMenu(`<h2>🔍 Oda açık değil</h2><div class="sub">Bu kodla açık bir oda yok. Oyun kurucusu odayı açmadan kimse giremez. Kurucudan odayı açmasını iste, sonra tekrar dene.</div><button class="mb" onclick="mpMenu()">← Geri</button>`)}},10000)})}
@@ -4275,9 +4279,9 @@ function mpStartResumed(){MP.resumed=false;MP.started=true;MP.paused=false;game.
 const MPSKEY='atlasAoH.mpsaves.v1';
 const mpSaves=()=>LS.get(MPSKEY,[]);
 function mpSaveRoom(){if(!MP.host||!game||!game.mpd||!game.mpd.roster)return false;try{mpRelSync();mpStoreMe();game.mpd.left=Math.max(1,Math.round((MP.next-Date.now())/1000));const sv=mpSnap();sv.id='mp_'+MP.code;
- const e={code:MP.code,key:MPKEY,scn:game.scn,speed:MP.speed,pid:MP.pid,name:MP.name,me:game.me,roster:game.mpd.roster,turn:game.turn,time:Date.now(),snap:sv};
- let all=mpSaves().filter(x=>x.code!==MP.code);all.unshift(e);all=all.slice(0,4);while(!LS.set(MPSKEY,all)){if(all.length<=1)return false;all.pop()}return true}catch(err){console.warn('mp save',err);return false}}
-function mpSavesMenu(){const all=mpSaves().filter(x=>x.pid===mpPid());showMenu(`<h2>📂 Kayıtlı oyunlar</h2><div class="sub">Sadece odayı kuran kişi kayıtlı oyunu açabilir. Aynı oyuncular aynı kodla tekrar girer.</div>${all.length?all.map(e=>`<div class="slot"><span class="flag" style="width:14px;height:34px;border-radius:4px;background:rgb(${CC[e.me]||'120,120,120'})"></span><div style="flex:1"><b>Oda ${e.code}</b> · ${e.scn}<br><small>${Object.values(e.roster||{}).map(p=>escH(p.name)).join(', ')} · ${dateStrScn(e)} </small></div><button onclick="mpResume('${e.code}')">▶</button><button style="background:#6e2e24" onclick="mpDelSave('${e.code}',this)">🗑</button></div>`).join(''):'<div class="sub">Kayıtlı oyun yok.</div>'}<button class="mb sec" onclick="mpMenu()">← Geri</button>`)}
+ const e={nm:cname(game.me),col:String(CC[game.me]||''),code:MP.code,key:MPKEY,scn:game.scn,speed:MP.speed,pid:MP.pid,name:MP.name,me:game.me,roster:game.mpd.roster,turn:game.turn,time:Date.now(),snap:sv};
+ let all=mpSaves().filter(x=>x.code!==MP.code);all.unshift(e);all=all.slice(0,6);while(!LS.set(MPSKEY,all)){if(all.length<=1)return false;all.pop()}return true}catch(err){console.warn('mp save',err);return false}}
+function mpSavesMenu(){{const n=cleanName((($('mpN')||{}).value)||'');if(n)LS.set('ad_mpname',n)}const all=mpSaves().filter(x=>x.pid===mpPid());showMenu(`<h2>📂 Oyun Yükle</h2><div class="sub">Kurduğun arkadaş oyunları. Oyunu aç, oda kodunu arkadaşlarına söyle; aynı oyuncular aynı kodla tekrar girer.</div>${all.length?all.map(e=>`<div class="slot"><span class="flag" style="width:14px;height:44px;border-radius:4px;background:rgb(${e.col||'120,120,120'})"></span><div style="flex:1;min-width:0"><b>${escH(e.nm||('Oda '+e.code))}</b> · ${e.scn} · Tur ${e.turn||1}<br><span style="color:#e8c66a;font-size:15px;letter-spacing:2px">🔑 Oda kodu: <b>${e.code}</b></span><br><small>${Object.values(e.roster||{}).map(p=>(p.host?'👑 ':'')+escH(p.name)).join(', ')} · ${dateStrScn(e)}</small></div><button onclick="mpResume('${e.code}')">▶</button><button style="background:#6e2e24" onclick="mpDelSave('${e.code}',this)">🗑</button></div>`).join(''):'<div class="sub">Henüz kayıtlı arkadaş oyunu yok. Yeni Oyun ile oda kurduğunda, oyun senin cihazına otomatik kaydedilir.</div>'}<button class="mb sec" onclick="mpMenu()">← Geri</button>`)}
 function dateStrScn(e){try{return new Date(e.time).toLocaleString()}catch(x){return ''}}
 function mpDelSave(code,b){if(!confirmDel(b))return;LS.set(MPSKEY,mpSaves().filter(x=>x.code!==code));mpSavesMenu()}
 function mpResume(code){const e=mpSaves().find(x=>x.code===code);if(!e)return;MP.name=e.name||LS.get('ad_mpname','')||'Kurucu';MPKEY=e.key||'';MP.speed=e.speed||15;
@@ -4711,6 +4715,54 @@ DICT.push(
 ['Saldır','Attack','هجوم','攻击','Attacca','Atacar','Angreifen','Attaquer','Атаковать']);
 
 
+// ===== WAR ALERTS (v1.6): on-screen warning when someone declares war on you or takes your cities =====
+const WAL={
+ tr:{war:'SAVAŞ! {a} sana savaş açtı',from:'{d} yönünden saldırı',border:'Tehlikedeki sınır şehirlerin',army:'Düşman ordusu',lost:'Şehir kaybettin!',took:'{a} ele geçirdi',front:'{d} cephesi',show:'📍 Göster',more:'+{n} şehir daha',dirs:['Doğu','Kuzeydoğu','Kuzey','Kuzeybatı','Batı','Güneybatı','Güney','Güneydoğu'],sea:'Denizden / uzaktan'},
+ en:{war:'WAR! {a} declared war on you',from:'Attack from the {d}',border:'Border cities in danger',army:'Enemy army',lost:'You lost cities!',took:'{a} captured',front:'{d} front',show:'📍 Show',more:'+{n} more',dirs:['east','northeast','north','northwest','west','southwest','south','southeast'],sea:'From the sea / far away'},
+ ar:{war:'حرب! {a} أعلنت الحرب عليك',from:'هجوم من {d}',border:'مدن حدودية في خطر',army:'جيش العدو',lost:'فقدت مدنًا!',took:'استولت {a}',front:'جبهة {d}',show:'📍 عرض',more:'+{n} أخرى',dirs:['الشرق','الشمال الشرقي','الشمال','الشمال الغربي','الغرب','الجنوب الغربي','الجنوب','الجنوب الشرقي'],sea:'من البحر / من بعيد'},
+ zh:{war:'战争！{a}向你宣战',from:'来自{d}的进攻',border:'危险的边境城市',army:'敌军',lost:'你失去了城市！',took:'{a}占领了',front:'{d}战线',show:'📍 查看',more:'还有{n}座',dirs:['东方','东北','北方','西北','西方','西南','南方','东南'],sea:'来自海上/远方'},
+ it:{war:'GUERRA! {a} ti ha dichiarato guerra',from:'Attacco da {d}',border:'Città di confine in pericolo',army:'Esercito nemico',lost:'Hai perso delle città!',took:'{a} ha conquistato',front:'Fronte {d}',show:'📍 Mostra',more:'+{n} altre',dirs:['est','nord-est','nord','nord-ovest','ovest','sud-ovest','sud','sud-est'],sea:'Dal mare / da lontano'},
+ es:{war:'¡GUERRA! {a} te declaró la guerra',from:'Ataque desde el {d}',border:'Ciudades fronterizas en peligro',army:'Ejército enemigo',lost:'¡Perdiste ciudades!',took:'{a} conquistó',front:'Frente {d}',show:'📍 Ver',more:'+{n} más',dirs:['este','noreste','norte','noroeste','oeste','suroeste','sur','sureste'],sea:'Desde el mar / lejos'},
+ de:{war:'KRIEG! {a} hat dir den Krieg erklärt',from:'Angriff aus dem {d}',border:'Grenzstädte in Gefahr',army:'Feindliche Armee',lost:'Städte verloren!',took:'{a} hat erobert',front:'{d}front',show:'📍 Zeigen',more:'+{n} weitere',dirs:['Osten','Nordosten','Norden','Nordwesten','Westen','Südwesten','Süden','Südosten'],sea:'Von See / aus der Ferne'},
+ fr:{war:'GUERRE ! {a} vous a déclaré la guerre',from:'Attaque depuis le {d}',border:'Villes frontalières menacées',army:'Armée ennemie',lost:'Villes perdues !',took:'{a} a pris',front:'Front {d}',show:'📍 Voir',more:'+{n} autres',dirs:['est','nord-est','nord','nord-ouest','ouest','sud-ouest','sud','sud-est'],sea:'Par la mer / de loin'},
+ ru:{war:'ВОЙНА! {a} объявила вам войну',from:'Удар с направления: {d}',border:'Пограничные города под угрозой',army:'Армия врага',lost:'Вы потеряли города!',took:'{a} захватила',front:'Фронт: {d}',show:'📍 Показать',more:'ещё {n}',dirs:['восток','северо-восток','север','северо-запад','запад','юго-запад','юг','юго-восток'],sea:'С моря / издалека'}};
+const wl=(k,v)=>{const L=WAL[typeof LANG!=='undefined'&&WAL[LANG]?LANG:'tr'];let t=L[k];for(const x in (v||{}))t=t.replace('{'+x+'}',v[x]);return t};
+const WW={g:null,k:'',turn:-1,en:new Set(),mine:[]};
+function wwKey(){return [game.scn,game.me,game.gid||game.id||'',game.mpd?game.mpd.code||'mp':''].join('|')}
+function wwEnemies(){const me=game.me,m=new Map();for(const w of game.wars){if(w[0]===me)m.set(w[1],0);else if(w[1]===me)m.set(w[0],1)}return m}
+function wwRef(){const me=game.me,cap=C[me]&&C[me].cap;if(cap!==undefined&&owner[cap]===me)return P[cap];return wwCenter(WW.mine.length?WW.mine:provsOf(me))}
+function wwCenter(list){if(!list.length)return null;const p0=P[list[0]];let sx=0,sy=0;for(const i of list){let dx=P[i].x-p0.x;if(dx>W/2)dx-=W;if(dx<-W/2)dx+=W;sx+=dx;sy+=P[i].y}return {x:p0.x+sx/list.length,y:sy/list.length}}
+function wwDir(from,to){if(!from||!to)return '';let dx=to.x-from.x;if(dx>W/2)dx-=W;if(dx<-W/2)dx+=W;const dy=from.y-to.y;if(Math.hypot(dx,dy)<3)return '';const a=(Math.atan2(dy,dx)*180/Math.PI+360+22.5)%360;return WAL[WAL[LANG]?LANG:'tr'].dirs[Math.floor(a/45)]}
+function wwNames(list,n){const s=list.slice(0,n).map(i=>escH(P[i].n)).join(', ');return list.length>n?s+' '+wl('more',{n:list.length-n}):s}
+function wwCheck(){try{
+ if(typeof game==='undefined'||!game||game.me<0||!C[game.me]||(typeof busy!=='undefined'&&busy)||(typeof mode!=='undefined'&&mode==='pick'))return;
+ if(typeof MP!=='undefined'&&MP.on&&!MP.started)return;
+ const me=game.me,k=wwKey(),en=wwEnemies();
+ const mpOn=typeof MP!=='undefined'&&MP.on;if(k!==WW.k||game.turn<WW.turn||(!mpOn&&game!==WW.g)){WW.g=game;WW.k=k;WW.turn=game.turn;WW.en=new Set(en.keys());WW.mine=provsOf(me);return}
+ if(game.turn===WW.turn&&!(typeof MP!=='undefined'&&MP.on))return; // single player: only check after a turn has passed
+ WW.turn=game.turn;
+ // new wars declared on me
+ const fresh=[...en].filter(([c,att])=>att&&!WW.en.has(c)&&owner.includes(c)).map(([c])=>c);
+ // cities lost to enemies
+ const lost=new Map();for(const p of WW.mine){const o=owner[p];if(o!==me&&atWar(me,o)){if(!lost.has(o))lost.set(o,[]);lost.get(o).push(p)}}
+ const ref=wwRef();
+ for(const c of fresh.slice(0,3)){const bd=[];const seen=new Set();for(const i of provsOf(me))for(const j of P[i].nb)if(owner[j]===c&&!seen.has(i)){seen.add(i);bd.push(i)}
+  const enB=[];for(const i of provsOf(c))if(P[i].nb.some(j=>owner[j]===me))enB.push(i);const pt=wwCenter(enB)||P[C[c].cap]||null;const d=enB.length?wwDir(ref,pt):'';
+  wwShow('🔥',wl('war',{a:escH(cname(c))}),[d?wl('from',{d}):wl('sea'),bd.length?wl('border')+': '+wwNames(bd,4):'',wl('army')+': '+(typeof kfmt==='function'?kfmt(armyTotal(c)):armyTotal(c))].filter(Boolean).join(' · '),pt,c,1)}
+ for(const [o,list] of lost){const pt=wwCenter(list),d=wwDir(ref,pt);
+  wwShow('⚠',wl('lost'),wl('took',{a:escH(cname(o))})+': <b>'+wwNames(list,5)+'</b>'+(d?' · '+wl('front',{d}):''),pt,o,0)}
+ WW.en=new Set(en.keys());WW.mine=provsOf(me)}catch(e){console.warn('war alert',e)}}
+let WWID=0;
+function wwShow(ic,title,body,pt,c,war){let box=$('wwBox');if(!box){box=document.createElement('div');box.id='wwBox';box.style.cssText='position:fixed;top:58px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:6px;width:min(560px,94vw);pointer-events:none';document.body.appendChild(box)}
+ while(box.children.length>=3)box.firstChild.remove();
+ const id='ww'+(++WWID),el=document.createElement('div');el.id=id;
+ el.style.cssText=`pointer-events:auto;background:${war?'rgba(110,20,14,.96)':'rgba(92,52,10,.96)'};border:2px solid ${war?'#ff6b4a':'#f0b040'};border-radius:10px;padding:9px 12px;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.55);font-size:14px;line-height:1.35;animation:wwIn .35s ease-out`;
+ const go=pt?`<button style="padding:5px 10px;border-radius:6px;border:0;background:#f3e2b8;color:#2a1a0a;font-weight:700" onclick="wwGo(${pt.x.toFixed(1)},${pt.y.toFixed(1)},'${id}')">${wl('show')}</button>`:'';
+ el.innerHTML=`<div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:3px;flex:none;background:rgb(${CC[c]||'200,60,40'})"></span><b style="flex:1;font-size:15px">${ic} ${title}</b>${go}<button style="padding:5px 9px;border-radius:6px;border:0;background:rgba(255,255,255,.18);color:#fff" onclick="this.closest('#${id}').remove()">✕</button></div><div style="margin-top:4px;opacity:.95">${body}</div>`;
+ box.appendChild(el);if(war&&typeof sfx==='function')sfx('sword');setTimeout(()=>{const x=$(id);if(x)x.remove()},war?15000:11000)}
+function wwGo(x,y,id){if(typeof cam!=='undefined'){cam.x=x;cam.y=y;cam.z=Math.max(cam.z,4)}if(typeof req==='function')req();const e=$(id);if(e)e.remove()}
+(function(){const st=document.createElement('style');st.textContent='@keyframes wwIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}';document.head.appendChild(st);setInterval(wwCheck,500)})();
+
 const AY=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 
 
@@ -4725,7 +4777,7 @@ function dateStr(t){const G=(typeof game!=='undefined'&&game)||{};const d=new Da
 const DIFF=['Kolay','Normal','Zor','Çok Zor'];
 function showMenu(html){mode='menu';if(!game)setTimeout(startTour,30);else stopTour();if($('selBar'))$('selBar').style.display='none';closeNews();closeEco();$('modeRank').style.display='none';$('log').style.display='none';$('menu').style.display='flex';$('mp').innerHTML=html;hud.style.display='none';$('pick').style.display='none';$('setup').style.display='none';card.style.display='none';0}
 function hideMenu(){$('menu').style.display='none';0}
-function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.5.1</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
+function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.6.0</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
  ${!game&&LS.get(LKEY,null)&&saves().some(s=>s.id===LS.get(LKEY,null))?'<button class="mb" onclick="continueGame()">⏯ Kaldığın yerden devam et</button>':''}<button class="mb ${!game&&LS.get(LKEY,null)?'sec':''}" onclick="gameMenu()">▶ Oyun</button><button class="mb sec" onclick="mpMenu()">👥 Arkadaşlarla Oyna</button><button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button>
  <button class="mb sec" onclick="leadersMenu()">👑 Liderler</button><button class="mb sec" onclick="helpMenu()">📖 Nasıl Oynanır</button><button class="mb sec" onclick="aboutMenu()">ℹ Hakkında</button>${game?'<button class="mb sec" onclick="resume()">↩ Oyuna Dön</button>':''}<button class="mb red" onclick="exitApp()">⏻ Çıkış</button>`)}
 function exitApp(){try{if(game&&!(typeof MP!=='undefined'&&MP.on))saveGame(true);if(typeof MP!=='undefined'&&MP.on)mpLeave()}catch(e){}if(window.AtlasApp&&AtlasApp.exit){AtlasApp.exit();return}try{if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App){Capacitor.Plugins.App.exitApp();return}}catch(e){}try{window.close()}catch(e){}setTimeout(()=>{game=null;showMenu(`<h2>👋 Görüşmek üzere</h2><div class="sub">Oyun kaydedildi. Kapatmak için bu sekmeyi kapatabilirsin.</div><button class="mb sec" onclick="mainMenu()">← Ana menü</button>`)},300)}
