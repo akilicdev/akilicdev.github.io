@@ -487,7 +487,7 @@ function stepArmy(a){const nx=a.path[0];if(!canEnter(a.o,nx)){a.path=[];return f
  a.path.shift();a.p=nx;let took=false;if(hostile(a.o,owner[nx])){const lo=owner[nx];if(a.o===game.me||lo===game.me)bev(nx,`${cname(a.o)} → ${P[nx].n} ele geçirildi`,a.o===game.me,a.o,lo,a.o);conquer(nx,a.o);took=true}
  const same=armies.find(b=>b!==a&&b.p===nx&&b.o===a.o&&!b.path.length);if(same&&!a.path.length){same.n+=a.n;armies=armies.filter(b=>b!==a);return false}
  return !took}
-function moveAll(o){for(const a of armies.filter(a=>a.o===o&&a.path.length)){for(let s=0;s<2&&a.path.length;s++){if(s&&o!==game.me&&owner[a.path[0]]!==game.me&&hostile(o,owner[a.path[0]]))break;if(!armies.includes(a)||!stepArmy(a))break}if(o!==game.me)delete a.tank}}
+function moveAll(o){const hum=o===game.me||(typeof isHum==='function'&&isHum(o));for(const a of armies.filter(a=>a.o===o&&a.path.length)){let hs=0;for(let s=0;s<4&&a.path.length;s++){const h=hostile(o,owner[a.path[0]]);if(h){const lim=hum||owner[a.path[0]]===game.me?2:1;if(hs>=lim||(s>=2&&!hum))break;hs++}else if(hs&&s>=2)break;if(!armies.includes(a)||!stepArmy(a))break}if(o!==game.me)delete a.tank}}
 function recruit(prov,n,o,free){if(CORE[prov]!==o&&atWar(o,CORE[prov]))return 0;const hum=o===game.me||(typeof isHum==='function'&&isHum(o));if(hum&&!free&&rcdOn(prov))return 0;const mx=recruitable(prov);n=Math.min(Math.floor(n),mx);if(n<=0)return 0;if(hum&&!free){game.rcd=game.rcd||{};game.rcd[prov]=game.turn}hap[prov]=Math.max(0,hap[prov]-(hum?6:12)*n/Math.max(1,mx));pop[prov]-=n;const a=homeArmy(prov,o);if(a&&!a.path.length)a.n+=n;else armies.push({id:aid++,o,p:prov,n,path:[]});return n}
 function provsOf(c){const r=[];for(let i=0;i<N;i++)if(owner[i]===c)r.push(i);return r}
 let ECO=[];function calcEco(){ECO=C.map(()=>0);for(let i=0;i<N;i++)ECO[owner[i]]+=ecoP[i]*(0.5+hap[i]/140)*(0.4+0.6*stabOf(i)/100)*(game&&game.dmg&&(game.dmg[i]||0)>game.turn?0.8:1)}
@@ -501,11 +501,12 @@ function deployStart(){armies=[];for(let c=0;c<C.length;c++){const m=MIL[c];if(m
  const capN=fr.length?Math.round(m*0.4):m;armies.push({id:aid++,o:c,p:cap,n:capN,path:[]});
  const rest=m-capN,tot=fr.reduce((s,i)=>s+pop[i],0)||1;for(const i of fr){const n=Math.round(rest*pop[i]/tot);if(n>0)armies.push({id:aid++,o:c,p:i,n,path:[]})}}}
 // ===== AI =====
-function aiRecruit(c,budget){if(budget<=0)return;let men=Math.floor(budget*PER_GOLD);const en=enemiesOf(c);
+function aiArmyCap(c){let p=0;for(let i=0;i<N;i++)if(owner[i]===c)p+=pop[i];return p*0.025*(MULT[game.diff]||1)}
+function aiRecruit(c,budget){if(budget<=0)return;let men=Math.floor(budget*PER_GOLD);if(c!==game.me&&!(typeof isHum==='function'&&isHum(c))){const room=aiArmyCap(c)-armyTotal(c);if(room<=0)return;men=Math.min(men,Math.floor(room))}const en=enemiesOf(c);
  let spots=provsOf(c).filter(i=>P[i].nb.some(j=>en.includes(owner[j])));if(!spots.length)spots=provsOf(c).sort((a,b)=>pop[b]-pop[a]).slice(0,4);
  for(const i of spots){if(men<=0)break;const got=recruit(i,Math.min(men,Math.ceil(men/spots.length)+1),c);men-=got}}
 function aiTurn(c){const en=enemiesOf(c);if(!en.length)return;
- let ep=0;for(const e of en)ep=Math.max(ep,armyPower(e));const vsMe=c!==game.me&&en.includes(game.me);const emg=c===game.me?1:vsMe?(ep>armyPower(c)?1.4:1.15):ep>armyPower(c)*1.2?1.7:1;let hit=false;
+ let ep=0;for(const e of en)ep=Math.max(ep,armyPower(e));const vsMe=c!==game.me&&en.includes(game.me);const emg=c===game.me?1:vsMe?(ep>armyPower(c)?0.9:0.6):ep>armyPower(c)*1.2?1.3:0.8;let hit=false;
  aiRecruit(c,incomeOf(c)*emg*(c===game.me?1:MULT[game.diff]));
  const fr=provsOf(c).filter(i=>P[i].nb.some(j=>en.includes(owner[j])));
  const dep=aiDepth(c);const HZ=c!==game.me&&en.includes(game.me)?hotZone(c):null;const depthOf=j=>{let m=99;for(const k of P[j].nb)if(owner[k]===c&&dep[k]<m)m=dep[k];return m+1};
@@ -546,7 +547,7 @@ function aiPeaceRecruit(){if(game.turn%5)return;for(let c=0;c<C.length;c++){if(c
 function rel2(a,b){const k=a<b?a+'-'+b:b+'-'+a;if(game.arel[k]===undefined)game.arel[k]=-5+((a*7919+b*104729)>>>0)%31;return k}
 function truce(a,b){const k=a<b?a+'-'+b:b+'-'+a;return (game.truce[k]||0)>game.turn}
 function startWar(a,b,force){if(atWar(a,b))return;if((b===game.me||isHum(b))&&a!==game.me&&!isHum(a)&&!force&&game.turn<75)return;game.wars.push([a,b,game.turn]);if(typeof addInf==='function')addInf(a,6);if(a===game.me||b===game.me)sfx('sword');const me=game.me;
- for(const x of [a,b])if(x!==me){const m=MULT[game.diff],en=x===a?b:a;for(const i of provsOf(x))if(P[i].nb.some(j=>owner[j]===en))recruit(i,recruitable(i)*0.5*m,x);if(owner[C[x].cap]===x)recruit(C[x].cap,recruitable(C[x].cap)*0.5*m,x)}
+ for(const x of [a,b])if(x!==me){const m=MULT[game.diff],en=x===a?b:a;for(const i of provsOf(x))if(P[i].nb.some(j=>owner[j]===en))recruit(i,recruitable(i)*0.22*m,x);if(owner[C[x].cap]===x)recruit(C[x].cap,recruitable(C[x].cap)*0.22*m,x)}
  if(a===me||b===me){const o=a===me?b:a;game.allies=game.allies.filter(x=>x!==o);game.rel[o]=Math.min(game.rel[o],-50);news('ulusal',a===me?`⚔ ${cname(b)} ülkesine savaş açıldı!`:`🔥 ${cname(a)} ülkemize savaş açtı!`,a!==me);
   if(a===me||b===me){const foe=a===me?b:a;for(const v of vassalsOf(me))if(v!==foe&&!atWar(v,foe)){game.wars.push([v,foe,game.turn])}}
   if(b===me){for(const al of game.allies.slice()){if(al!==a&&!atWar(al,a)&&Math.random()<0.75){game.wars.push([al,a,game.turn]);news('ulusal',`🤝 Müttefikimiz ${cname(al)}, ${cname(a)} ülkesine karşı yanımızda savaşa girdi!`)}}}toast(a===me?'⚔ Savaş ilan edildi':`🔥 ${cname(a)} savaş açtı!`)}
@@ -591,7 +592,7 @@ function peaceUI(c){const ad=adv(game.me,c),gold=Math.round(incomeOf(c)*4);
  <div class="acts col"><button onclick="tryPeace(${c},'white')">🤍 Beyaz barış (iller geri verilir)</button>
  <button onclick="tryPeace(${c},'keep')">🚩 İşgal ettiğim iller bende kalsın</button>
  <button onclick="tryPeace(${c},'gold')">💰 İller + ${fmt(gold)} altın tazminat</button></div></div>`}
-function tryPeace(c,type){const ad=adv(game.me,c),need={white:-0.15,keep:0.12,gold:0.3}[type];const len=game.turn-(game.wars.find(w=>(w[0]===c||w[1]===c)&&(w[0]===game.me||w[1]===game.me))||[0,0,game.turn])[2];
+function tryPeace(c,type){const ad=peaceAdv(game.me,c),need={white:-0.15,keep:0.12,gold:0.3}[type];const len=game.turn-(game.wars.find(w=>(w[0]===c||w[1]===c)&&(w[0]===game.me||w[1]===game.me))||[0,0,game.turn])[2];
  if(!useDP(2))return;const ok=type==='white'?(ad>=need||(len>=40&&ad>=-0.4)):ad>=need;
  if(!ok){toast(`✋ ${cname(c)} bu şartları reddetti`);game.rel[c]-=2;return}
  makePeace(game.me,c,type==='gold'?'keep':type,type==='gold'?Math.round(incomeOf(c)*4):0);if(dirty){buildBorders();paint();dirty=false}updHud();refreshBar();req()}
@@ -768,6 +769,11 @@ function rcdOn(p){return !!(game&&game.rcd&&game.rcd[p]===game.turn)}
 function fleetTo(f,t){f.after=-1;if(t.prov===undefined)return orderFleet(f,t);const v=t.prov;if(PCELL[v].length&&orderFleet(f,{prov:v}))return true;
  const seen=new Uint8Array(N),q=[v];seen[v]=1;let tries=0;for(let h=0;h<q.length&&h<4000;h++){const u=q[h];if(u!==v&&PCELL[u].length&&canEnter(f.o,u)&&findPath(f.o,u,v)){if(orderFleet(f,{prov:u})){f.after=v;return true}if(++tries>8)break}
   for(const j of P[u].nb)if(!seen[j]&&canEnter(f.o,j)){seen[j]=1;q.push(j)}}return false}
+
+// peace evaluation used for player offers: territory first, then capital, war length and armies
+function peaceAdv(a,b){let ad=adv(a,b);const pa=armyPower(a),pb=armyPower(b);ad-=0.5*(pa-pb)/(pa+pb+1);ad+=0.25*(pa-pb)/(pa+pb+1);
+ if(owner[C[b].cap]===a)ad+=0.2;if(owner[C[a].cap]===b)ad-=0.2;const w=game.wars.find(x=>(x[0]===a&&x[1]===b)||(x[0]===b&&x[1]===a));
+ const len=w?game.turn-w[2]:0,td=taken(a,b)-taken(b,a);if(td>0)ad+=Math.min(0.2,len/120);else if(td<0)ad-=Math.min(0.2,len/120);return ad}
 
 // ===== BUILDINGS / ECONOMY / TECH / DISEASE / NAVY =====
 const GS=180,UPKEEP=0.01;
@@ -1045,9 +1051,9 @@ function cityList(c,s){cityC=c;if(s)citySort=s;closeSide();const p=$('cityP');p.
 // ---- air strikes ----
 const airRange=i=>Math.round((70+40*lv(i,B.AIR))*({med:0.35,gun:0.5,ww1:0.7,ww2:0.9}[ERA]||1));
 function wrapD(a,b){let dx=Math.abs(P[a].x-P[b].x);dx=Math.min(dx,W-dx);return Math.hypot(dx,P[a].y-P[b].y)}
-function airStrike(base,tgt,o){if(o===game.me||owner[tgt]===game.me)sfx('air');const L=lv(base,B.AIR);if(!L)return false;game.airCd[base]=game.turn+2;const A=tl(o,'air');const pw=6000*(isMed(game.scn)?(ERA==='gun'?0.2:0.12):1)*L*Q[o]*(1+(A>=1?0.15:0)+(A>=2?0.3:0)+(A>=5?0.3:0)+(A>=6?0.4:0))*(o===game.me?1:MULT[game.diff])*(1-0.25*lv(tgt,B.AD)*(A>=3?0.5:1));if(A>=4)game.airCd[base]=game.turn+1;game.supp[tgt]=game.turn+1;FXA={a:base,b:tgt,t0:performance.now()};ANIM.push({k:'air',a:base,b:tgt,t0:performance.now(),d:2600,o});fxLoop();
+function airStrike(base,tgt,o){if(o===game.me||owner[tgt]===game.me)sfx('air');const L=lv(base,B.AIR);if(!L)return false;game.airCd[base]=game.turn+2;const A=tl(o,'air');const pw=6000*(isMed(game.scn)?(ERA==='gun'?0.2:0.12):1)*L*Q[o]*(1+(A>=1?0.15:0)+(A>=2?0.3:0)+(A>=5?0.3:0)+(A>=6?0.4:0))*(o===game.me?1:MULT[game.diff])*(1-0.25*lv(tgt,B.AD)*(A>=3?0.5:1));if(A>=4)game.airCd[base]=game.turn+1;game.supp[tgt]=game.turn+1;FXA={a:base,b:tgt,t0:performance.now()};ANIM.push({k:'air',a:base,b:tgt,t0:performance.now(),d:3600,o});fxLoop();
  const here=armies.filter(a=>a.p===tgt&&atWar(o,a.o));let killed=0;
- if(here.length){let left=pw;for(const a of here){const k=Math.min(a.n,Math.round(left/Math.max(0.3,Q[a.o])));a.n-=k;killed+=k;left-=k*Q[a.o];if(a.n<=0)armies=armies.filter(x=>x!==a);if(left<=0)break}}
+ if(here.length){const tot=here.reduce((s,a)=>s+a.n,0),share=Math.min(0.22,(0.05+0.025*L)*(1+0.08*A))*(1-0.25*lv(tgt,B.AD)*(A>=3?0.5:1))*(isMed(game.scn)?0.4:1);let left=Math.max(pw,tot*share*1.0)*Math.max(0.3,Q[here[0].o]);for(const a of here){const k=Math.min(a.n,Math.round(left/Math.max(0.3,Q[a.o])));a.n-=k;killed+=k;left-=k*Q[a.o];if(a.n<=0)armies=armies.filter(x=>x!==a);if(left<=0)break}}
  else{ecoP[tgt]*=0.98;hap[tgt]=Math.max(0,hap[tgt]-6);pop[tgt]=Math.max(10,pop[tgt]-pw*0.05)}
  if(o===game.me||owner[tgt]===game.me)bev(tgt,`✈ ${cname(o)} hava saldırısı → ${P[tgt].n}: ${killed?kfmt(killed)+' asker öldü':'şehir bombalandı, ekonomi zarar gördü'}${shipHit(tgt,o,'air')}`,o===game.me,o);return true}
 function aiAir(c){const en=enemiesOf(c);if(!en.length)return;for(const b of provsOf(c)){if(!has(b,B.AIR)||(game.airCd[b]||0)>game.turn||Math.random()>0.6)continue;const R=airRange(b);let best=null,bn=0;
@@ -1211,7 +1217,8 @@ function makeVassal(v,o){game.vas[v]=o;game.wars=game.wars.filter(w=>!((w[0]===v
 let STARCUT=null;function stars(i){if(!STARCUT){const v=P.map((p,k)=>provValue(k)).sort((a,b)=>a-b);STARCUT=[0.35,0.6,0.8,0.93].map(q=>v[Math.floor(v.length*q)])}const x=provValue(i);let s=1;for(const c of STARCUT)if(x>=c)s++;return s}
 function coreStars(c){let s=0;for(let i=0;i<N;i++)if(CORE[i]===c||(C[c].rebel&&owner[i]===c))s+=stars(i);return Math.max(5,s)}
 function warScore(a,b){let oa=0,ob=0;for(let i=0;i<N;i++){if(owner[i]===a&&CORE[i]===b)oa+=stars(i);else if(owner[i]===b&&CORE[i]===a)ob+=stars(i)}
- const base=Math.min(coreStars(a),coreStars(b));const pa=armyPower(a),pb=armyPower(b);return Math.max(-100,Math.min(100,Math.round((oa-ob)/base*120+(pa-pb)/(pa+pb+1)*25)))}
+ const base=Math.min(coreStars(a),coreStars(b));const pa=armyPower(a),pb=armyPower(b);const w=game.wars.find(x=>(x[0]===a&&x[1]===b)||(x[0]===b&&x[1]===a)),len=w?game.turn-w[2]:0,ex=Math.min(20,len/4)*Math.sign(oa-ob);
+ return Math.max(-100,Math.min(100,Math.round((oa-ob)/base*130+(pa-pb)/(pa+pb+1)*12+(owner[C[b].cap]===a?20:0)-(owner[C[a].cap]===b?20:0)+ex)))}
 function warsUI(){closeSide();const p=$('warsP');p.style.display='block';const me=game.me;const en=enemiesOf(me);
  p.innerHTML=`<div class="np-h"><b>⚔ Savaşlar</b><button class="x2" onclick="closeSide()">✕</button></div>`+(en.length?en.map(c=>{const ws=warScore(me,c),w=game.wars.find(x=>(x[0]===c||x[1]===c)&&(x[0]===me||x[1]===me));
   return `<div class="wr" onclick="negotiate(${c})">${fimg(me)} <b>${cname(me)}</b> – ${fimg(c)} <b>${cname(c)}</b><em style="color:${ws>0?'#9fc48a':ws<0?'#e0806a':'#d8b56a'}">${ws>0?'+':''}${ws}%</em><span>${game.turn-w[2]} tur · müzakere için dokun</span></div>`}).join(''):'<div class="ni" style="opacity:.6">Şu an savaşta değilsin.</div>')}
@@ -1220,7 +1227,7 @@ function negotiate(c){closeSide();const me=game.me,ws=warScore(me,c),tot=coreSta
  const occ=[];for(let i=0;i<N;i++)if(owner[i]===me&&CORE[i]===c)occ.push(i);const lost=[];for(let i=0;i<N;i++)if(owner[i]===c&&CORE[i]===me)lost.push(i);
  NEG={c,ws,k,occ,lost,sel:new Set(occ),ret:new Set(lost),vas:false,gold:false};const p=$('negP');p.style.display='block';negDraw()}
 function negCost(){const n=NEG;let s=0;for(const i of n.sel)s+=stars(i)*n.k;for(const i of n.ret)s+=stars(i)*n.k*0.5;if(n.vas)s+=60;if(n.gold)s+=15;return Math.round(s)}
-function negDraw(){const n=NEG,c=n.c,me=game.me,cost=negCost(),ok=cost<=Math.max(0,n.ws)||(cost===0&&n.ws>-30);const capN=P[C[c].cap].n;
+function negDraw(){const n=NEG,c=n.c,me=game.me,cost=negCost(),ok=cost<=Math.max(0,n.ws)+5||(cost===0&&n.ws>-30);const capN=P[C[c].cap].n;
  const row=(i,set,f)=>`<label class="ng"><input type="checkbox" ${set.has(i)?'checked':''} onchange="NEG.${f}.has(${i})?NEG.${f}.delete(${i}):NEG.${f}.add(${i});negDraw()"> ${P[i].n} <span>${'★'.repeat(stars(i))}</span></label>`;
  $('negP').innerHTML=`<div class="np-h"><b>📜 Barış Müzakeresi</b><button class="x2" onclick="closeSide()">✕</button></div><div style="padding:8px 14px">
  <div class="ab">${fimg(me,16)} ${cname(me)} – ${fimg(c,16)} ${cname(c)} · Savaş skoru: <b style="color:${n.ws>0?'#9fc48a':'#e0806a'}">${n.ws>0?'+':''}${n.ws}%</b></div>
@@ -1232,7 +1239,7 @@ function negDraw(){const n=NEG,c=n.c,me=game.me,cost=negCost(),ok=cost<=Math.max
  <div class="pbar" style="margin-top:8px"><div style="width:${Math.min(100,cost/Math.max(1,n.ws)*100)}%;background:${ok?'#7f9f5e':'#a5503c'}"></div></div>
  <div style="font-size:13px;margin:4px 0 8px">Talep: <b>${cost}</b> puan · Savaş skorun: <b>${Math.max(0,n.ws)}</b> puan ${ok?'— <span style="color:#9fc48a">kabul edilebilir</span>':'— <span style="color:#e0806a">bu şartlar reddedilir</span>'}</div>
  <button class="b-green" onclick="negSend()">📜 Teklif et (2📜)</button> ${n.ws<0?`<button class="b-red" onclick="negSurrender()">🏳 Teslim ol (onların şartları)</button>`:''}</div>`}
-function negSend(){if(!useDP(2))return;const n=NEG,c=n.c,me=game.me,cost=negCost();const ok=cost<=Math.max(0,n.ws)||(cost===0&&n.ws>-30);
+function negSend(){if(!useDP(2))return;const n=NEG,c=n.c,me=game.me,cost=negCost();const ok=cost<=Math.max(0,n.ws)+5||(cost===0&&n.ws>-30);
  if(!ok){toast(`✋ ${cname(c)} bu şartları reddetti`);game.rel[c]=(game.rel[c]|0)-2;return}
  for(let i=0;i<N;i++){if(owner[i]===me&&CORE[i]===c&&!n.sel.has(i))owner[i]=c;if(owner[i]===c&&CORE[i]===me&&n.ret.has(i))owner[i]=me}
  let gold=0;if(n.gold){gold=Math.round(incomeOf(c)*10);game.gold+=gold}endWar(me,c);if(n.vas)makeVassal(c,me);
@@ -3684,11 +3691,11 @@ function resUI(){const me=game.me,T=resTotals(me),X=XT();let tot=0;let h=inTabs(
  h+=`<div class="row"><span><b>Toplam kaynak geliri</b></span><b style="color:#9fc48a">+${fmt(tot)} 💰/<span>tur</span></b></div><button onclick="closeSide();setMode&&setMode('res')">🗺 Kaynak haritasını aç</button></div>`;$('sub').innerHTML=h}
 // ---------- economy balance ----------
 function ecoBal(){const X=XT();if(!X.e0||X.e0.length!==N){X.e0=Array.from(ecoP,x=>Math.round(x*10)/10)}const me=game.me,ind=tl(me,'ind');
- for(let i=0;i<N;i++){const cap=Math.max(0.05,X.e0[i])*1.8;if(owner[i]===me&&ind)ecoP[i]*=1+0.00025*ind;if(ecoP[i]>cap)ecoP[i]=cap+(ecoP[i]-cap)*0.96}}
+ for(let i=0;i<N;i++){const cap=Math.max(0.05,X.e0[i])*2.6;if(owner[i]===me&&ind)ecoP[i]*=1+0.00025*ind;if(ecoP[i]>cap)ecoP[i]=cap+(ecoP[i]-cap)*0.98}}
 // small countries played by a person get a modest boost so they stay playable (modern/ww maps; medieval has its own)
 let WKB={t:-9,s:null};function weakBoost(c){if(!game||isMed(game.scn)||typeof ECO==='undefined')return 1;if(WKB.t!==game.turn||!WKB.s){WKB={t:game.turn,s:C.map((x,i)=>owner.includes(i)&&!x.tribal?ECO[i]||0:0).filter(v=>v>0).sort((a,b)=>b-a)}}const ref=WKB.s[Math.min(19,WKB.s.length-1)]||1,e=Math.max(1,ECO[c]||1);return Math.max(1,Math.min(2,Math.pow(ref/e,0.3)))}
 function grossAdj(c,g){if(!game||c!==game.me)return g;const X=XT();return weakBoost(c)*g*(1+0.03*tl(c,'ind')+0.015*Math.min(8,(X.sp&&X.sp.sat)||0)+(X.uni&&X.uni.m?0.02*Math.min(8,X.uni.m.filter(x=>owner.includes(x)).length):0))}
-function ecoAdjF(c){const e=ECO[c];if(!game||c!==game.me||!game.ext)return e;const X=game.ext;if(!X.E0){X.E0=Math.max(1,e);return e}return e>X.E0?X.E0*Math.pow(e/X.E0,0.65):e}
+function ecoAdjF(c){const e=ECO[c];if(!game||c!==game.me||!game.ext)return e;const X=game.ext;if(!X.E0){X.E0=Math.max(1,e);return e}return e>X.E0?X.E0*Math.pow(e/X.E0,0.82):e}
 // ---------- epidemics & cures ----------
 function CU(){const X=XT();return X.cure||(X.cure={q:0,m:0,h:0,v:{},imm:{}})}
 function cureF(o,kind,i,id){if(!game||o!==game.me)return 1;const c=CU(),T=game.turn;let f=1;
@@ -3962,7 +3969,7 @@ function preAnim(g,A,u,x0,y0,x1,y1,ang,S,col,ux,uy,px,py,now){
    if(gun){if(v<0.15)dust(g,sx,sy,10*S,v/0.15,'220,220,210');g.fillStyle='#1b1712';g.beginPath();g.arc(hx,hy,2.2*S,0,7);g.fill()}
    else{const v2=Math.min(1,v+0.04),hx2=sx+(tx-sx)*v2,hy2=sy+(ty-sy)*v2-Math.sin(v2*Math.PI)*Math.hypot(tx-sx,ty-sy)*0.25;const a2=Math.atan2(hy2-hy,hx2-hx);g.strokeStyle='#2a1d12';g.lineWidth=1.1;g.beginPath();g.moveTo(hx-Math.cos(a2)*6*S,hy-Math.sin(a2)*6*S);g.lineTo(hx,hy);g.stroke()}}
   for(let q=0;q<5;q++){const t0=(gun?0.55:0.6)+q*0.06;dust(g,x1+Math.cos(q*2.3)*12*S,y1+Math.sin(q*1.7)*8*S,(gun?18:10)*S,(u-t0)/0.25,gun?'90,85,80':'150,125,90')}}}
-function drawAnims(g,ox,oy,z,now){const PRE=ERA==='med'||ERA==='gun';const S=Math.max(0.7,Math.min(1.6,z/6));
+function drawAnims(g,ox,oy,z,now){const PRE=ERA==='med'||ERA==='gun';const S=Math.max(1.25,Math.min(2.4,z/3.5));
  for(const A of ANIM){const u=(now-A.t0)/A.d;if(u<0)continue;const [x0,y0,x1,y1]=animPts(A.a,A.b,ox,oy,z),ang=Math.atan2(y1-y0,x1-x0),dist=Math.hypot(x1-x0,y1-y0),col=CC[A.o]?`rgb(${CC[A.o].map(v=>Math.round(v*0.55+70)).join(',')})`:'#8a8a7a';
   const ux=(x1-x0)/(dist||1),uy=(y1-y0)/(dist||1),px=-uy,py=ux;
   if(PRE){preAnim(g,A,u,x0,y0,x1,y1,ang,S,col,ux,uy,px,py,now);continue}
@@ -4578,7 +4585,7 @@ function airUI(){const me=game.me,bs=airBases(me);const info='<div class="winfo"
 function doAir(t){const me=game.me;mode='play';if(!atWar(me,owner[t])){toast('⛔ Sadece savaştığın ülkeyi bombalayabilirsin');refreshBar();return}const bs=airBases(me);
  const b=bs.filter(x=>(game.airCd[x]||0)<=game.turn&&wrapD(x,t)<=airRange(x)).sort((a,c)=>wrapD(a,t)-wrapD(c,t))[0];
  if(b===undefined){toast(!bs.length?'⛔ Hava üssün yok':bs.some(x=>wrapD(x,t)<=airRange(x))?'✈ Menzildeki uçaklar hazırlanıyor':'⛔ Menzil dışında');refreshBar();return}
- const cost=2500*lv(b,B.AIR);if(game.gold<cost){toast('💰 Yetersiz altın');return}if(game.mp<1){toast('🏃 Yetersiz hareket puanı');return}game.gold-=cost;game.mp-=1;BLOG=[];airStrike(b,t,me);updHud();refreshBar();playReplay()}
+ const cost=2500*lv(b,B.AIR);if(game.gold<cost){toast('💰 Yetersiz altın');return}if(game.mp<1){toast('🏃 Yetersiz hareket puanı');return}game.gold-=cost;game.mp-=1;BLOG=[];airStrike(b,t,me);updHud();refreshBar();animFocus(b,t);setTimeout(playReplay,3000)}
 // missiles: one national stock, fired from the nearest silo in range
 function missileUI(){const me=game.me,sl=misSilos(me),q=game.mprod.length;const info='<div class="winfo"><b>Füze</b> · Çok uzun menzil · Binaları yıkar, ekonomiyi %10 vurur · Limandaki gemileri batırabilir · Halk direnişini 3 tur yarıya indirir · Askerlere az etki · Tek kullanımlık</div>';
  if(!sl.length&&game.missiles<1){$('sub').innerHTML=`<div class="box">${info}🚀 Füze silon yok. Bir şehirde 🏗 İnşa → Füze Silosu kur.</div>`;return}
@@ -4733,6 +4740,9 @@ DICT.push(
 ['Saldır','Attack','هجوم','攻击','Attacca','Atacar','Angreifen','Attaquer','Атаковать']);
 
 
+// frame the camera so the whole flight (base → target) is on screen
+function animFocus(a,b){let ax=P[a].x,bx=P[b].x;if(bx-ax>W/2)bx-=W;if(ax-bx>W/2)bx+=W;const d=Math.max(20,Math.hypot(bx-ax,P[b].y-P[a].y));cam.x=(ax+bx)/2;cam.y=(P[a].y+P[b].y)/2;cam.z=Math.max(1.6,Math.min(9,Math.min(VW,VH)*0.62/d));if(cam.x<0)cam.x+=W;req()}
+
 // ===== WAR ALERTS (v1.6): on-screen warning when someone declares war on you or takes your cities =====
 const WAL={
  tr:{war:'SAVAŞ! {a} sana savaş açtı',from:'{d} yönünden saldırı',border:'Tehlikedeki sınır şehirlerin',army:'Düşman ordusu',lost:'Şehir kaybettin!',took:'{a} ele geçirdi',front:'{d} cephesi',show:'📍 Göster',more:'+{n} şehir daha',dirs:['Doğu','Kuzeydoğu','Kuzey','Kuzeybatı','Batı','Güneybatı','Güney','Güneydoğu'],sea:'Denizden / uzaktan'},
@@ -4860,6 +4870,42 @@ function selFit(i){const m=MAPMODE;if(owner[i]!==game.me)return false;if(m==='bl
 {const _sr=selRect;selRect=function(){_sr.apply(this,arguments);let cut=0;for(const i of [...SEL])if(!selFit(i)){SEL.delete(i);cut++}if(cut){paint();req();selUI()}}}
 {const _st=selToggle;selToggle=function(v){if(!SEL.has(v)&&owner[v]===game.me&&!selFit(v)){toast(MAPMODE==='bld'?`⛔ ${P[v].n}: ${BINFO[B[BLDK]].n} burada yapılamaz${BLDK==='PORT'?' (kıyı şehri değil)':''} veya zaten en üst seviyede`:MAPMODE==='army'?'⛔ Bu şehirde şu an asker yetiştirilemez':'⛔ Bu şehir için gerekmiyor');return}return _st(v)}}
 
+// ===== v1.8: capitals & big cities on the map, capitulation, attack gong, real exit =====
+// ---------- capitals (gold star) and big cities (most soldiers) ----------
+let CMK={k:'',caps:[],big:[]};
+function cityMarks(){const k=game.turn+'|'+C.length+'|'+(typeof MP!=='undefined'&&MP.sig||'');if(CMK.k===k)return CMK;const caps=[],big=[],by={};
+ for(let i=0;i<N;i++){const o=owner[i];if(o===undefined||o<0||!C[o]||C[o].tribal)continue;(by[o]=by[o]||[]).push(i)}
+ for(const o in by){const c=+o,L=by[o],cap=C[c].cap;if(owner[cap]===c)caps.push(cap);if(L.length<4)continue;
+  const n=Math.min(3,Math.max(1,Math.round(L.length/10)));const s=L.filter(i=>i!==cap).sort((a,b)=>pop[b]-pop[a]).slice(0,n);for(const i of s)if(pop[i]>0)big.push(i)}
+ CMK={k,caps,big};return CMK}
+function starPath(g,x,y,r){g.beginPath();for(let j=0;j<10;j++){const a=-Math.PI/2+j*Math.PI/5,rr=j%2?r*0.45:r;g.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr)}g.closePath()}
+function drawCityMarks(z,ox,oy){if(!game||z<0.9)return;const M=cityMarks(),g=cx;const r=Math.max(4.5,Math.min(11,z*1.5));
+ const each=(i,f)=>{for(let k=-1;k<=1;k++){const sx=ox+(P[i].x+k*W)*z,sy=oy+P[i].y*z;if(sx>-20&&sx<VW+20&&sy>-20&&sy<VH+20)f(sx,sy)}};
+ if(z>=2.2){g.lineWidth=1.6;for(const i of M.big)each(i,(x,y)=>{const q=r*0.62;g.fillStyle='rgba(245,240,228,.95)';g.strokeStyle='rgba(20,16,10,.85)';g.beginPath();g.moveTo(x,y-q);g.lineTo(x+q,y);g.lineTo(x,y+q);g.lineTo(x-q,y);g.closePath();g.fill();g.stroke();g.fillStyle='rgba(20,16,10,.9)';g.beginPath();g.arc(x,y,q*0.32,0,7);g.fill()})}
+ g.lineWidth=1.8;for(const i of M.caps)each(i,(x,y)=>{starPath(g,x,y,r);g.fillStyle=owner[i]===game.me?'#ffd34d':'#f2c84b';g.strokeStyle='rgba(30,20,6,.9)';g.fill();g.stroke()})}
+{const _dA=drawArmies;drawArmies=function(z,ox,oy){try{drawCityMarks(z,ox,oy)}catch(e){}return _dA(z,ox,oy)}}
+
+// ---------- capitulation: a beaten country that lost its capital and almost all land surrenders the rest ----------
+function capitulations(){for(const w of game.wars.slice()){for(const [x,y] of [[w[0],w[1]],[w[1],w[0]]]){if(!owner.includes(x)||!owner.includes(y))continue;
+  if(x===game.me||(typeof isHum==='function'&&isHum(x)))continue;const cap=C[x].cap;if(owner[cap]===x)continue;
+  let core=0,left=0;for(let i=0;i<N;i++){if(CORE[i]===x)core++;if(owner[i]===x)left++}if(!left||left>Math.max(2,core*0.2))continue;
+  if(armyPower(x)>armyPower(y)*0.35)continue;
+  for(let i=0;i<N;i++)if(owner[i]===x)owner[i]=y;armies=armies.filter(a=>a.o!==x);fleets=fleets.filter(f=>f.o!==x);game.wars=game.wars.filter(v=>v[0]!==x&&v[1]!==x);
+  news('ulusal',`🏳 ${cname(x)} teslim oldu — kalan topraklar ${cname(y)} yönetimine geçti.`);if(y===game.me||x===game.me)toast(`🏳 ${cname(x)} teslim oldu · kalan şehirleri artık senin`);dirty=true;break}}}
+{const _ap=aiPeace;aiPeace=function(onlyMe){const r=_ap.apply(this,arguments);try{capitulations()}catch(e){console.warn('capitulation',e)}return r}}
+
+// ---------- gong when someone attacks you ----------
+let GONGT=0;
+function gong(){if(!SET.sound)return;const now=Date.now();if(now-GONGT<4000)return;GONGT=now;try{const A=window._gongAC||(window._gongAC=new (window.AudioContext||window.webkitAudioContext)());if(A.state==='suspended')A.resume();
+ const t=A.currentTime,out=A.createGain();out.gain.value=0.5;out.connect(A.destination);
+ for(const [f,v,d] of [[98,0.55,4.2],[196,0.32,3.2],[262,0.18,2.4],[392,0.12,1.6],[523,0.07,1.1]]){const o=A.createOscillator(),gn=A.createGain();o.type='sine';o.frequency.setValueAtTime(f*1.012,t);o.frequency.exponentialRampToValueAtTime(f,t+0.4);gn.gain.setValueAtTime(0.0001,t);gn.gain.exponentialRampToValueAtTime(v,t+0.012);gn.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(gn);gn.connect(out);o.start(t);o.stop(t+d+0.05)}
+ const n=A.createBufferSource(),b=A.createBuffer(1,A.sampleRate*0.08,A.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);n.buffer=b;const ng=A.createGain();ng.gain.value=0.25;n.connect(ng);ng.connect(out);n.start(t)}catch(e){}}
+{const _ws=wwShow;wwShow=function(ic,title,body,pt,c,war){gong();return _ws.apply(this,arguments)}}
+
+// ---------- exit: really leave the game ----------
+{const _ex=exitApp;exitApp=function(){if(window.AtlasApp&&AtlasApp.exit)return _ex();try{if(game&&!(typeof MP!=='undefined'&&MP.on))saveGame(true);if(typeof MP!=='undefined'&&MP.on)mpLeave()}catch(e){}
+ try{window.close()}catch(e){}setTimeout(()=>{if(/(^|\.)tugrion\.com$/.test(location.hostname)){location.replace('/')}else{game=null;showMenu(`<h2>👋 Görüşmek üzere</h2><div class="sub">Oyun kaydedildi. Bu sekmeyi kapatabilirsin.</div><button class="mb sec" onclick="mainMenu()">↺ Tekrar oyna</button>`)}},250)}}
+
 const AY=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 
 
@@ -4874,7 +4920,7 @@ function dateStr(t){const G=(typeof game!=='undefined'&&game)||{};const d=new Da
 const DIFF=['Kolay','Normal','Zor','Çok Zor'];
 function showMenu(html){mode='menu';if(!game)setTimeout(startTour,30);else stopTour();if($('selBar'))$('selBar').style.display='none';closeNews();closeEco();$('modeRank').style.display='none';$('log').style.display='none';$('menu').style.display='flex';$('mp').innerHTML=html;hud.style.display='none';$('pick').style.display='none';$('setup').style.display='none';card.style.display='none';0}
 function hideMenu(){$('menu').style.display='none';0}
-function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.7.2</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
+function mainMenu(){selC=-1;sel=-1;if(!game&&ERA!=='mod')setEra('mod');if(!game&&NAMESCN!=='2027')provNames('2027');paint();showMenu(`<h1>ATLAS DOMINION</h1><div class="sub" style="opacity:.55;font-size:11px;margin-top:-6px">v1.8.0</div><div class="sub">Strateji · Tur Tabanlı · 1200 – 2027</div>
  ${!game&&LS.get(LKEY,null)&&saves().some(s=>s.id===LS.get(LKEY,null))?'<button class="mb" onclick="continueGame()">⏯ Kaldığın yerden devam et</button>':''}<button class="mb ${!game&&LS.get(LKEY,null)?'sec':''}" onclick="gameMenu()">▶ Oyun</button><button class="mb sec" onclick="mpMenu()">👥 Arkadaşlarla Oyna</button>${typeof fsBtn==='function'?fsBtn():''}<button class="mb sec" onclick="settingsMenu()">⚙ Ayarlar</button>
  <button class="mb sec" onclick="leadersMenu()">👑 Liderler</button><button class="mb sec" onclick="helpMenu()">📖 Nasıl Oynanır</button><button class="mb sec" onclick="aboutMenu()">ℹ Hakkında</button>${game?'<button class="mb sec" onclick="resume()">↩ Oyuna Dön</button>':''}<button class="mb red" onclick="exitApp()">⏻ Çıkış</button>`)}
 function exitApp(){try{if(game&&!(typeof MP!=='undefined'&&MP.on))saveGame(true);if(typeof MP!=='undefined'&&MP.on)mpLeave()}catch(e){}if(window.AtlasApp&&AtlasApp.exit){AtlasApp.exit();return}try{if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App){Capacitor.Plugins.App.exitApp();return}}catch(e){}try{window.close()}catch(e){}setTimeout(()=>{game=null;showMenu(`<h2>👋 Görüşmek üzere</h2><div class="sub">Oyun kaydedildi. Kapatmak için bu sekmeyi kapatabilirsin.</div><button class="mb sec" onclick="mainMenu()">← Ana menü</button>`)},300)}
