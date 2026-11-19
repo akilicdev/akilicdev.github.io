@@ -8,6 +8,12 @@
 <meta name="theme-color" content="#2a110c">
 <title>Çiğ Köfte Master</title>
 <link rel="icon" href="TemplateData/icon.png">
+<link rel="manifest" href="TemplateData/manifest.webmanifest">
+<link rel="apple-touch-icon" href="TemplateData/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Çiğ Köfte">
 <style>
 html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#2a110c;touch-action:none;-webkit-user-select:none;user-select:none}
 #unity-canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#2a110c;outline:none}
@@ -25,6 +31,8 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#
 #ck-back{position:fixed;left:10px;top:8px;z-index:6;color:#fde8cf;text-decoration:none;font:600 13px system-ui,sans-serif;background:rgba(0,0,0,.35);padding:6px 10px;border-radius:10px;opacity:.75}
 #ck-back:hover{opacity:1}
 #ck-err{display:none;max-width:560px;text-align:center;line-height:1.5}
+#ck-ios{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:8;display:none;align-items:center;gap:12px;max-width:92vw;background:rgba(20,8,5,.92);color:#fde8cf;font:600 14px system-ui,sans-serif;padding:10px 12px 10px 16px;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+#ck-ios button{border:0;border-radius:10px;background:#ffc24a;color:#2a110c;font:700 14px system-ui,sans-serif;padding:8px 14px;cursor:pointer}
 </style>
 
 </head>
@@ -38,6 +46,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#
   <img class="masc" src="TemplateData/mascot.png" alt="">
 </div>
 <div id="ck-rotate"><div class="ph"></div><div>Telefonu yan çevirin<br><small>Please rotate your device</small></div></div>
+<div id="ck-ios" role="dialog" aria-live="polite"><span>Tam ekran için: Safari'de <b>Paylaş ⬆</b> → <b>Ana Ekrana Ekle</b>, sonra oyunu ana ekrandaki simgeden açın.</span><button id="ck-ios-ok" type="button">Tamam</button></div>
 <a id="ck-back" href="/games/cig-kofte-master.html" aria-label="Tugrion">&#8592; tugrion.com</a>
 <script>
 (function(){
@@ -57,6 +66,28 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#
     devicePixelRatio: mobile ? Math.min(window.devicePixelRatio || 1, 2) : (window.devicePixelRatio || 1)
   };
   canvas.addEventListener("contextmenu",function(e){e.preventDefault();});
+  // --- Telefonda TAM EKRAN: ilk dokunusta adres cubugu ve alt cubuk gizlenir, ekran yatay kilitlenir
+  var ios=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  var standalone=(window.navigator.standalone===true)||(window.matchMedia&&(matchMedia("(display-mode: fullscreen)").matches||matchMedia("(display-mode: standalone)").matches));
+  var de=document.documentElement;
+  var fsReq=de.requestFullscreen||de.webkitRequestFullscreen;
+  function isFull(){return !!(document.fullscreenElement||document.webkitFullscreenElement);}
+  function goFull(){
+    if(!mobile||standalone||isFull()||!fsReq)return;
+    try{
+      var p=fsReq.call(de,{navigationUI:"hide"});
+      var lock=function(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock("landscape")["catch"](function(){});}catch(e){}};
+      if(p&&p.then)p.then(lock)["catch"](function(){});else lock();
+    }catch(e){}
+  }
+  document.addEventListener("touchend",goFull,true);
+  document.addEventListener("pointerup",goFull,true);
+  // iPhone Safari tam ekrani desteklemiyor: bir kez "Ana Ekrana Ekle" ipucu goster
+  if(ios&&!standalone&&!fsReq){
+    var seen=false;try{seen=localStorage.getItem("ck_ios_hint")==="1";}catch(e){}
+    if(!seen){var h=document.getElementById("ck-ios");h.style.display="flex";
+      document.getElementById("ck-ios-ok").addEventListener("click",function(){h.style.display="none";try{localStorage.setItem("ck_ios_hint","1");}catch(e){}});}
+  }
   window.addEventListener("keydown",function(e){ if([32,37,38,39,40,9].indexOf(e.keyCode)>=0) e.preventDefault(); },{passive:false});
   function fail(){ document.getElementById("ck-msg").style.display="none"; document.getElementById("ck-err").style.display="block"; }
   var s=document.createElement("script");
