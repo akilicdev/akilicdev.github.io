@@ -1,27 +1,76 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; style-src 'unsafe-inline'; script-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title>Çiğ Köfte Master — Tugrion</title>
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#2a110c">
+<title>Çiğ Köfte Master</title>
+<link rel="icon" href="TemplateData/icon.png">
 <style>
-html,body{margin:0;height:100%;background:radial-gradient(circle at 50% 40%,#5a2416 0,#2a110c 70%);color:#fde8cf;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;box-sizing:border-box}
-img{width:120px;height:120px;border-radius:28px}
-h1{margin:6px 0 0;font-size:28px}
-p{margin:0;max-width:520px;line-height:1.5;opacity:.9}
-a{color:#2a110c;background:#ffc24a;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;margin-top:8px}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#2a110c;touch-action:none;-webkit-user-select:none;user-select:none}
+#unity-canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#2a110c;outline:none}
+#ck-loader{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:radial-gradient(circle at 50% 40%,#5a2416 0,#2a110c 70%);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#fde8cf;z-index:5;transition:opacity .4s}
+#ck-loader img.logo{width:min(70vw,620px);height:auto;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))}
+#ck-loader img.masc{position:absolute;left:6vw;bottom:6vh;width:min(18vw,150px);animation:bob 1.2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-10px)}}
+#ck-bar{width:min(70vw,520px);height:18px;border-radius:12px;background:rgba(255,255,255,.15);overflow:hidden}
+#ck-fill{height:100%;width:2%;border-radius:12px;background:linear-gradient(90deg,#ffd45a,#ff8a2a);transition:width .2s}
+#ck-msg{font-size:15px;opacity:.85;text-align:center;padding:0 16px}
+#ck-rotate{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#2a110c;color:#fde8cf;font:600 18px system-ui,sans-serif;z-index:9;text-align:center;padding:20px}
+#ck-rotate .ph{width:58px;height:96px;border:5px solid #fde8cf;border-radius:12px;animation:rot 1.6s ease-in-out infinite}
+@keyframes rot{50%{transform:rotate(-90deg)}}
+@media (orientation:portrait) and (max-width:900px){#ck-rotate{display:flex}}
+#ck-back{position:fixed;left:10px;top:8px;z-index:6;color:#fde8cf;text-decoration:none;font:600 13px system-ui,sans-serif;background:rgba(0,0,0,.35);padding:6px 10px;border-radius:10px;opacity:.75}
+#ck-back:hover{opacity:1}
+#ck-err{display:none;max-width:560px;text-align:center;line-height:1.5}
 </style>
+
 </head>
 <body>
-<main>
-  <img src="icon.webp" alt="">
-  <h1>Çiğ Köfte Master</h1>
-  <p>Oyun çok yakında burada oynanabilir olacak.<br>The game will be playable here very soon.</p>
-  <a href="/games/cig-kofte-master.html">← tugrion.com</a>
-</main>
+<canvas id="unity-canvas" tabindex="-1"></canvas>
+<div id="ck-loader">
+  <img class="logo" src="TemplateData/logo.png" alt="Çiğ Köfte Master">
+  <div id="ck-bar"><div id="ck-fill"></div></div>
+  <div id="ck-msg">Yükleniyor… / Loading…</div>
+  <div id="ck-err">Oyun yüklenemedi. Sayfayı yenileyin. / The game could not load. Please refresh the page.</div>
+  <img class="masc" src="TemplateData/mascot.png" alt="">
+</div>
+<div id="ck-rotate"><div class="ph"></div><div>Telefonu yan çevirin<br><small>Please rotate your device</small></div></div>
+<a id="ck-back" href="/games/cig-kofte-master.html" aria-label="Tugrion">&#8592; tugrion.com</a>
+<script>
+(function(){
+  var canvas=document.getElementById("unity-canvas");
+  var fill=document.getElementById("ck-fill");
+  var loader=document.getElementById("ck-loader");
+  var mobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  var buildUrl="Build";
+  var config={
+    dataUrl: buildUrl + "/Web_tugrion.data.unityweb",
+    frameworkUrl: buildUrl + "/Web_tugrion.framework.js.unityweb",
+    codeUrl: buildUrl + "/Web_tugrion.wasm.unityweb",
+    streamingAssetsUrl: "StreamingAssets",
+    companyName: "Tugrion",
+    productName: "Çiğ Köfte Master",
+    productVersion: "1.0",
+    devicePixelRatio: mobile ? Math.min(window.devicePixelRatio || 1, 2) : (window.devicePixelRatio || 1)
+  };
+  canvas.addEventListener("contextmenu",function(e){e.preventDefault();});
+  window.addEventListener("keydown",function(e){ if([32,37,38,39,40,9].indexOf(e.keyCode)>=0) e.preventDefault(); },{passive:false});
+  function fail(){ document.getElementById("ck-msg").style.display="none"; document.getElementById("ck-err").style.display="block"; }
+  var s=document.createElement("script");
+  s.src=buildUrl + "/Web_tugrion.loader.js";
+  s.onerror=fail;
+  s.onload=function(){
+    Promise.resolve().then(function(){
+      createUnityInstance(canvas, config, function(p){ fill.style.width=Math.max(2,Math.round(p*100))+"%"; })
+      .then(function(inst){ window.unityInstance=inst; loader.style.opacity="0"; setTimeout(function(){loader.style.display="none";var b=document.getElementById("ck-back");if(b)b.style.display="none";},450); canvas.focus(); })
+      .catch(function(m){ console.error(m); fail(); });
+    });
+  };
+  document.body.appendChild(s);
+})();
+</script>
 </body>
 </html>
