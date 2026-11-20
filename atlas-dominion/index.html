@@ -4931,7 +4931,9 @@ if(window.CG_BUILD){playIntro=function(done){try{done&&done()}catch(e){}};let CG
  const adCb=(onDone,onFail)=>({adStarted:()=>{adOn=true;sndKeep=SET.sound;SET.sound=false;try{window._gongAC&&window._gongAC.suspend()}catch(e){}},
   adFinished:()=>{adOn=false;if(sndKeep!==null)SET.sound=sndKeep;sndKeep=null;onDone&&onDone()},
   adError:()=>{adOn=false;if(sndKeep!==null)SET.sound=sndKeep;sndKeep=null;onFail&&onFail()}});
- window.AtlasApp={ads:()=>true,rewardedReady:()=>!!SDK,
+ // ads are off for now (CrazyGames Basic Launch allows no ads); set CG_ADS=true for Full Launch
+ const CG_ADS=false;
+ window.AtlasApp={ads:()=>CG_ADS,rewardedReady:()=>!!SDK,
   showRewarded:k=>{if(!SDK){window.onAdReward(k,false);return}try{SDK.ad.requestAd('rewarded',adCb(()=>window.onAdReward(k,true),()=>{MON.busy=false;toast('⚠ Şu an reklam yok, biraz sonra tekrar dene')}))}catch(e){MON.busy=false}},
   showInterstitial:()=>{if(SDK)try{SDK.ad.requestAd('midgame',adCb())}catch(e){}},
   privacyOptionsRequired:()=>false};
