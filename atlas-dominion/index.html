@@ -4907,11 +4907,11 @@ function gong(){if(!SET.sound)return;const now=Date.now();if(now-GONGT<4000)retu
  try{window.close()}catch(e){}setTimeout(()=>{if(/(^|\.)tugrion\.com$/.test(location.hostname)){location.replace('/')}else{game=null;showMenu(`<h2>👋 Görüşmek üzere</h2><div class="sub">Oyun kaydedildi. Bu sekmeyi kapatabilirsin.</div><button class="mb sec" onclick="mainMenu()">↺ Tekrar oyna</button>`)}},250)}}
 
 // ===== CrazyGames build (active only when window.CG_BUILD is set by the CrazyGames index.html) =====
-if(window.CG_BUILD){setTimeout(function(){
+if(window.CG_BUILD){let CGFRESH=true;try{CGFRESH=!localStorage.getItem('atlasAoH.settings')}catch(e){}setTimeout(function(){
  const CGL=['tr','en','ar','zh','it','es','de','fr','ru'];let SDK=null,playing=false,adOn=false,sndKeep=null;
  const cgLang=()=>{try{const si=SDK&&SDK.user&&SDK.user.systemInfo;const l=String((si&&(si.locale||si.language))||navigator.language||'en').slice(0,2).toLowerCase();return CGL.includes(l)?l:'en'}catch(e){return 'en'}};
  // first visit: English until the SDK tells us the player's language
- const firstRun=!SET.uiLang;if(firstRun&&typeof setLang==='function'){try{setLang('en')}catch(e){}}
+ const firstRun=CGFRESH;if(firstRun&&typeof setLang==='function'){try{setLang('en')}catch(e){}}
  // ads only through the CrazyGames SDK: a small bridge replaces the Android one
  const adCb=(onDone,onFail)=>({adStarted:()=>{adOn=true;sndKeep=SET.sound;SET.sound=false;try{window._gongAC&&window._gongAC.suspend()}catch(e){}},
   adFinished:()=>{adOn=false;if(sndKeep!==null)SET.sound=sndKeep;sndKeep=null;onDone&&onDone()},
@@ -4925,6 +4925,18 @@ if(window.CG_BUILD){setTimeout(function(){
  const strip=()=>{const m=$('menu');if(!m)return;for(const b of [...m.querySelectorAll('button')]){const oc=b.getAttribute('onclick')||'';if(/shopMenu|exitApp|fsToggle|pwaInstall/.test(oc))b.remove()}};
  for(const fn of ['mainMenu','pauseMenu','settingsMenu']){const f=window[fn];if(typeof f!=='function')continue;window[fn]=function(){const r=f.apply(this,arguments);try{strip()}catch(e){}return r}}
  try{new MutationObserver(()=>strip()).observe($('menu'),{childList:true,subtree:true})}catch(e){}strip();
+ // progress saving through the CrazyGames Data Module (synced to the player's CrazyGames account)
+ const CGK=()=>[SETKEY,SKEY,LKEY,'ad_help','ad_mpname','ad_pid','ad_rw','ad_cloud'];const CGMAX=900000;
+ const fitSaves=v=>{if(!Array.isArray(v))return v;let a=v.slice();while(a.length&&JSON.stringify(a).length>CGMAX)a.pop();return a};
+ const cgPut=(k,v)=>{if(!SDK||!SDK.data||!CGK().includes(k))return;try{let s=JSON.stringify(k===SKEY?fitSaves(v):v);if(s.length>CGMAX)return;SDK.data.setItem(k,s)}catch(e){}};
+ {const _set=LS.set;LS.set=function(k,v){const r=_set(k,v);cgPut(k,v);return r}}
+ window.cgDataSync=function(){if(!SDK||!SDK.data)return;let changed=false;
+  for(const k of CGK()){let rv=null;try{rv=SDK.data.getItem(k)}catch(e){}const lv=localStorage.getItem(k);
+   if(rv&&k===SETKEY&&firstRun){try{const r=JSON.parse(rv);Object.assign(SET,r);localStorage.setItem(k,rv);if(r.uiLang&&r.uiLang!==LANG)setLang(r.uiLang);window._cgRemoteSet=true;changed=true}catch(e){}}
+   else if(rv&&!lv){try{localStorage.setItem(k,rv);changed=true}catch(e){}}
+   else if(rv&&lv&&k===SKEY&&rv!==lv){try{const A=JSON.parse(lv),Bv=JSON.parse(rv),m=new Map();for(const s of [...Bv,...A]){const id=s.id||s.gid||JSON.stringify([s.scn,s.me,s.turn]);const o=m.get(id);if(!o||(s.time||0)>=(o.time||0))m.set(id,s)}localStorage.setItem(k,JSON.stringify([...m.values()].sort((a,b)=>(b.time||0)-(a.time||0))));changed=true}catch(e){}}
+   else if(lv&&!rv){try{cgPut(k,JSON.parse(lv))}catch(e){}}}
+  if(changed){try{const s=LS.get(SETKEY,null);if(s)Object.assign(SET,s)}catch(e){}if(!game&&typeof mainMenu==='function')mainMenu()}};
  goFull=function(){};fsBtn=function(){return ''};
  // gameplay start/stop: playing = a game is on screen and no menu covers it
  setInterval(()=>{if(!SDK||adOn)return;const m=$('menu');const now=!!game&&!(m&&getComputedStyle(m).display!=='none');if(now!==playing){playing=now;try{now?SDK.game.gameplayStart():SDK.game.gameplayStop()}catch(e){}}},800);
@@ -4935,8 +4947,9 @@ if(window.CG_BUILD){setTimeout(function(){
  document.head.insertAdjacentHTML('beforeend','<style>body{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}input,textarea{-webkit-user-select:text;user-select:text}</style>');
 try{const m=$('menu');if(m&&m.style.display!=='none'&&!game)mainMenu()}catch(e){}
  (async()=>{try{if(!window.CrazyGames||!CrazyGames.SDK)return;await CrazyGames.SDK.init();SDK=CrazyGames.SDK;try{SDK.game.loadingStop&&SDK.game.loadingStop()}catch(e){}
+  try{cgDataSync()}catch(e){console.warn('cg data',e)}
   try{applyMute(SDK.game.settings);SDK.game.addSettingsChangeListener(applyMute)}catch(e){}
-  if(firstRun){const l=cgLang();if(l!==LANG){setLang(l);if(!game&&typeof mainMenu==='function')mainMenu()}}}catch(e){console.warn('CrazyGames SDK',e)}})();
+  if(firstRun&&!window._cgRemoteSet){const l=cgLang();if(l!==LANG){setLang(l);if(!game&&typeof mainMenu==='function')mainMenu()}}}catch(e){console.warn('CrazyGames SDK',e)}})();
 },0)}
 DICT.push(['⚠ Şu an reklam yok, biraz sonra tekrar dene','⚠ No ad available right now, try again shortly','⚠ لا يوجد إعلان الآن، حاول بعد قليل','⚠ 暂无广告，请稍后再试','⚠ Nessuna pubblicità ora, riprova tra poco','⚠ No hay anuncio ahora, inténtalo pronto','⚠ Gerade keine Werbung, versuche es gleich nochmal','⚠ Aucune pub pour l’instant, réessaie bientôt','⚠ Сейчас нет рекламы, попробуйте позже']);
 
