@@ -1650,6 +1650,11 @@ const DICT=[
 ['Yavaş · 30 sn','Slow · 30 s','بطيء · 30 ث','慢 · 30 秒','Lento · 30 s','Lento · 30 s','Langsam · 30 s','Lent · 30 s','Медленно · 30 с'],
 ['Normal · 15 sn','Normal · 15 s','عادي · 15 ث','正常 · 15 秒','Normale · 15 s','Normal · 15 s','Normal · 15 s','Normal · 15 s','Обычно · 15 с'],
 ['Hızlı · 8 sn','Fast · 8 s','سريع · 8 ث','快 · 8 秒','Veloce · 8 s','Rápido · 8 s','Schnell · 8 s','Rapide · 8 s','Быстро · 8 с'],
+['Çok hızlı · 5 sn','Very fast · 5 s','سريع جدًا · 5 ث','极快 · 5 秒','Rapidissimo · 5 s','Muy rápido · 5 s','Sehr schnell · 5 s','Très rapide · 5 s','Очень быстро · 5 с'],
+['Davet linki kopyala','Copy invite link','نسخ رابط الدعوة','复制邀请链接','Copia link di invito','Copiar enlace de invitación','Einladungslink kopieren','Copier le lien d’invitation','Скопировать ссылку-приглашение'],
+['🔗 Davet linki kopyalandı','🔗 Invite link copied','🔗 تم نسخ رابط الدعوة','🔗 邀请链接已复制','🔗 Link di invito copiato','🔗 Enlace copiado','🔗 Einladungslink kopiert','🔗 Lien d’invitation copié','🔗 Ссылка скопирована'],
+['⛔ Oda dolu','⛔ Room is full','⛔ الغرفة ممتلئة','⛔ 房间已满','⛔ Stanza piena','⛔ Sala llena','⛔ Raum ist voll','⛔ Salon complet','⛔ Комната заполнена'],
+['Bu odada en fazla 8 oyuncu olabilir.','A room can have at most 8 players.','يمكن أن تضم الغرفة 8 لاعبين كحد أقصى.','一个房间最多 8 名玩家。','Una stanza può avere al massimo 8 giocatori.','Una sala admite como máximo 8 jugadores.','Ein Raum hat höchstens 8 Spieler.','Un salon accueille au maximum 8 joueurs.','В комнате может быть не более 8 игроков.'],
 ['Harita','Map','الخريطة','地图','Mappa','Mapa','Karte','Carte','Карта'],
 ['Kodu arkadaşlarına söyle. Herkes haritadan bir ülke seçsin.','Tell your friends the code. Everyone picks a country on the map.','أخبر أصدقاءك بالرمز. ليختر كل واحد دولة من الخريطة.','把代码告诉好友。每人在地图上选一个国家。','Di\' il codice agli amici. Ognuno sceglie un paese sulla mappa.','Dile el código a tus amigos. Cada uno elige un país en el mapa.','Sag deinen Freunden den Code. Jeder wählt ein Land auf der Karte.','Donne le code à tes amis. Chacun choisit un pays sur la carte.','Скажи друзьям код. Каждый выбирает страну на карте.'],
 ['Haritadan oynamak istediğin ülkeye dokun.','Tap the country you want to play on the map.','المس الدولة التي تريد اللعب بها على الخريطة.','在地图上点击你想玩的国家。','Tocca sulla mappa il paese che vuoi giocare.','Toca en el mapa el país que quieres jugar.','Tippe auf der Karte auf das Land, das du spielen willst.','Touche sur la carte le pays que tu veux jouer.','Нажми на карте страну, за которую хочешь играть.'],
@@ -4217,7 +4222,7 @@ function mpApplyState(sv){if(!MP.guest)return;const first=!game||!game.mpd;const
 // ---------- messages ----------
 function mpOnMsg(m){if(!m||m.from===MP.pid||(m.to&&m.to!==MP.pid))return;const d=m.d||{};
  if(MP.host){const p=MP.players[m.from];
-  if(m.t==='hello'){const name=cleanName(d.name)||'Oyuncu';if(!MP.players[m.from]&&(MP.started||MP.resumed)){mpSend('deny',{why:'roster'},m.from);return}if(!MP.players[m.from])MP.players[m.from]={name,c:-1,seen:Date.now()};else{MP.players[m.from].name=name;MP.players[m.from].seen=Date.now()}mpLobbyBroadcast();if(MP.started){const c=MP.players[m.from].c;mpSend('welcome',{c,scn:MP.scn,speed:MP.speed},m.from);if(window.MPTEST)mpBroadcastState(m.from);else MP.dirtyAt=MP.dirtyAt||Date.now()}mpLobbyUI();return}
+  if(m.t==='hello'){const name=cleanName(d.name)||'Oyuncu';if(!MP.players[m.from]&&(MP.started||MP.resumed)){mpSend('deny',{why:'roster'},m.from);return}if(!MP.players[m.from]&&Object.keys(MP.players).length>=7){mpSend('deny',{why:'full'},m.from);return}if(!MP.players[m.from])MP.players[m.from]={name,c:-1,seen:Date.now()};else{MP.players[m.from].name=name;MP.players[m.from].seen=Date.now()}mpLobbyBroadcast();if(MP.started){const c=MP.players[m.from].c;mpSend('welcome',{c,scn:MP.scn,speed:MP.speed},m.from);if(window.MPTEST)mpBroadcastState(m.from);else MP.dirtyAt=MP.dirtyAt||Date.now()}mpLobbyUI();return}
   if(!p)return;p.seen=Date.now();
   if(m.t==='claim'&&!MP.started&&!MP.resumed){const c=+d.c;if(!C[c]||C[c].tribal||Object.values(MP.players).some(q=>q!==p&&q.c===c)||c===MP.me){mpSend('deny',{c},m.from);return}p.c=c;mpLobbyBroadcast();mpLobbyUI();return}
   if(m.t==='act'&&MP.started&&p.c>=0){const out=mpExec(p.c,d.fn,d.a,d.ctx);if(out.length)mpSend('toast',{t:out},m.from);MP.dirtyAt=MP.dirtyAt||Date.now();return}
@@ -4225,7 +4230,7 @@ function mpOnMsg(m){if(!m||m.from===MP.pid||(m.to&&m.to!==MP.pid))return;const d
   if(m.t==='bye'){p.seen=0;mpLobbyUI();return}return}
  if(MP.guest){if(m.t==='lobby'||m.t==='st'||m.t==='welcome'||m.t==='toast'||m.t==='pause')MP.hostSeen=Date.now();
   if(m.t==='lobby'){if(MP.started&&d.resumed&&!MP.resWait){MP.resWait=true;toast('✔ Kurucu geri döndü · devam etmesi bekleniyor')}if(!d.resumed)MP.resWait=false;MP.players=d.players||{};MP.speed=d.speed||15;MP.resumed=!!d.resumed;const me=MP.players[MP.pid];if(!me&&(d.started||d.resumed)&&MP.helloAt&&Date.now()-MP.helloAt>6000){mpDenied();return}if(d.scn&&d.scn!==MP.scn&&!d.started&&!d.resumed){MP.scn=d.scn;newGame(d.scn);mode='pick';$('setup').style.display='none'}MP.scn=d.scn;if(me){MP.me=me.c;if(!d.started&&me.c>=0){selC=me.c;paint();req()}}mpLobbyUI();return}
-  if(m.t==='deny'){if(d.why==='roster'){mpDenied();return}toast('⛔ Bu ülke başka oyuncuda');return}
+  if(m.t==='deny'){if(d.why==='roster'){mpDenied();return}if(d.why==='full'){mpLeave();showMenu(`<h2>⛔ Oda dolu</h2><div class="sub">Bu odada en fazla 8 oyuncu olabilir.</div><button class="mb" onclick="mpMenu()">← Geri</button>`);return}toast('⛔ Bu ülke başka oyuncuda');return}
   if(m.t==='welcome'){MPSV=0;MP.welcomed=true;MP.me=d.c;MP.speed=d.speed||15;MP.started=true;mpLobbyUI();return}
   if(m.t==='start'){if(d.c[MP.pid]===undefined){mpDenied();return}MP.started=true;MP.welcomed=true;MPSV=0;MP.me=d.c[MP.pid];toast('▶ Oyun başlıyor…');return}
   if(m.t==='st'){const k=d.id;const b=MP.chunks[k]||(MP.chunks[k]={n:d.n,p:[],got:0});if(!b.p[d.i]){b.p[d.i]=d.x;b.got++}
@@ -4907,7 +4912,7 @@ function gong(){if(!SET.sound)return;const now=Date.now();if(now-GONGT<4000)retu
  try{window.close()}catch(e){}setTimeout(()=>{if(/(^|\.)tugrion\.com$/.test(location.hostname)){location.replace('/')}else{game=null;showMenu(`<h2>👋 Görüşmek üzere</h2><div class="sub">Oyun kaydedildi. Bu sekmeyi kapatabilirsin.</div><button class="mb sec" onclick="mainMenu()">↺ Tekrar oyna</button>`)}},250)}}
 
 // ===== CrazyGames build (active only when window.CG_BUILD is set by the CrazyGames index.html) =====
-if(window.CG_BUILD){let CGFRESH=true;try{CGFRESH=!localStorage.getItem('atlasAoH.settings')}catch(e){}setTimeout(function(){
+if(window.CG_BUILD){playIntro=function(done){try{done&&done()}catch(e){}};let CGFRESH=true;try{CGFRESH=!localStorage.getItem('atlasAoH.settings')}catch(e){}setTimeout(function(){
  const CGL=['tr','en','ar','zh','it','es','de','fr','ru'];let SDK=null,playing=false,adOn=false,sndKeep=null;
  const cgLang=()=>{try{const si=SDK&&SDK.user&&SDK.user.systemInfo;const l=String((si&&(si.locale||si.language))||navigator.language||'en').slice(0,2).toLowerCase();return CGL.includes(l)?l:'en'}catch(e){return 'en'}};
  // first visit: English until the SDK tells us the player's language
@@ -4937,6 +4942,17 @@ if(window.CG_BUILD){let CGFRESH=true;try{CGFRESH=!localStorage.getItem('atlasAoH
    else if(rv&&lv&&k===SKEY&&rv!==lv){try{const A=JSON.parse(lv),Bv=JSON.parse(rv),m=new Map();for(const s of [...Bv,...A]){const id=s.id||s.gid||JSON.stringify([s.scn,s.me,s.turn]);const o=m.get(id);if(!o||(s.time||0)>=(o.time||0))m.set(id,s)}localStorage.setItem(k,JSON.stringify([...m.values()].sort((a,b)=>(b.time||0)-(a.time||0))));changed=true}catch(e){}}
    else if(lv&&!rv){try{cgPut(k,JSON.parse(lv))}catch(e){}}}
   if(changed){try{const s=LS.get(SETKEY,null);if(s)Object.assign(SET,s)}catch(e){}if(!game&&typeof mainMenu==='function')mainMenu()}};
+ // multiplayer on CrazyGames: invite link/button for the room, instant multiplayer, join from an invite
+ let invOn='';
+ const invShow=code=>{if(!SDK||invOn===code)return;try{SDK.game.showInviteButton({roomId:code});invOn=code}catch(e){}};
+ const invHide=()=>{if(!SDK||!invOn)return;try{SDK.game.hideInviteButton()}catch(e){}invOn=''};
+ window.cgInvite=async function(){if(!SDK||!MP.code)return;try{const u=await SDK.game.inviteLink({roomId:MP.code});try{await navigator.clipboard.writeText(u);toast('🔗 Davet linki kopyalandı')}catch(e){prompt('Davet linki',u)}}catch(e){toast('⚠ Davet linki alınamadı')}};
+ {const _lu=mpLobbyUI;mpLobbyUI=function(){const r=_lu.apply(this,arguments);try{const L=$('mpL');if(MP.on&&!MP.started&&MP.code&&MP.host){invShow(MP.code);if(L&&!L.querySelector('.cginv')){const b=L.querySelector('button');b&&b.insertAdjacentHTML('beforebegin','<button class="mb sec cginv" style="margin-top:8px" onclick="cgInvite()">🔗 Davet linki kopyala</button>')}}else invHide()}catch(e){}return r}}
+ {const _lv=mpLeave;mpLeave=function(){invHide();return _lv.apply(this,arguments)}}
+ const cgName=async()=>{try{const u=SDK.user&&SDK.user.getUser?await SDK.user.getUser():null;const un=u&&cleanName(String(u.username||''));if(un){LS.set('ad_mpname',un);return un}}catch(e){}let n=LS.get('ad_mpname','');if(!n){n='Player'+(100+Math.floor(Math.random()*900));LS.set('ad_mpname',n)}return n};
+ window.cgMulti=async function(){if(!SDK)return;let code='';try{code=String(SDK.game.getInviteParam('roomId')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6)}catch(e){}
+  if(code.length===6){await cgName();mpMenu();const c=$('mpC');if(c){c.value=code;mpJoin()}return}
+  let inst=false;try{inst=!!SDK.game.isInstantMultiplayer}catch(e){}if(inst){await cgName();mpMenu();mpHostMenu()}};
  goFull=function(){};fsBtn=function(){return ''};
  // gameplay start/stop: playing = a game is on screen and no menu covers it
  setInterval(()=>{if(!SDK||adOn)return;const m=$('menu');const now=!!game&&!(m&&getComputedStyle(m).display!=='none');if(now!==playing){playing=now;try{now?SDK.game.gameplayStart():SDK.game.gameplayStop()}catch(e){}}},800);
@@ -4949,7 +4965,8 @@ try{const m=$('menu');if(m&&m.style.display!=='none'&&!game)mainMenu()}catch(e){
  (async()=>{try{if(!window.CrazyGames||!CrazyGames.SDK)return;await CrazyGames.SDK.init();SDK=CrazyGames.SDK;try{SDK.game.loadingStop&&SDK.game.loadingStop()}catch(e){}
   try{cgDataSync()}catch(e){console.warn('cg data',e)}
   try{applyMute(SDK.game.settings);SDK.game.addSettingsChangeListener(applyMute)}catch(e){}
-  if(firstRun&&!window._cgRemoteSet){const l=cgLang();if(l!==LANG){setLang(l);if(!game&&typeof mainMenu==='function')mainMenu()}}}catch(e){console.warn('CrazyGames SDK',e)}})();
+  if(firstRun&&!window._cgRemoteSet){const l=cgLang();if(l!==LANG){setLang(l);if(!game&&typeof mainMenu==='function')mainMenu()}}
+  try{await cgMulti()}catch(e){console.warn('cg mp',e)}}catch(e){console.warn('CrazyGames SDK',e)}})();
 },0)}
 DICT.push(['⚠ Şu an reklam yok, biraz sonra tekrar dene','⚠ No ad available right now, try again shortly','⚠ لا يوجد إعلان الآن، حاول بعد قليل','⚠ 暂无广告，请稍后再试','⚠ Nessuna pubblicità ora, riprova tra poco','⚠ No hay anuncio ahora, inténtalo pronto','⚠ Gerade keine Werbung, versuche es gleich nochmal','⚠ Aucune pub pour l’instant, réessaie bientôt','⚠ Сейчас нет рекламы, попробуйте позже']);
 
