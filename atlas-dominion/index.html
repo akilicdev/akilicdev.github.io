@@ -1650,6 +1650,7 @@ const DICT=[
 ['Yavaş · 30 sn','Slow · 30 s','بطيء · 30 ث','慢 · 30 秒','Lento · 30 s','Lento · 30 s','Langsam · 30 s','Lent · 30 s','Медленно · 30 с'],
 ['Normal · 15 sn','Normal · 15 s','عادي · 15 ث','正常 · 15 秒','Normale · 15 s','Normal · 15 s','Normal · 15 s','Normal · 15 s','Обычно · 15 с'],
 ['Hızlı · 8 sn','Fast · 8 s','سريع · 8 ث','快 · 8 秒','Veloce · 8 s','Rápido · 8 s','Schnell · 8 s','Rapide · 8 s','Быстро · 8 с'],
+['Zaman hızı (bir tur kaç saniye)','Time speed (seconds per turn)','سرعة الوقت (ثوانٍ لكل دور)','时间速度（每回合秒数）','Velocità (secondi per turno)','Velocidad (segundos por turno)','Zeittempo (Sekunden pro Runde)','Vitesse (secondes par tour)','Скорость (секунд на ход)'],
 ['Çok hızlı · 5 sn','Very fast · 5 s','سريع جدًا · 5 ث','极快 · 5 秒','Rapidissimo · 5 s','Muy rápido · 5 s','Sehr schnell · 5 s','Très rapide · 5 s','Очень быстро · 5 с'],
 ['Davet linki kopyala','Copy invite link','نسخ رابط الدعوة','复制邀请链接','Copia link di invito','Copiar enlace de invitación','Einladungslink kopieren','Copier le lien d’invitation','Скопировать ссылку-приглашение'],
 ['🔗 Davet linki kopyalandı','🔗 Invite link copied','🔗 تم نسخ رابط الدعوة','🔗 邀请链接已复制','🔗 Link di invito copiato','🔗 Enlace copiado','🔗 Einladungslink kopiert','🔗 Lien d’invitation copié','🔗 Ссылка скопирована'],
@@ -4946,12 +4947,18 @@ if(window.CG_BUILD){playIntro=function(done){try{done&&done()}catch(e){}};let CG
  let invOn='';
  const invShow=code=>{if(!SDK||invOn===code)return;try{SDK.game.showInviteButton({roomId:code});invOn=code}catch(e){}};
  const invHide=()=>{if(!SDK||!invOn)return;try{SDK.game.hideInviteButton()}catch(e){}invOn=''};
- window.cgInvite=async function(){if(!SDK||!MP.code)return;try{const u=await SDK.game.inviteLink({roomId:MP.code});try{await navigator.clipboard.writeText(u);toast('🔗 Davet linki kopyalandı')}catch(e){prompt('Davet linki',u)}}catch(e){toast('⚠ Davet linki alınamadı')}};
+ window.cgInvite=async function(){if(!SDK||!MP.code)return;try{const u=await Promise.resolve(SDK.game.inviteLink({roomId:MP.code}));try{await navigator.clipboard.writeText(u);toast('🔗 Davet linki kopyalandı')}catch(e){prompt('Davet linki',u)}}catch(e){toast('⚠ Davet linki alınamadı')}};
  {const _lu=mpLobbyUI;mpLobbyUI=function(){const r=_lu.apply(this,arguments);try{const L=$('mpL');if(MP.on&&!MP.started&&MP.code&&MP.host){invShow(MP.code);if(L&&!L.querySelector('.cginv')){const b=L.querySelector('button');b&&b.insertAdjacentHTML('beforebegin','<button class="mb sec cginv" style="margin-top:8px" onclick="cgInvite()">🔗 Davet linki kopyala</button>')}}else invHide()}catch(e){}return r}}
  {const _lv=mpLeave;mpLeave=function(){invHide();return _lv.apply(this,arguments)}}
  const cgName=async()=>{try{const u=SDK.user&&SDK.user.getUser?await SDK.user.getUser():null;const un=u&&cleanName(String(u.username||''));if(un){LS.set('ad_mpname',un);return un}}catch(e){}let n=LS.get('ad_mpname','');if(!n){n='Player'+(100+Math.floor(Math.random()*900));LS.set('ad_mpname',n)}return n};
- window.cgMulti=async function(){if(!SDK)return;let code='';try{code=String(SDK.game.getInviteParam('roomId')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6)}catch(e){}
-  if(code.length===6){await cgName();mpMenu();const c=$('mpC');if(c){c.value=code;mpJoin()}return}
+ const cgCode=v=>String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+ window.cgJoin=async function(k){try{if(MP.on)mpLeave()}catch(e){}await cgName();mpMenu();const c=$('mpC');if(c){c.value=k;mpJoin()}};
+ let roomSent='';const roomSync=()=>{if(!SDK||!SDK.game.updateRoom)return;const k=MP.on&&MP.code?MP.code+'|'+(MP.started?1:0):'';if(k===roomSent)return;roomSent=k;
+  try{if(MP.on&&MP.code)SDK.game.updateRoom({roomId:MP.code,isJoinable:!MP.started&&!MP.resumed,inviteParams:{roomId:MP.code}});else if(SDK.game.leftRoom)SDK.game.leftRoom()}catch(e){}};
+ setInterval(roomSync,1500);
+ window.cgMulti=async function(){if(!SDK)return;let code='';try{code=cgCode(SDK.game.getInviteParam('roomId')||SDK.game.getInviteParam('roomName'))}catch(e){}
+  try{if(SDK.game.addJoinRoomListener)SDK.game.addJoinRoomListener(p=>{const k=cgCode(p&&(p.roomId||p.roomName));if(k.length===6&&!(MP.on&&MP.code===k))cgJoin(k)})}catch(e){}
+  if(code.length===6){await cgJoin(code);return}
   let inst=false;try{inst=!!SDK.game.isInstantMultiplayer}catch(e){}if(inst){await cgName();mpMenu();mpHostMenu()}};
  goFull=function(){};fsBtn=function(){return ''};
  // gameplay start/stop: playing = a game is on screen and no menu covers it
