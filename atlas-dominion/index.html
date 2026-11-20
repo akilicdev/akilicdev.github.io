@@ -4959,7 +4959,11 @@ if(window.CG_BUILD){playIntro=function(done){try{done&&done()}catch(e){}};let CG
  window.cgMulti=async function(){if(!SDK)return;let code='';try{code=cgCode(SDK.game.getInviteParam('roomId')||SDK.game.getInviteParam('roomName'))}catch(e){}
   try{if(SDK.game.addJoinRoomListener)SDK.game.addJoinRoomListener(p=>{const k=cgCode(p&&(p.roomId||p.roomName));if(k.length===6&&!(MP.on&&MP.code===k))cgJoin(k)})}catch(e){}
   if(code.length===6){await cgJoin(code);return}
-  let inst=false;try{inst=!!SDK.game.isInstantMultiplayer}catch(e){}if(inst){await cgName();mpMenu();mpHostMenu()}};
+  const instOn=()=>{try{const g=SDK.game;let v=g.isInstantMultiplayer;if(typeof v==='function')v=v.call(g);if(v===true||v==='true')return true;
+   const p=g.getInviteParam&&(g.getInviteParam('instantMultiplayer')||g.getInviteParam('isInstantMultiplayer'));if(p===true||p==='true'||p==='1')return true}catch(e){}
+   try{const s=(location.search+'&'+location.hash+'&'+document.referrer).toLowerCase();if(/instantmultiplayer=(true|1)/.test(s))return true}catch(e){}return false};
+  const goInst=async()=>{if(MP.on||game)return;await cgName();mpMenu();mpHostMenu()};
+  if(instOn()){await goInst();return}setTimeout(()=>{if(instOn())goInst()},2000)};
  goFull=function(){};fsBtn=function(){return ''};
  // gameplay start/stop: playing = a game is on screen and no menu covers it
  setInterval(()=>{if(!SDK||adOn)return;const m=$('menu');const now=!!game&&!(m&&getComputedStyle(m).display!=='none');if(now!==playing){playing=now;try{now?SDK.game.gameplayStart():SDK.game.gameplayStop()}catch(e){}}},800);
